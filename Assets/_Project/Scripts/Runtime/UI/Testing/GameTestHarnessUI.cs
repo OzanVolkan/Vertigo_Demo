@@ -164,7 +164,7 @@ namespace Vertigo.UI.Testing
             }
         }
 
-        private void OnSpinStarted(int targetIndex, float targetAngle, float duration)
+        private void OnSpinStarted(int targetIndex, float targetAngle, float exactCenterAngle, float duration)
         {
             if (ui_button_cashout != null)
                 ui_button_cashout.interactable = false;

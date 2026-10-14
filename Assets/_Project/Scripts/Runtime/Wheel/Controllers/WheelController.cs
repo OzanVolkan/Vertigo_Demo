@@ -56,18 +56,20 @@ namespace Vertigo.Wheel.Controllers
             // Roll target slice based on slice weights
             _currentTargetIndex = WheelMathUtility.RollWeightedSliceIndex(currentConfig.ConcreteSlices);
             
-            // Calculate target angle (negative Z for clockwise)
+            // Calculate target angle (with natural offset) and exact center angle
             float targetAngle = WheelMathUtility.CalculateTargetRotation(
                 _currentTargetIndex,
                 _currentWheelAngle,
+                out float exactCenterAngle,
                 minFullTurns,
                 addRandomOffset: true
             );
 
-            _currentWheelAngle = targetAngle;
+            // After centering completes, the wheel will be resting exactly at exactCenterAngle normalized to [0, 360)
+            _currentWheelAngle = (exactCenterAngle % 360f + 360f) % 360f;
 
-            Debug.Log($"[WheelController] Spin started! Target Slice: {_currentTargetIndex} ({currentConfig.GetSlice(_currentTargetIndex)?.Reward?.DisplayName}), Target Angle: {targetAngle:F1}");
-            GameEvents.FireSpinStarted(_currentTargetIndex, targetAngle, spinDuration);
+            Debug.Log($"[WheelController] Spin started! Target Slice: {_currentTargetIndex} ({currentConfig.GetSlice(_currentTargetIndex)?.Reward?.DisplayName}), Landing Angle: {targetAngle:F1}, Centered Angle: {exactCenterAngle:F1}");
+            GameEvents.FireSpinStarted(_currentTargetIndex, targetAngle, exactCenterAngle, spinDuration);
         }
 
         /// <summary>

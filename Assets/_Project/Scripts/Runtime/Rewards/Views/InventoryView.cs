@@ -100,6 +100,8 @@ namespace Vertigo.Rewards.Views
                 {
                     slotView.Setup(reward.Icon, amount, $"{amount:N0}");
                     // Subtle punch scale animation when reward is updated
+                    slotView.transform.DOKill(true);
+                    slotView.transform.localScale = Vector3.one;
                     slotView.transform.DOPunchScale(Vector3.one * 0.15f, 0.25f, 2, 0.5f);
                 }
             }

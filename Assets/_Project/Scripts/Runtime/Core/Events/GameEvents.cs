@@ -18,7 +18,7 @@ namespace Vertigo.Core.Events
 
         // Wheel & Spin Events
         public static event Action OnSpinRequested;
-        public static event Action<int, float, float> OnSpinStarted; // targetSliceIndex, targetAngle, duration
+        public static event Action<int, float, float, float> OnSpinStarted; // targetSliceIndex, targetAngle, exactCenterAngle, duration
         public static event Action<WheelSliceData> OnSpinCompleted;
         public static event Action OnSliceTick; // Triggered when indicator hits a slice peg
 
@@ -39,7 +39,7 @@ namespace Vertigo.Core.Events
         public static void FireGameStateChanged(GameState state) => OnGameStateChanged?.Invoke(state);
         public static void FireZoneChanged(ZoneData zone) => OnZoneChanged?.Invoke(zone);
         public static void FireSpinRequested() => OnSpinRequested?.Invoke();
-        public static void FireSpinStarted(int targetIndex, float targetAngle, float duration) => OnSpinStarted?.Invoke(targetIndex, targetAngle, duration);
+        public static void FireSpinStarted(int targetIndex, float targetAngle, float exactCenterAngle, float duration) => OnSpinStarted?.Invoke(targetIndex, targetAngle, exactCenterAngle, duration);
         public static void FireSpinCompleted(WheelSliceData slice) => OnSpinCompleted?.Invoke(slice);
         public static void FireSliceTick() => OnSliceTick?.Invoke();
         public static void FireRewardCollected(IRewardData reward, int amount) => OnRewardCollected?.Invoke(reward, amount);

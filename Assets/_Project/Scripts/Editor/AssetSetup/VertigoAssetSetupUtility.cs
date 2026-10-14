@@ -1,8 +1,8 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.U2D;
 using UnityEngine;
-using UnityEngine.U2D;
 
 namespace Vertigo.Editor
 {
@@ -10,6 +10,8 @@ namespace Vertigo.Editor
     {
         private const string DemoContentPath = "Assets/2D/demo_content";
         private const string AtlasPath = "Assets/_Project/Art/Atlases/VertigoDemoAtlas.spriteatlasv2";
+        private const int AtlasPadding = 8;          // Extra padding prevents neighbour bleeding at lower mip levels
+        private const int MaxAtlasSpriteSize = 1024; // Larger textures (full-screen VFX) stay out of the atlas
 
         [InitializeOnLoadMethod]
         private static void OnProjectLoaded()
@@ -78,9 +80,12 @@ namespace Vertigo.Editor
                     modified = true;
                 }
 
-                if (importer.mipmapEnabled)
+                // Icons are authored at 512-720px but rendered at ~40-100px. Without mipmaps,
+                // bilinear sampling skips texels when minifying heavily, which shows up as jagged/pixelated edges.
+                if (!importer.mipmapEnabled)
                 {
-                    importer.mipmapEnabled = false;
+                    importer.mipmapEnabled = true;
+                    importer.mipmapFilter = TextureImporterMipFilter.KaiserFilter;
                     modified = true;
                 }
 
@@ -139,42 +144,61 @@ namespace Vertigo.Editor
                 Directory.CreateDirectory(dir);
             }
 
-            SpriteAtlas atlas = AssetDatabase.LoadAssetAtPath<SpriteAtlas>(AtlasPath);
-            if (atlas == null)
+            // Sprite Atlas V2: the asset holds only the packable list, settings live on the importer.
+            SpriteAtlasAsset atlasAsset = new SpriteAtlasAsset();
+            atlasAsset.Add(CollectPackableSprites());
+            SpriteAtlasAsset.Save(atlasAsset, AtlasPath);
+            AssetDatabase.ImportAsset(AtlasPath, ImportAssetOptions.ForceUpdate);
+
+            if (AssetImporter.GetAtPath(AtlasPath) is SpriteAtlasImporter atlasImporter)
             {
-                atlas = new SpriteAtlas();
-                AssetDatabase.CreateAsset(atlas, AtlasPath);
+                // Rotation and tight packing are not supported by UGUI Image and break slicing/rendering.
+                atlasImporter.packingSettings = new SpriteAtlasPackingSettings
+                {
+                    blockOffset = 1,
+                    enableRotation = false,
+                    enableTightPacking = false,
+                    padding = AtlasPadding
+                };
+
+                atlasImporter.textureSettings = new SpriteAtlasTextureSettings
+                {
+                    readable = false,
+                    generateMipMaps = true,
+                    sRGB = true,
+                    filterMode = FilterMode.Bilinear,
+                    anisoLevel = 1
+                };
+
+                atlasImporter.includeInBuild = true;
+                atlasImporter.SaveAndReimport();
             }
 
-            // Atlas settings for mobile performance
-            SpriteAtlasPackingSettings packingSettings = new SpriteAtlasPackingSettings
-            {
-                blockOffset = 1,
-                enableRotation = false,
-                enableTightPacking = false,
-                padding = 4
-            };
-            atlas.SetPackingSettings(packingSettings);
+            Debug.Log($"[Vertigo] SpriteAtlas (V2) created/updated at {AtlasPath}");
+        }
 
-            SpriteAtlasTextureSettings textureSettings = new SpriteAtlasTextureSettings
-            {
-                readable = false,
-                generateMipMaps = false,
-                sRGB = true,
-                filterMode = FilterMode.Bilinear
-            };
-            atlas.SetTextureSettings(textureSettings);
+        /// <summary>
+        /// Collects UI sprites for the atlas. Very large textures (e.g. full-screen VFX flashes)
+        /// are excluded since they would waste most of an atlas page on their own.
+        /// </summary>
+        private static Object[] CollectPackableSprites()
+        {
+            var packables = new List<Object>();
+            string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { DemoContentPath });
 
-            // Add demo_content folder as packable
-            Object demoFolderObj = AssetDatabase.LoadAssetAtPath<Object>(DemoContentPath);
-            if (demoFolderObj != null)
+            foreach (string guid in guids)
             {
-                atlas.Remove(atlas.GetPackables());
-                atlas.Add(new[] { demoFolderObj });
-                EditorUtility.SetDirty(atlas);
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!(AssetImporter.GetAtPath(path) is TextureImporter importer)) continue;
+
+                importer.GetSourceTextureWidthAndHeight(out int width, out int height);
+                if (Mathf.Max(width, height) > MaxAtlasSpriteSize) continue;
+
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (texture != null) packables.Add(texture);
             }
 
-            Debug.Log($"[Vertigo] SpriteAtlas created/updated at {AtlasPath}");
+            return packables.ToArray();
         }
     }
 }

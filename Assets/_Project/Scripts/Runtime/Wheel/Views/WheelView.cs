@@ -22,9 +22,24 @@ namespace Vertigo.Wheel.Views
         [Header("Slices")]
         [SerializeField] private List<WheelSliceView> ui_slice_views = new List<WheelSliceView>();
 
+        [Header("Indicator Settings")]
+        [Tooltip("Deflection angle when a slice peg pushes the needle")]
+        [SerializeField, Range(5f, 35f)] private float indicatorKickAngle = 18f;
+        [Tooltip("Duration to spring back to center")]
+        [SerializeField, Range(0.05f, 0.25f)] private float indicatorSnapDuration = 0.12f;
+
+        [Header("Centering Polish Settings")]
+        [Tooltip("Pause duration after stopping before centering begins")]
+        [SerializeField, Range(0.1f, 0.8f)] private float centerDelay = 0.35f;
+        [Tooltip("Duration of the smooth centering rotation")]
+        [SerializeField, Range(0.2f, 0.8f)] private float centerDuration = 0.45f;
+        [Tooltip("Easing curve for centering rotation")]
+        [SerializeField] private Ease centerEase = Ease.OutQuad;
+
         [Header("Dependencies")]
         [SerializeField] private WheelController wheelController;
 
+        private Sequence _spinSequence;
         private Tween _spinTween;
         private Tween _indicatorTween;
         private int _lastTickSliceIndex = -1;
@@ -35,6 +50,13 @@ namespace Vertigo.Wheel.Views
             if (ui_button_spin != null)
             {
                 ui_button_spin.onClick.AddListener(OnSpinButtonClicked);
+            }
+
+            // Enforce indicator top hinge pivot (0.5, 0.88) so it flutters from the top pin
+            if (ui_transform_indicator != null)
+            {
+                ui_transform_indicator.pivot = new Vector2(0.5f, 0.88f);
+                ui_transform_indicator.localEulerAngles = Vector3.zero;
             }
         }
 
@@ -50,6 +72,7 @@ namespace Vertigo.Wheel.Views
             GameEvents.OnZoneChanged -= OnZoneChanged;
             GameEvents.OnSpinStarted -= OnSpinStarted;
             GameEvents.OnGameStateChanged -= OnGameStateChanged;
+            _spinSequence?.Kill();
             _spinTween?.Kill();
             _indicatorTween?.Kill();
         }
@@ -89,24 +112,28 @@ namespace Vertigo.Wheel.Views
             }
         }
 
-        private void OnSpinStarted(int targetIndex, float targetAngle, float duration)
+        private void OnSpinStarted(int targetIndex, float targetAngle, float exactCenterAngle, float duration)
         {
             _currentTargetIndex = targetIndex;
             _lastTickSliceIndex = -1;
 
+            _spinSequence?.Kill();
             _spinTween?.Kill();
             _indicatorTween?.Kill();
 
             if (ui_transform_indicator != null)
-                ui_transform_indicator.localRotation = Quaternion.identity;
+            {
+                ui_transform_indicator.pivot = new Vector2(0.5f, 0.88f);
+                ui_transform_indicator.localEulerAngles = Vector3.zero;
+            }
 
-            // Spin with realistic easing curve
-            _spinTween = ui_transform_wheel_rotator.DORotate(new Vector3(0, 0, targetAngle), duration, RotateMode.FastBeyond360)
+            // 1. Main Spin to landing angle (with natural offset like in Image 1)
+            _spinTween = ui_transform_wheel_rotator.DOLocalRotate(new Vector3(0, 0, targetAngle), duration, RotateMode.FastBeyond360)
                 .SetEase(Ease.OutCubic)
                 .OnUpdate(() =>
                 {
-                    // Detect slice passing to trigger indicator punch tick
-                    float currentZ = ui_transform_wheel_rotator.eulerAngles.z;
+                    // Detect slice passing to trigger indicator tick
+                    float currentZ = ui_transform_wheel_rotator.localEulerAngles.z;
                     int currentSlice = WheelMathUtility.GetSliceIndexAtAngle(currentZ);
                     if (currentSlice != _lastTickSliceIndex)
                     {
@@ -117,18 +144,46 @@ namespace Vertigo.Wheel.Views
                 })
                 .OnComplete(() =>
                 {
-                    if (ui_transform_indicator != null)
-                        ui_transform_indicator.localRotation = Quaternion.identity;
-
-                    // Play win animation on the landed slice
-                    if (_currentTargetIndex >= 0 && _currentTargetIndex < ui_slice_views.Count)
+                    // 2. Pause naturally on the offset position (suspense moment)
+                    DOVirtual.DelayedCall(centerDelay, () =>
                     {
-                        ui_slice_views[_currentTargetIndex]?.PlayWinAnimation();
-                    }
+                        // 3. Smooth micro-rotation to center the slice under the indicator (Image 2)
+                        // The exact corrective rotation from targetAngle to exactCenterAngle is (exactCenterAngle - targetAngle)
+                        // which is at most ±12°, mathematically guaranteed to stay strictly within the landed slot.
+                        float correctionDelta = exactCenterAngle - targetAngle;
 
-                    // Notify controller
-                    wheelController?.OnSpinAnimationComplete();
+                        if (Mathf.Abs(correctionDelta) > 0.1f)
+                        {
+                            Vector3 targetEuler = ui_transform_wheel_rotator.localEulerAngles;
+                            targetEuler.z += correctionDelta;
+
+                            // Smooth micro-rotation to center (strictly shortest path, never spins a full turn)
+                            _spinTween = ui_transform_wheel_rotator.DOLocalRotate(targetEuler, centerDuration, RotateMode.Fast)
+                                .SetEase(centerEase)
+                                .OnComplete(CompleteSpin);
+                        }
+                        else
+                        {
+                            CompleteSpin();
+                        }
+                    });
                 });
+        }
+
+        private void CompleteSpin()
+        {
+            _indicatorTween?.Kill();
+            if (ui_transform_indicator != null)
+                ui_transform_indicator.localEulerAngles = Vector3.zero;
+
+            // Play win celebration on the centered slice (Image 2)
+            if (_currentTargetIndex >= 0 && _currentTargetIndex < ui_slice_views.Count)
+            {
+                ui_slice_views[_currentTargetIndex]?.PlayWinAnimation();
+            }
+
+            // Notify controller
+            wheelController?.OnSpinAnimationComplete();
         }
 
         private void TriggerIndicatorTick()
@@ -136,8 +191,10 @@ namespace Vertigo.Wheel.Views
             if (ui_transform_indicator == null) return;
 
             _indicatorTween?.Kill();
-            // Subtle spring tick punch on the indicator
-            _indicatorTween = ui_transform_indicator.DOPunchRotation(new Vector3(0, 0, -18f), 0.12f, 1, 0.4f);
+            // Peg deflects the needle tip around the top hinge; snap back to 0 with spring overshoot
+            ui_transform_indicator.localEulerAngles = new Vector3(0, 0, indicatorKickAngle);
+            _indicatorTween = ui_transform_indicator.DOLocalRotate(Vector3.zero, indicatorSnapDuration)
+                .SetEase(Ease.OutBack, 2.5f);
         }
 
         private void OnValidate()

@@ -86,7 +86,7 @@ namespace Vertigo.Core.State
             GameEvents.FireGameStateChanged(newState);
         }
 
-        private void HandleSpinStarted(int targetIndex, float targetAngle, float duration)
+        private void HandleSpinStarted(int targetIndex, float targetAngle, float exactCenterAngle, float duration)
         {
             SetState(GameState.Spinning);
         }

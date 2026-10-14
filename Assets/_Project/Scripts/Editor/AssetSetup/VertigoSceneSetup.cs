@@ -23,6 +23,26 @@ namespace Vertigo.Editor
     {
         private const string ScenePath = "Assets/_Project/Scenes/MainGame.unity";
 
+        // Badge layout (reference resolution 1920x1080, match width).
+        // Font sizes below ~18 end up only a few physical pixels tall on small screens and look jagged.
+        private const float BadgeWidth = 300f;
+        private const float BadgeHeight = 76f;
+        private const float BadgeSpacing = 12f;
+        private const float BadgeLabelFontSize = 20f;
+        private const float BadgeValueFontSize = 44f;
+
+        [InitializeOnLoadMethod]
+        private static void AutoRebuildOnCompile()
+        {
+            if (SessionState.GetBool("VertigoSceneRebuilt_LeftPanelFix_V4", false)) return;
+            SessionState.SetBool("VertigoSceneRebuilt_LeftPanelFix_V4", true);
+
+            EditorApplication.delayCall += () =>
+            {
+                SetupMainGameScene();
+            };
+        }
+
         [MenuItem("Tools/Vertigo/Setup MainGame Scene", priority = 1)]
         public static void SetupMainGameScene()
         {
@@ -73,8 +93,10 @@ namespace Vertigo.Editor
             Sprite zoneMapFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_zone_map_frame.png");
             Sprite zoneBg = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_bg.png");
             Sprite zoneCurrentBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_current.png");
-            Sprite zoneSuperBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_super.png");
-            Sprite zoneComingBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_coming.png");
+            // Note: despite its name, ui_card_panel_zone_super.png is a green gradient (used for the safe badge),
+            // while ui_card_panel_zone_white.png is a neutral gradient meant to be tinted (used gold for the super badge).
+            Sprite zoneGreenBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_super.png");
+            Sprite zoneWhiteBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_white.png");
             Sprite greyBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_grey_standard.png");
             Sprite orangeBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_orange_standard.png");
             Sprite spinBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_generic_button.png");
@@ -167,67 +189,61 @@ namespace Vertigo.Editor
             RectTransform badgesRT = badgesObj.GetComponent<RectTransform>();
             SetAnchors(badgesRT, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f));
             badgesRT.anchoredPosition = new Vector2(-40, -20);
-            badgesRT.sizeDelta = new Vector2(230, 130);
+            badgesRT.sizeDelta = new Vector2(BadgeWidth, BadgeHeight * 2 + BadgeSpacing);
 
-            // Super Zone Badge (Top)
+            // Super Zone Badge (Top) - neutral gradient sprite tinted gold
             GameObject superBadgeObj = CreateUIObject("ui_badge_super_zone", badgesObj.transform);
             RectTransform superRT = superBadgeObj.GetComponent<RectTransform>();
             SetAnchors(superRT, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-            superRT.anchoredPosition = new Vector2(0, 0);
-            superRT.sizeDelta = new Vector2(230, 56);
+            superRT.anchoredPosition = Vector2.zero;
+            superRT.sizeDelta = new Vector2(0, BadgeHeight);
             Image superBg = superBadgeObj.AddComponent<Image>();
-            superBg.sprite = zoneSuperBadge;
+            superBg.sprite = zoneWhiteBadge;
             superBg.type = Image.Type.Sliced;
+            superBg.color = new Color(0.85f, 0.52f, 0.08f, 1f);
             superBg.raycastTarget = false;
 
-            TMP_Text superLabel = CreateTMPText("ui_text_label", superBadgeObj.transform, "SÜPER\nBÖLGE", 12, FontStyles.Bold, TextAlignmentOptions.Left);
-            superLabel.color = new Color(0.95f, 0.82f, 0.20f, 1f);
-            superLabel.rectTransform.anchoredPosition = new Vector2(-60, 0);
-            superLabel.rectTransform.sizeDelta = new Vector2(70, 45);
+            TMP_Text superLabel = CreateTMPText("ui_text_label", superBadgeObj.transform, "SÜPER\nBÖLGE", BadgeLabelFontSize, FontStyles.Bold, TextAlignmentOptions.Left);
+            superLabel.color = new Color(1f, 0.93f, 0.70f, 1f);
+            superLabel.rectTransform.anchoredPosition = new Vector2(-80, 0);
+            superLabel.rectTransform.sizeDelta = new Vector2(110, 60);
 
-            TMP_Text superVal = CreateTMPText("ui_text_next_super_zone_value", superBadgeObj.transform, "30", 30, FontStyles.Bold, TextAlignmentOptions.Center);
-            superVal.color = new Color(0.98f, 0.85f, 0.25f, 1f);
-            superVal.rectTransform.anchoredPosition = new Vector2(5, 0);
-            superVal.rectTransform.sizeDelta = new Vector2(60, 45);
+            TMP_Text superVal = CreateTMPText("ui_text_next_super_zone_value", superBadgeObj.transform, "30", BadgeValueFontSize, FontStyles.Bold, TextAlignmentOptions.Center);
+            superVal.color = new Color(1f, 0.90f, 0.35f, 1f);
+            superVal.rectTransform.anchoredPosition = new Vector2(30, 0);
+            superVal.rectTransform.sizeDelta = new Vector2(80, 60);
             zoneBarSO.FindProperty("ui_text_next_super_zone_value").objectReferenceValue = superVal;
 
             GameObject superIconObj = CreateUIObject("ui_image_icon", superBadgeObj.transform);
             RectTransform sIconRT = superIconObj.GetComponent<RectTransform>();
-            sIconRT.anchoredPosition = new Vector2(68, 0);
-            sIconRT.sizeDelta = new Vector2(55, 36);
+            sIconRT.anchoredPosition = new Vector2(105, 0);
+            sIconRT.sizeDelta = new Vector2(80, 52);
             Image sIcon = superIconObj.AddComponent<Image>();
             sIcon.sprite = bayonetIcon;
+            sIcon.preserveAspect = true;
             sIcon.raycastTarget = false;
 
-            // Safe Zone Badge (Bottom)
+            // Safe Zone Badge (Bottom) - green gradient sprite
             GameObject safeBadgeObj = CreateUIObject("ui_badge_safe_zone", badgesObj.transform);
             RectTransform safeRT = safeBadgeObj.GetComponent<RectTransform>();
             SetAnchors(safeRT, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
-            safeRT.anchoredPosition = new Vector2(0, -64);
-            safeRT.sizeDelta = new Vector2(230, 56);
+            safeRT.anchoredPosition = new Vector2(0, -(BadgeHeight + BadgeSpacing));
+            safeRT.sizeDelta = new Vector2(0, BadgeHeight);
             Image safeBg = safeBadgeObj.AddComponent<Image>();
-            safeBg.sprite = zoneComingBadge;
+            safeBg.sprite = zoneGreenBadge;
             safeBg.type = Image.Type.Sliced;
             safeBg.raycastTarget = false;
 
-            TMP_Text safeLabel = CreateTMPText("ui_text_label", safeBadgeObj.transform, "GÜVENLİ\nBÖLGE", 12, FontStyles.Bold, TextAlignmentOptions.Left);
-            safeLabel.color = new Color(0.35f, 0.90f, 0.45f, 1f);
-            safeLabel.rectTransform.anchoredPosition = new Vector2(-60, 0);
-            safeLabel.rectTransform.sizeDelta = new Vector2(70, 45);
+            TMP_Text safeLabel = CreateTMPText("ui_text_label", safeBadgeObj.transform, "GÜVENLİ\nBÖLGE", BadgeLabelFontSize, FontStyles.Bold, TextAlignmentOptions.Left);
+            safeLabel.color = new Color(0.85f, 1f, 0.85f, 1f);
+            safeLabel.rectTransform.anchoredPosition = new Vector2(-80, 0);
+            safeLabel.rectTransform.sizeDelta = new Vector2(110, 60);
 
-            TMP_Text safeVal = CreateTMPText("ui_text_next_safe_zone_value", safeBadgeObj.transform, "15", 30, FontStyles.Bold, TextAlignmentOptions.Center);
-            safeVal.color = new Color(0.35f, 0.90f, 0.45f, 1f);
-            safeVal.rectTransform.anchoredPosition = new Vector2(5, 0);
-            safeVal.rectTransform.sizeDelta = new Vector2(60, 45);
+            TMP_Text safeVal = CreateTMPText("ui_text_next_safe_zone_value", safeBadgeObj.transform, "5", BadgeValueFontSize, FontStyles.Bold, TextAlignmentOptions.Center);
+            safeVal.color = Color.white;
+            safeVal.rectTransform.anchoredPosition = new Vector2(30, 0);
+            safeVal.rectTransform.sizeDelta = new Vector2(80, 60);
             zoneBarSO.FindProperty("ui_text_next_safe_zone_value").objectReferenceValue = safeVal;
-
-            GameObject safeIconObj = CreateUIObject("ui_image_icon", safeBadgeObj.transform);
-            RectTransform safeIconRT = safeIconObj.GetComponent<RectTransform>();
-            safeIconRT.anchoredPosition = new Vector2(68, 0);
-            safeIconRT.sizeDelta = new Vector2(36, 36);
-            Image safeIcon = safeIconObj.AddComponent<Image>();
-            safeIcon.sprite = zoneComingBadge;
-            safeIcon.raycastTarget = false;
 
             zoneBarSO.ApplyModifiedProperties();
 
@@ -244,7 +260,7 @@ namespace Vertigo.Editor
             Image leftBg = leftPanelObj.AddComponent<Image>();
             leftBg.sprite = neutralFrame;
             leftBg.type = Image.Type.Sliced;
-            leftBg.color = new Color(0.10f, 0.12f, 0.16f, 0.92f);
+            leftBg.color = Color.white; // Keep crisp silver/metallic outer frame
             leftBg.raycastTarget = false;
 
             InventoryView inventoryView = leftPanelObj.AddComponent<InventoryView>();
@@ -254,7 +270,7 @@ namespace Vertigo.Editor
             GameObject cashOutBtnObj = CreateButton("ui_button_cashout", leftPanelObj.transform, greyBtnSprite, "ÇIKIŞ", 24);
             RectTransform cashOutRT = cashOutBtnObj.GetComponent<RectTransform>();
             SetAnchors(cashOutRT, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
-            cashOutRT.anchoredPosition = new Vector2(0, -38);
+            cashOutRT.anchoredPosition = new Vector2(0, -36);
             cashOutRT.sizeDelta = new Vector2(195, 52);
             Button cashOutBtn = cashOutBtnObj.GetComponent<Button>();
             invSO.FindProperty("ui_button_cashout").objectReferenceValue = cashOutBtn;
@@ -263,38 +279,63 @@ namespace Vertigo.Editor
             GameObject slotsContainerObj = CreateUIObject("ui_container_slots", leftPanelObj.transform);
             RectTransform scRT = slotsContainerObj.GetComponent<RectTransform>();
             SetAnchors(scRT, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
-            scRT.offsetMin = new Vector2(12, 16);
-            scRT.offsetMax = new Vector2(-12, -75);
+            scRT.offsetMin = new Vector2(0, 16);
+            scRT.offsetMax = new Vector2(0, -82); // Clean gap below ÇIKIŞ button
 
             VerticalLayoutGroup vlg = slotsContainerObj.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 10;
+            vlg.padding = new RectOffset(0, 0, 4, 4);
+            vlg.spacing = 14;
             vlg.childControlWidth = true;
-            vlg.childControlHeight = false;
+            vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
             vlg.childAlignment = TextAnchor.UpperCenter;
 
-            // Template Slot for instantiating items
+            // Template Slot for instantiating items (Centered horizontally matching reference)
             GameObject slotTemplate = CreateUIObject("ui_item_reward_slot_template", slotsContainerObj.transform);
             RectTransform slotTemplateRT = slotTemplate.GetComponent<RectTransform>();
-            slotTemplateRT.sizeDelta = new Vector2(190, 52);
+            SetAnchors(slotTemplateRT, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f));
+            slotTemplateRT.sizeDelta = new Vector2(230, 56);
 
+            LayoutElement le = slotTemplate.AddComponent<LayoutElement>();
+            le.minHeight = 56;
+            le.preferredHeight = 56;
+            le.flexibleHeight = 0;
+            le.flexibleWidth = 1;
+
+            // HorizontalLayoutGroup centers the [Icon + Amount] pair perfectly inside the panel
             HorizontalLayoutGroup sHlg = slotTemplate.AddComponent<HorizontalLayoutGroup>();
-            sHlg.spacing = 15;
-            sHlg.childAlignment = TextAnchor.MiddleLeft;
+            sHlg.childAlignment = TextAnchor.MiddleCenter;
+            sHlg.spacing = 16;
             sHlg.childControlWidth = false;
             sHlg.childControlHeight = false;
             sHlg.childForceExpandWidth = false;
             sHlg.childForceExpandHeight = false;
 
+            // 1. Icon Image (clean sprite without awkward black square, perfectly centered)
             GameObject slotIconObj = CreateUIObject("ui_image_icon", slotTemplate.transform);
             RectTransform sIconRTransform = slotIconObj.GetComponent<RectTransform>();
-            sIconRTransform.sizeDelta = new Vector2(48, 48);
+            sIconRTransform.sizeDelta = new Vector2(54, 54);
             Image sIconImg = slotIconObj.AddComponent<Image>();
+            sIconImg.preserveAspect = true;
             sIconImg.raycastTarget = false;
 
-            TMP_Text slotAmt = CreateTMPText("ui_text_amount_value", slotTemplate.transform, "1", 24, FontStyles.Bold, TextAlignmentOptions.Left);
-            slotAmt.rectTransform.sizeDelta = new Vector2(110, 45);
+            // 2. Amount Text (Consistent left-aligned column with auto-sizing)
+            GameObject textObj = CreateUIObject("ui_text_amount_value", slotTemplate.transform);
+            RectTransform textRT = textObj.GetComponent<RectTransform>();
+            textRT.sizeDelta = new Vector2(80, 46);
+
+            TMP_Text slotAmt = textObj.AddComponent<TextMeshProUGUI>();
+            slotAmt.text = "1";
+            slotAmt.fontSize = 26;
+            slotAmt.fontStyle = FontStyles.Bold;
+            slotAmt.alignment = TextAlignmentOptions.MidlineLeft;
+            slotAmt.enableAutoSizing = true;
+            slotAmt.fontSizeMin = 18;
+            slotAmt.fontSizeMax = 26;
+            slotAmt.color = Color.white;
+            slotAmt.raycastTarget = false;
+            slotAmt.maskable = false;
 
             InventoryRewardSlotView slotViewComp = slotTemplate.AddComponent<InventoryRewardSlotView>();
             SerializedObject slotViewSO = new SerializedObject(slotViewComp);
@@ -368,6 +409,7 @@ namespace Vertigo.Editor
                 iconRT.sizeDelta = new Vector2(50, 50);
                 iconRT.anchoredPosition = new Vector2(0, 12);
                 Image iconImg = iconObj.AddComponent<Image>();
+                iconImg.preserveAspect = true;
                 iconImg.raycastTarget = false;
 
                 // Amount Text
@@ -386,13 +428,15 @@ namespace Vertigo.Editor
                 slicesListProp.GetArrayElementAtIndex(i).objectReferenceValue = sliceViewComp;
             }
 
-            // Indicator at Top
+            // Indicator at Top (Pinned at the top hinge pivot 0.5, 0.88)
             GameObject indicatorObj = CreateUIObject("ui_image_wheel_indicator", wheelCenter.transform);
             RectTransform indicatorRT = indicatorObj.GetComponent<RectTransform>();
-            indicatorRT.sizeDelta = new Vector2(55, 75);
-            indicatorRT.anchoredPosition = new Vector2(0, 255);
+            indicatorRT.pivot = new Vector2(0.5f, 0.88f);
+            indicatorRT.sizeDelta = new Vector2(44, 60);
+            indicatorRT.anchoredPosition = new Vector2(0, 260);
             Image indicatorImg = indicatorObj.AddComponent<Image>();
             indicatorImg.sprite = bronzeIndicator;
+            indicatorImg.preserveAspect = true;
             indicatorImg.raycastTarget = false;
             wheelViewSO.FindProperty("ui_transform_indicator").objectReferenceValue = indicatorRT;
             wheelViewSO.FindProperty("ui_image_wheel_indicator").objectReferenceValue = indicatorImg;
