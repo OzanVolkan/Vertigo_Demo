@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c077fe1754ab4d94da901b3733717ed0, type: 3}
+  m_Name: Reward_Rifle
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Rewards.Data.RewardDataSO
+  id: Reward_Rifle
+  displayName: Tier 2 Rifle
+  icon: {fileID: 21300000, guid: b74894cc7cbeed446937db0cdf6f1893, type: 3}
+  type: 2
+  amountPrefix: x
+  useAbbreviatedAmount: 1

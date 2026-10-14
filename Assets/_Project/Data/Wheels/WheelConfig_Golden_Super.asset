@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07012fd1d82d9634ea4308706760eac2, type: 3}
+  m_Name: WheelConfig_Golden_Super
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Wheel.Data.WheelConfigSO
+  wheelType: 2
+  wheelBaseSprite: {fileID: 21300000, guid: 0ba9b39a21543bc4abab2210b4bb48af, type: 3}
+  indicatorSprite: {fileID: 21300000, guid: 5b9c975f3bf1d8648b74336aba8c18b3, type: 3}
+  slices:
+  - sliceIndex: 0
+    reward: {fileID: 11400000, guid: 8e027bf1ec2a54d4e9bbf3811b3f8679, type: 2}
+    amount: 1
+    weight: 1
+  - sliceIndex: 1
+    reward: {fileID: 11400000, guid: 830cc41bfe3027348a22f0efbe19f465, type: 2}
+    amount: 2
+    weight: 1.2
+  - sliceIndex: 2
+    reward: {fileID: 11400000, guid: 44b10120b37254544864c5ac0f2ce6c1, type: 2}
+    amount: 100
+    weight: 1
+  - sliceIndex: 3
+    reward: {fileID: 11400000, guid: 5d046696d013fa743837e066fc039db9, type: 2}
+    amount: 5000
+    weight: 1.2
+  - sliceIndex: 4
+    reward: {fileID: 11400000, guid: 93d8b091f532b564fb5d06d4396b56b2, type: 2}
+    amount: 2
+    weight: 0.8
+  - sliceIndex: 5
+    reward: {fileID: 11400000, guid: a8bec4db41ea36b418225532f146255a, type: 2}
+    amount: 2
+    weight: 0.8
+  - sliceIndex: 6
+    reward: {fileID: 11400000, guid: 44b10120b37254544864c5ac0f2ce6c1, type: 2}
+    amount: 250
+    weight: 0.7
+  - sliceIndex: 7
+    reward: {fileID: 11400000, guid: 5d046696d013fa743837e066fc039db9, type: 2}
+    amount: 10000
+    weight: 0.9
