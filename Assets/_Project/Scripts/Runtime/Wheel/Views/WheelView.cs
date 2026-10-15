@@ -22,6 +22,24 @@ namespace Vertigo.Wheel.Views
         [Header("Slices")]
         [SerializeField] private List<WheelSliceView> ui_slice_views = new List<WheelSliceView>();
 
+        [Header("Slice Layout Configuration")]
+        [Tooltip("Distance from wheel center to slice items")]
+        [SerializeField, Range(80f, 260f)] private float sliceRadialDistance = 160f;
+        [Tooltip("Size of the slice item container")]
+        [SerializeField] private Vector2 sliceContentSize = new Vector2(90f, 90f);
+        [Tooltip("Icon dimensions")]
+        [SerializeField] private Vector2 iconSize = new Vector2(50f, 50f);
+        [Tooltip("Icon position offset inside the slice content")]
+        [SerializeField] private Vector2 iconOffset = new Vector2(0f, 12f);
+        [Tooltip("Amount text dimensions")]
+        [SerializeField] private Vector2 textSize = new Vector2(90f, 26f);
+        [Tooltip("Amount text position offset inside the slice content")]
+        [SerializeField] private Vector2 textOffset = new Vector2(0f, -22f);
+        [Tooltip("Font size for the amount text")]
+        [SerializeField, Range(10f, 36f)] private float textFontSize = 18f;
+        [Tooltip("Win shine effect dimensions")]
+        [SerializeField] private Vector2 shineSize = new Vector2(110f, 110f);
+
         [Header("Indicator Settings")]
         [Tooltip("Deflection angle when a slice peg pushes the needle")]
         [SerializeField, Range(5f, 35f)] private float indicatorKickAngle = 18f;
@@ -223,6 +241,58 @@ namespace Vertigo.Wheel.Views
             {
                 ui_slice_views = new List<WheelSliceView>(GetComponentsInChildren<WheelSliceView>(true));
             }
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorApplication.delayCall += () =>
+                {
+                    if (this != null)
+                    {
+                        ApplySliceLayout();
+                    }
+                };
+            }
+#endif
         }
+
+#if UNITY_EDITOR
+        [ContextMenu("Apply Slice Layout")]
+        public void ApplySliceLayout()
+        {
+            if (ui_slice_views == null || ui_slice_views.Count == 0)
+            {
+                ui_slice_views = new List<WheelSliceView>(GetComponentsInChildren<WheelSliceView>(true));
+            }
+
+            int count = ui_slice_views.Count;
+            if (count == 0) return;
+
+            for (int i = 0; i < count; i++)
+            {
+                var slice = ui_slice_views[i];
+                if (slice == null) continue;
+
+                UnityEditor.Undo.RecordObject(slice.gameObject, "Apply Slice Layout");
+
+                RectTransform sliceRT = slice.GetComponent<RectTransform>();
+                if (sliceRT != null)
+                {
+                    sliceRT.localRotation = Quaternion.Euler(0, 0, -i * (360f / count));
+                    sliceRT.anchoredPosition = Vector2.zero;
+                }
+
+                slice.ApplyLayout(
+                    sliceRadialDistance,
+                    sliceContentSize,
+                    iconSize,
+                    iconOffset,
+                    textSize,
+                    textOffset,
+                    textFontSize,
+                    shineSize);
+            }
+        }
+#endif
     }
 }

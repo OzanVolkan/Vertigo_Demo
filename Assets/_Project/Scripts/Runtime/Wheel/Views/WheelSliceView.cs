@@ -75,5 +75,55 @@ namespace Vertigo.Wheel.Views
         {
             _winTween?.Kill();
         }
+
+#if UNITY_EDITOR
+        public void ApplyLayout(
+            float radialDistance,
+            Vector2 contentSize,
+            Vector2 iconSize,
+            Vector2 iconOffset,
+            Vector2 textSize,
+            Vector2 textOffset,
+            float fontSize,
+            Vector2 shineSize)
+        {
+            Transform contentTrans = transform.Find("ui_slice_content");
+            if (contentTrans != null && contentTrans.TryGetComponent(out RectTransform contentRT))
+            {
+                UnityEditor.Undo.RecordObject(contentRT, "Adjust Slice Content Layout");
+                contentRT.anchoredPosition = new Vector2(0f, radialDistance);
+                contentRT.sizeDelta = contentSize;
+                UnityEditor.EditorUtility.SetDirty(contentRT);
+            }
+
+            if (ui_image_icon != null && ui_image_icon.TryGetComponent(out RectTransform iconRT))
+            {
+                UnityEditor.Undo.RecordObject(iconRT, "Adjust Slice Icon Layout");
+                iconRT.sizeDelta = iconSize;
+                iconRT.anchoredPosition = iconOffset;
+                UnityEditor.EditorUtility.SetDirty(iconRT);
+            }
+
+            if (ui_text_amount_value != null && ui_text_amount_value.TryGetComponent(out RectTransform textRT))
+            {
+                UnityEditor.Undo.RecordObject(textRT, "Adjust Slice Text Layout");
+                UnityEditor.Undo.RecordObject(ui_text_amount_value, "Adjust Slice Text Font");
+                textRT.sizeDelta = textSize;
+                textRT.anchoredPosition = textOffset;
+                ui_text_amount_value.fontSize = fontSize;
+                UnityEditor.EditorUtility.SetDirty(textRT);
+                UnityEditor.EditorUtility.SetDirty(ui_text_amount_value);
+            }
+
+            if (ui_image_shine != null && ui_image_shine.TryGetComponent(out RectTransform shineRT))
+            {
+                UnityEditor.Undo.RecordObject(shineRT, "Adjust Slice Shine Layout");
+                shineRT.sizeDelta = shineSize;
+                UnityEditor.EditorUtility.SetDirty(shineRT);
+            }
+
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+#endif
     }
 }

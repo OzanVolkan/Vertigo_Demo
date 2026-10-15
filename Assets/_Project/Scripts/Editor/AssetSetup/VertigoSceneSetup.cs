@@ -521,6 +521,7 @@ namespace Vertigo.Editor
             wheelViewSO.FindProperty("ui_button_spin").objectReferenceValue = spinBtn;
 
             wheelViewSO.ApplyModifiedProperties();
+            wheelView.ApplySliceLayout();
 
             // =========================================================================
             // E. BOMB GAME OVER POPUP
