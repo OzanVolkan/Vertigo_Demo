@@ -43,6 +43,12 @@ namespace Vertigo.Zone.Controllers
             LoadCurrentZone();
         }
 
+        public void JumpToZone(int targetZone)
+        {
+            currentZoneNumber = Mathf.Max(1, targetZone);
+            LoadCurrentZone();
+        }
+
         public void ResetToStart()
         {
             currentZoneNumber = 1;

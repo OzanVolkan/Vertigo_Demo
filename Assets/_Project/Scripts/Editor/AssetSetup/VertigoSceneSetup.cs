@@ -10,6 +10,7 @@ using UnityEngine.UI;
 using Vertigo.Core.State;
 using Vertigo.Rewards.Controllers;
 using Vertigo.Rewards.Views;
+using Vertigo.Testing;
 using Vertigo.UI.Panels;
 using Vertigo.Wheel.Controllers;
 using Vertigo.Wheel.Views;
@@ -60,6 +61,7 @@ namespace Vertigo.Editor
             ZoneManager zoneManager = coreObj.AddComponent<ZoneManager>();
             WheelController wheelController = coreObj.AddComponent<WheelController>();
             SessionInventoryManager inventoryManager = coreObj.AddComponent<SessionInventoryManager>();
+            ZoneTestManager testManager = coreObj.AddComponent<ZoneTestManager>();
 
             // Load Zone Config
             ZoneManagerConfigSO zoneConfig = AssetDatabase.LoadAssetAtPath<ZoneManagerConfigSO>("Assets/_Project/Data/Zones/ZoneConfig_Default.asset");
@@ -97,6 +99,9 @@ namespace Vertigo.Editor
             Sprite bombIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_icon_death.png");
             Sprite bayonetIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_icon_mle_bayonet_easter_time.png");
             Sprite starFlash = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/star_flash_alpha.png");
+            Sprite bronzeFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_particle_frame_bronze.png");
+            Sprite silverFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_particle_frame_silver.png");
+            Sprite goldFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_particle_frame_gold.png");
 
             // 4. Main Canvas Setup (Scale With Screen Size, Match = 0, Responsive 20:9, 16:9, 4:3)
             GameObject canvasObj = new GameObject("ui_canvas_main");
@@ -310,21 +315,50 @@ namespace Vertigo.Editor
             Button cashOutBtn = cashOutBtnObj.GetComponent<Button>();
             invSO.FindProperty("ui_button_cashout").objectReferenceValue = cashOutBtn;
 
-            // Slots Container with Vertical Layout
-            GameObject slotsContainerObj = CreateUIObject("ui_container_slots", leftPanelObj.transform);
+            // Scroll View & Viewport with RectMask2D to prevent overflow
+            GameObject scrollViewObj = CreateUIObject("ui_scrollview_inventory", leftPanelObj.transform);
+            RectTransform svRT = scrollViewObj.GetComponent<RectTransform>();
+            SetAnchors(svRT, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
+            svRT.offsetMin = new Vector2(0, 16);
+            svRT.offsetMax = new Vector2(0, -82); // Below ÇIKIŞ button
+
+            // Background image with raycastTarget = true so the scroll view catches drag and mouse wheel
+            Image scrollBg = scrollViewObj.AddComponent<Image>();
+            scrollBg.color = new Color(0, 0, 0, 0); // 100% transparent
+            scrollBg.raycastTarget = true;
+            scrollBg.maskable = true;
+
+            scrollViewObj.AddComponent<RectMask2D>();
+
+            ScrollRect scrollRect = scrollViewObj.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Elastic;
+            scrollRect.elasticity = 0.1f;
+            scrollRect.scrollSensitivity = 30f;
+            scrollRect.viewport = svRT;
+
+            // Slots Container with Vertical Layout & ContentSizeFitter
+            GameObject slotsContainerObj = CreateUIObject("ui_container_slots", scrollViewObj.transform);
             RectTransform scRT = slotsContainerObj.GetComponent<RectTransform>();
-            SetAnchors(scRT, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
-            scRT.offsetMin = new Vector2(0, 16);
-            scRT.offsetMax = new Vector2(0, -82); // Clean gap below ÇIKIŞ button
+            SetAnchors(scRT, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f));
+            scRT.anchoredPosition = Vector2.zero;
+            scRT.sizeDelta = Vector2.zero;
+
+            scrollRect.content = scRT;
 
             VerticalLayoutGroup vlg = slotsContainerObj.AddComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset(0, 0, 4, 4);
+            vlg.padding = new RectOffset(0, 0, 4, 12);
             vlg.spacing = 14;
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
             vlg.childAlignment = TextAnchor.UpperCenter;
+
+            ContentSizeFitter csf = slotsContainerObj.AddComponent<ContentSizeFitter>();
+            csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // Template Slot for instantiating items (Centered horizontally matching reference)
             GameObject slotTemplate = CreateUIObject("ui_item_reward_slot_template", slotsContainerObj.transform);
@@ -354,6 +388,7 @@ namespace Vertigo.Editor
             Image sIconImg = slotIconObj.AddComponent<Image>();
             sIconImg.preserveAspect = true;
             sIconImg.raycastTarget = false;
+            sIconImg.maskable = true;
 
             // 2. Amount Text (Consistent left-aligned column with auto-sizing)
             GameObject textObj = CreateUIObject("ui_text_amount_value", slotTemplate.transform);
@@ -370,7 +405,7 @@ namespace Vertigo.Editor
             slotAmt.fontSizeMax = 26;
             slotAmt.color = Color.white;
             slotAmt.raycastTarget = false;
-            slotAmt.maskable = false;
+            slotAmt.maskable = true;
 
             InventoryRewardSlotView slotViewComp = slotTemplate.AddComponent<InventoryRewardSlotView>();
             SerializedObject slotViewSO = new SerializedObject(slotViewComp);
@@ -380,6 +415,7 @@ namespace Vertigo.Editor
 
             slotTemplate.SetActive(false); // Inactive template
 
+            invSO.FindProperty("ui_scroll_rect").objectReferenceValue = scrollRect;
             invSO.FindProperty("ui_container_slots").objectReferenceValue = slotsContainerObj.transform;
             invSO.FindProperty("slotPrefab").objectReferenceValue = slotViewComp;
             invSO.ApplyModifiedProperties();
@@ -543,6 +579,32 @@ namespace Vertigo.Editor
             bpSO.ApplyModifiedProperties();
 
             bombPopup.SetActive(false);
+
+            // =========================================================================
+            // F. REWARD COLLECTION EFFECT CONTAINER
+            // =========================================================================
+            GameObject particleContainerObj = CreateUIObject("ui_particle_container", canvasObj.transform);
+            RectTransform particleContainerRT = particleContainerObj.GetComponent<RectTransform>();
+            SetAnchors(particleContainerRT, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
+            particleContainerRT.offsetMin = Vector2.zero;
+            particleContainerRT.offsetMax = Vector2.zero;
+
+            // Render below popups, above gameplay panels
+            particleContainerObj.transform.SetSiblingIndex(bombPopup.transform.GetSiblingIndex());
+
+            RewardCollectEffectView collectEffectView = particleContainerObj.AddComponent<RewardCollectEffectView>();
+            SerializedObject ceSO = new SerializedObject(collectEffectView);
+            ceSO.FindProperty("bronzeFrameSprite").objectReferenceValue = bronzeFrameSprite;
+            ceSO.FindProperty("silverFrameSprite").objectReferenceValue = silverFrameSprite;
+            ceSO.FindProperty("goldFrameSprite").objectReferenceValue = goldFrameSprite;
+            ceSO.FindProperty("ui_particle_container").objectReferenceValue = particleContainerRT;
+            ceSO.ApplyModifiedProperties();
+
+            // Wire GameManager references
+            gmSO.FindProperty("wheelView").objectReferenceValue = wheelView;
+            gmSO.FindProperty("inventoryView").objectReferenceValue = inventoryView;
+            gmSO.FindProperty("rewardCollectEffect").objectReferenceValue = collectEffectView;
+            gmSO.ApplyModifiedProperties();
 
             // Save Scene
             EditorSceneManager.SaveScene(scene, ScenePath);

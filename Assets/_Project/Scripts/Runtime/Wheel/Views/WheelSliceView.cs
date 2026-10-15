@@ -16,6 +16,8 @@ namespace Vertigo.Wheel.Views
 
         private Tween _winTween;
 
+        public Vector3 IconWorldPosition => ui_image_icon != null ? ui_image_icon.transform.position : transform.position;
+
         public void Setup(IWheelSliceData sliceData)
         {
             _winTween?.Kill();

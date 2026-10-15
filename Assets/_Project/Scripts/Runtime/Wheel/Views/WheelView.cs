@@ -186,6 +186,15 @@ namespace Vertigo.Wheel.Views
             wheelController?.OnSpinAnimationComplete();
         }
 
+        public Vector3 GetWinningSlicePosition()
+        {
+            if (_currentTargetIndex >= 0 && _currentTargetIndex < ui_slice_views.Count && ui_slice_views[_currentTargetIndex] != null)
+            {
+                return ui_slice_views[_currentTargetIndex].IconWorldPosition;
+            }
+            return ui_transform_wheel_rotator != null ? ui_transform_wheel_rotator.position : transform.position;
+        }
+
         private void TriggerIndicatorTick()
         {
             if (ui_transform_indicator == null) return;

@@ -14,25 +14,42 @@ namespace Vertigo.Wheel.Controllers
         /// <summary>
         /// Selects a slice based on weights.
         /// </summary>
-        public static int RollWeightedSliceIndex(IReadOnlyList<WheelSliceData> slices)
+        public static int RollWeightedSliceIndex(IReadOnlyList<WheelSliceData> slices, bool ignoreBombs = false)
         {
             if (slices == null || slices.Count == 0) return 0;
 
             float totalWeight = 0f;
             for (int i = 0; i < slices.Count; i++)
             {
+                if (ignoreBombs && slices[i].Reward != null && slices[i].Reward.IsBomb)
+                    continue;
+
                 totalWeight += Mathf.Max(0.01f, slices[i].Weight);
             }
+
+            if (totalWeight <= 0f) return 0;
 
             float roll = UnityEngine.Random.Range(0f, totalWeight);
             float cumulative = 0f;
 
             for (int i = 0; i < slices.Count; i++)
             {
+                if (ignoreBombs && slices[i].Reward != null && slices[i].Reward.IsBomb)
+                    continue;
+
                 cumulative += Mathf.Max(0.01f, slices[i].Weight);
                 if (roll <= cumulative)
                 {
                     return i;
+                }
+            }
+
+            if (ignoreBombs)
+            {
+                for (int i = 0; i < slices.Count; i++)
+                {
+                    if (slices[i].Reward == null || !slices[i].Reward.IsBomb)
+                        return i;
                 }
             }
 

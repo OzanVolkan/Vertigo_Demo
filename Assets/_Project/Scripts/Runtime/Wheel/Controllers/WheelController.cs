@@ -13,12 +13,18 @@ namespace Vertigo.Wheel.Controllers
 
         [Header("Runtime State")]
         [SerializeField] private WheelConfigSO currentConfig;
+        [SerializeField] private bool disableBombChance = false;
         private bool _isSpinning;
         private int _currentTargetIndex;
         private float _currentWheelAngle;
 
         public WheelConfigSO CurrentConfig => currentConfig;
         public bool IsSpinning => _isSpinning;
+        public bool DisableBombChance
+        {
+            get => disableBombChance;
+            set => disableBombChance = value;
+        }
 
         private void OnEnable()
         {
@@ -53,8 +59,8 @@ namespace Vertigo.Wheel.Controllers
 
             _isSpinning = true;
 
-            // Roll target slice based on slice weights
-            _currentTargetIndex = WheelMathUtility.RollWeightedSliceIndex(currentConfig.ConcreteSlices);
+            // Roll target slice based on slice weights (respecting disableBombChance test setting)
+            _currentTargetIndex = WheelMathUtility.RollWeightedSliceIndex(currentConfig.ConcreteSlices, disableBombChance);
             
             // Calculate target angle (with natural offset) and exact center angle
             float targetAngle = WheelMathUtility.CalculateTargetRotation(

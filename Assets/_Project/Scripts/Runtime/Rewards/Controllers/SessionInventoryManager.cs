@@ -26,7 +26,18 @@ namespace Vertigo.Rewards.Controllers
             GameEvents.OnCashOutRequested -= OnCashOutRequested;
         }
 
+        public int GetAmount(string rewardId)
+        {
+            if (string.IsNullOrEmpty(rewardId)) return 0;
+            return _sessionItems.TryGetValue(rewardId, out var item) ? item.amount : 0;
+        }
+
         public void AddReward(IRewardData reward, int amount)
+        {
+            AddReward(reward, amount, false);
+        }
+
+        public void AddReward(IRewardData reward, int amount, bool suppressInventoryUpdateEvent)
         {
             if (reward == null || reward.IsBomb || amount <= 0) return;
 
@@ -40,7 +51,10 @@ namespace Vertigo.Rewards.Controllers
             }
 
             GameEvents.FireRewardCollected(reward, amount);
-            GameEvents.FireInventoryUpdated(_sessionItems);
+            if (!suppressInventoryUpdateEvent)
+            {
+                GameEvents.FireInventoryUpdated(_sessionItems);
+            }
             Debug.Log($"[SessionInventory] Added {reward.DisplayName} x{amount}. Total unique items: {_sessionItems.Count}");
         }
 
