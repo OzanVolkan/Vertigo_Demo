@@ -116,9 +116,13 @@ namespace Vertigo.Editor
             {
                 return new Vector4(20, 20, 20, 20);
             }
+            if (name.Contains("ui_badge_frame"))
+            {
+                return new Vector4(48, 48, 48, 48);
+            }
             if (name.Contains("ui_card_frame_12px"))
             {
-                return new Vector4(12, 12, 12, 12);
+                return new Vector4(28, 28, 28, 28);
             }
             if (name.Contains("ui_card_frame_4px"))
             {
@@ -126,7 +130,7 @@ namespace Vertigo.Editor
             }
             if (name.Contains("ui_card_frame_gardient"))
             {
-                return new Vector4(12, 12, 12, 12);
+                return new Vector4(28, 28, 28, 28);
             }
             if (name.Contains("ui_card_panel_zone") || name.Contains("ui_card_zone_map"))
             {

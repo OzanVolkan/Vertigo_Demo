@@ -24,24 +24,12 @@ namespace Vertigo.Editor
         private const string ScenePath = "Assets/_Project/Scenes/MainGame.unity";
 
         // Badge layout (reference resolution 1920x1080, match width).
-        // Font sizes below ~18 end up only a few physical pixels tall on small screens and look jagged.
-        private const float BadgeWidth = 300f;
-        private const float BadgeHeight = 76f;
-        private const float BadgeSpacing = 12f;
-        private const float BadgeLabelFontSize = 20f;
-        private const float BadgeValueFontSize = 44f;
+        private const float BadgeWidth = 210f;
+        private const float BadgeHeight = 62f;
+        private const float BadgeSpacing = 8f;
+        private const float BadgeLabelFontSize = 18f;
+        private const float BadgeValueFontSize = 36f;
 
-        [InitializeOnLoadMethod]
-        private static void AutoRebuildOnCompile()
-        {
-            if (SessionState.GetBool("VertigoSceneRebuilt_LeftPanelFix_V4", false)) return;
-            SessionState.SetBool("VertigoSceneRebuilt_LeftPanelFix_V4", true);
-
-            EditorApplication.delayCall += () =>
-            {
-                SetupMainGameScene();
-            };
-        }
 
         [MenuItem("Tools/Vertigo/Setup MainGame Scene", priority = 1)]
         public static void SetupMainGameScene()
@@ -90,11 +78,13 @@ namespace Vertigo.Editor
 
             // Load Sprites
             Sprite neutralFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_frame_12px_neutral.png");
-            Sprite zoneMapFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_zone_map_frame.png");
+            Sprite zoneMapFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_zonebar_frame.png");
             Sprite zoneBg = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_bg.png");
-            Sprite zoneCurrentBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_current.png");
-            // Note: despite its name, ui_card_panel_zone_super.png is a green gradient (used for the safe badge),
-            // while ui_card_panel_zone_white.png is a neutral gradient meant to be tinted (used gold for the super badge).
+            Sprite zoneCurrentBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone.png");
+            Sprite superBadgeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_frame_super.png");
+            Sprite safeBadgeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_frame_safe.png");
+            Sprite superSwordIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_icon_badge_sword.png");
+            Sprite safeDeltaIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_icon_badge_delta.png");
             Sprite zoneGreenBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_super.png");
             Sprite zoneWhiteBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_white.png");
             Sprite greyBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_grey_standard.png");
@@ -126,12 +116,12 @@ namespace Vertigo.Editor
             RectTransform topBarRT = topBarObj.GetComponent<RectTransform>();
             SetAnchors(topBarRT, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
             topBarRT.anchoredPosition = new Vector2(0, -25);
-            topBarRT.sizeDelta = new Vector2(680, 68);
+            topBarRT.sizeDelta = new Vector2(650, 48);
 
             Image topBarBg = topBarObj.AddComponent<Image>();
             topBarBg.sprite = zoneMapFrame;
             topBarBg.type = Image.Type.Sliced;
-            topBarBg.color = new Color(0.12f, 0.14f, 0.18f, 0.95f);
+            topBarBg.color = Color.white;
             topBarBg.raycastTarget = false;
 
             ZoneBarView zoneBarView = topBarObj.AddComponent<ZoneBarView>();
@@ -141,39 +131,61 @@ namespace Vertigo.Editor
             GameObject slotsContainer = CreateUIObject("ui_container_zone_slots", topBarObj.transform);
             RectTransform slotsRT = slotsContainer.GetComponent<RectTransform>();
             SetAnchors(slotsRT, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
-            slotsRT.offsetMin = new Vector2(10, 6);
-            slotsRT.offsetMax = new Vector2(-10, -6);
+            slotsRT.offsetMin = new Vector2(10, 0);
+            slotsRT.offsetMax = new Vector2(-10, 0);
 
             HorizontalLayoutGroup hlg = slotsContainer.AddComponent<HorizontalLayoutGroup>();
             hlg.childAlignment = TextAnchor.MiddleCenter;
-            hlg.spacing = 8;
+            hlg.spacing = 4;
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
             hlg.childForceExpandWidth = true;
             hlg.childForceExpandHeight = true;
 
-            // Generate 9 slots
+            // Generate 13 slots (matching Image 2 reference)
+            const int slotCount = 13;
             SerializedProperty slotTextsProp = zoneBarSO.FindProperty("ui_slot_texts");
             SerializedProperty slotBgsProp = zoneBarSO.FindProperty("ui_slot_backgrounds");
             slotTextsProp.ClearArray();
             slotBgsProp.ClearArray();
 
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < slotCount; i++)
             {
                 GameObject slot = CreateUIObject($"ui_slot_{i}", slotsContainer.transform);
-                Image slotBg = slot.AddComponent<Image>();
+
+                // Child Badge (ui_image_badge)
+                GameObject badgeObj = CreateUIObject("ui_image_badge", slot.transform);
+                RectTransform badgeRT = badgeObj.GetComponent<RectTransform>();
+                badgeRT.anchorMin = new Vector2(0.5f, 0.5f);
+                badgeRT.anchorMax = new Vector2(0.5f, 0.5f);
+                badgeRT.pivot = new Vector2(0.5f, 0.5f);
+                badgeRT.anchoredPosition = Vector2.zero;
+                badgeRT.sizeDelta = new Vector2(46, 54);
+
+                Image slotBg = badgeObj.AddComponent<Image>();
                 slotBg.sprite = zoneCurrentBadge;
-                slotBg.type = Image.Type.Sliced;
+                slotBg.type = Image.Type.Simple;
+                slotBg.preserveAspect = false;
                 slotBg.color = Color.white;
                 slotBg.raycastTarget = false;
-                slotBg.enabled = (i == 4); // Index 4 is center (current)
+                slotBg.maskable = false;
+                slotBg.enabled = (i == 0); // Slot 0 is current zone 1
 
-                TMP_Text slotTxt = CreateTMPText("ui_text_slot_value", slot.transform, (i + 1).ToString(), 24, FontStyles.Bold, TextAlignmentOptions.Center);
-                slotTxt.color = (i == 4) ? Color.black : new Color(0.85f, 0.85f, 0.85f, 1f);
-                RectTransform stRT = slotTxt.rectTransform;
+                // Child Text (ui_text_slot_value)
+                GameObject slotTextObj = CreateUIObject("ui_text_slot_value", slot.transform);
+                RectTransform stRT = slotTextObj.GetComponent<RectTransform>();
                 SetAnchors(stRT, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
                 stRT.offsetMin = Vector2.zero;
                 stRT.offsetMax = Vector2.zero;
+
+                TMP_Text slotTxt = slotTextObj.AddComponent<TextMeshProUGUI>();
+                slotTxt.text = (i + 1).ToString();
+                slotTxt.fontSize = 24;
+                slotTxt.fontStyle = (i == 0) ? FontStyles.Bold : FontStyles.Normal;
+                slotTxt.alignment = TextAlignmentOptions.Center;
+                slotTxt.color = (i == 0) ? new Color(0.08f, 0.08f, 0.10f, 1f) : Color.white;
+                slotTxt.raycastTarget = false;
+                slotTxt.maskable = false;
 
                 slotTextsProp.InsertArrayElementAtIndex(i);
                 slotTextsProp.GetArrayElementAtIndex(i).objectReferenceValue = slotTxt;
@@ -191,59 +203,77 @@ namespace Vertigo.Editor
             badgesRT.anchoredPosition = new Vector2(-40, -20);
             badgesRT.sizeDelta = new Vector2(BadgeWidth, BadgeHeight * 2 + BadgeSpacing);
 
-            // Super Zone Badge (Top) - neutral gradient sprite tinted gold
+            // Super Zone Badge (Top) - Custom gold frame & claymore sword
             GameObject superBadgeObj = CreateUIObject("ui_badge_super_zone", badgesObj.transform);
             RectTransform superRT = superBadgeObj.GetComponent<RectTransform>();
             SetAnchors(superRT, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
             superRT.anchoredPosition = Vector2.zero;
             superRT.sizeDelta = new Vector2(0, BadgeHeight);
             Image superBg = superBadgeObj.AddComponent<Image>();
-            superBg.sprite = zoneWhiteBadge;
+            superBg.sprite = superBadgeFrame != null ? superBadgeFrame : zoneWhiteBadge;
             superBg.type = Image.Type.Sliced;
-            superBg.color = new Color(0.85f, 0.52f, 0.08f, 1f);
+            superBg.color = Color.white;
             superBg.raycastTarget = false;
 
-            TMP_Text superLabel = CreateTMPText("ui_text_label", superBadgeObj.transform, "SÜPER\nBÖLGE", BadgeLabelFontSize, FontStyles.Bold, TextAlignmentOptions.Left);
-            superLabel.color = new Color(1f, 0.93f, 0.70f, 1f);
-            superLabel.rectTransform.anchoredPosition = new Vector2(-80, 0);
-            superLabel.rectTransform.sizeDelta = new Vector2(110, 60);
+            TMP_Text superLabel = CreateTMPText("ui_text_label", superBadgeObj.transform, "SÜPER\nBÖLGE", BadgeLabelFontSize, FontStyles.Bold, TextAlignmentOptions.MidlineLeft);
+            superLabel.color = new Color(0.92f, 0.65f, 0.12f, 1f);
+            superLabel.lineSpacing = -15f;
+            SetAnchors(superLabel.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f));
+            superLabel.rectTransform.anchoredPosition = new Vector2(16, 0);
+            superLabel.rectTransform.sizeDelta = new Vector2(75, 50);
 
-            TMP_Text superVal = CreateTMPText("ui_text_next_super_zone_value", superBadgeObj.transform, "30", BadgeValueFontSize, FontStyles.Bold, TextAlignmentOptions.Center);
-            superVal.color = new Color(1f, 0.90f, 0.35f, 1f);
-            superVal.rectTransform.anchoredPosition = new Vector2(30, 0);
-            superVal.rectTransform.sizeDelta = new Vector2(80, 60);
+            TMP_Text superVal = CreateTMPText("ui_text_next_super_zone_value", superBadgeObj.transform, "30", BadgeValueFontSize, FontStyles.Bold, TextAlignmentOptions.MidlineLeft);
+            superVal.color = new Color(1.0f, 0.73f, 0.12f, 1f);
+            SetAnchors(superVal.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f));
+            superVal.rectTransform.anchoredPosition = new Vector2(92, 0);
+            superVal.rectTransform.sizeDelta = new Vector2(55, 52);
             zoneBarSO.FindProperty("ui_text_next_super_zone_value").objectReferenceValue = superVal;
 
             GameObject superIconObj = CreateUIObject("ui_image_icon", superBadgeObj.transform);
             RectTransform sIconRT = superIconObj.GetComponent<RectTransform>();
-            sIconRT.anchoredPosition = new Vector2(105, 0);
-            sIconRT.sizeDelta = new Vector2(80, 52);
+            SetAnchors(sIconRT, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f));
+            sIconRT.anchoredPosition = new Vector2(-10, 9);
+            sIconRT.sizeDelta = new Vector2(82, 82);
             Image sIcon = superIconObj.AddComponent<Image>();
-            sIcon.sprite = bayonetIcon;
+            sIcon.sprite = superSwordIcon != null ? superSwordIcon : bayonetIcon;
             sIcon.preserveAspect = true;
             sIcon.raycastTarget = false;
 
-            // Safe Zone Badge (Bottom) - green gradient sprite
+            // Safe Zone Badge (Bottom) - Custom green frame & Delta triangle
             GameObject safeBadgeObj = CreateUIObject("ui_badge_safe_zone", badgesObj.transform);
             RectTransform safeRT = safeBadgeObj.GetComponent<RectTransform>();
             SetAnchors(safeRT, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0.5f, 1));
             safeRT.anchoredPosition = new Vector2(0, -(BadgeHeight + BadgeSpacing));
             safeRT.sizeDelta = new Vector2(0, BadgeHeight);
             Image safeBg = safeBadgeObj.AddComponent<Image>();
-            safeBg.sprite = zoneGreenBadge;
+            safeBg.sprite = safeBadgeFrame != null ? safeBadgeFrame : zoneGreenBadge;
             safeBg.type = Image.Type.Sliced;
+            safeBg.color = Color.white;
             safeBg.raycastTarget = false;
 
-            TMP_Text safeLabel = CreateTMPText("ui_text_label", safeBadgeObj.transform, "GÜVENLİ\nBÖLGE", BadgeLabelFontSize, FontStyles.Bold, TextAlignmentOptions.Left);
-            safeLabel.color = new Color(0.85f, 1f, 0.85f, 1f);
-            safeLabel.rectTransform.anchoredPosition = new Vector2(-80, 0);
-            safeLabel.rectTransform.sizeDelta = new Vector2(110, 60);
+            TMP_Text safeLabel = CreateTMPText("ui_text_label", safeBadgeObj.transform, "GÜVENLİ\nBÖLGE", 17f, FontStyles.Bold, TextAlignmentOptions.MidlineLeft);
+            safeLabel.color = new Color(0.62f, 0.92f, 0.30f, 1f);
+            safeLabel.lineSpacing = -15f;
+            SetAnchors(safeLabel.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f));
+            safeLabel.rectTransform.anchoredPosition = new Vector2(16, 0);
+            safeLabel.rectTransform.sizeDelta = new Vector2(75, 50);
 
-            TMP_Text safeVal = CreateTMPText("ui_text_next_safe_zone_value", safeBadgeObj.transform, "5", BadgeValueFontSize, FontStyles.Bold, TextAlignmentOptions.Center);
-            safeVal.color = Color.white;
-            safeVal.rectTransform.anchoredPosition = new Vector2(30, 0);
-            safeVal.rectTransform.sizeDelta = new Vector2(80, 60);
+            TMP_Text safeVal = CreateTMPText("ui_text_next_safe_zone_value", safeBadgeObj.transform, "15", BadgeValueFontSize, FontStyles.Bold, TextAlignmentOptions.MidlineLeft);
+            safeVal.color = new Color(0.65f, 0.98f, 0.35f, 1f);
+            SetAnchors(safeVal.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f));
+            safeVal.rectTransform.anchoredPosition = new Vector2(92, 0);
+            safeVal.rectTransform.sizeDelta = new Vector2(55, 52);
             zoneBarSO.FindProperty("ui_text_next_safe_zone_value").objectReferenceValue = safeVal;
+
+            GameObject safeIconObj = CreateUIObject("ui_image_icon", safeBadgeObj.transform);
+            RectTransform safeIconRT = safeIconObj.GetComponent<RectTransform>();
+            SetAnchors(safeIconRT, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f));
+            safeIconRT.anchoredPosition = new Vector2(-18, 0);
+            safeIconRT.sizeDelta = new Vector2(46, 46);
+            Image safeIcon = safeIconObj.AddComponent<Image>();
+            safeIcon.sprite = safeDeltaIcon;
+            safeIcon.preserveAspect = true;
+            safeIcon.raycastTarget = false;
 
             zoneBarSO.ApplyModifiedProperties();
 

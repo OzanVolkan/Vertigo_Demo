@@ -28,13 +28,12 @@ namespace Vertigo.Zone.Views
         [SerializeField] private TMP_Text ui_text_next_safe_zone_value;
 
         [Header("Colors")]
-        [SerializeField] private Color normalColor = new Color(0.85f, 0.85f, 0.85f, 1f);
-        [SerializeField] private Color safeColor = new Color(0.30f, 0.85f, 0.39f, 1f); // #4CD964
-        [SerializeField] private Color superColor = new Color(1.00f, 0.84f, 0.00f, 1f); // #FFD700
-        [SerializeField] private Color pastZoneColor = new Color(0.45f, 0.45f, 0.45f, 1f);
-
-        private const int VisibleSlotCount = 9; // e.g. 4 before, current, 4 after
-        private const int HalfSlots = 4;
+        [SerializeField] private Color normalColor = new Color(1f, 1f, 1f, 1f); // Crisp white
+        [SerializeField] private Color safeColor = new Color(0.35f, 0.95f, 0.15f, 1f); // Vivid neon lime #59F226
+        [SerializeField] private Color superColor = new Color(1.00f, 0.84f, 0.00f, 1f); // Bright gold #FFD700
+        [SerializeField] private Color pastZoneColor = new Color(0.42f, 0.44f, 0.48f, 1f); // Muted grey #6B707B
+        [SerializeField] private Color pastSafeColor = new Color(0.20f, 0.42f, 0.12f, 1f); // Muted dark olive green #336B1E
+        [SerializeField] private Color pastSuperColor = new Color(0.55f, 0.42f, 0.12f, 1f); // Muted dark gold
 
         private void OnEnable()
         {
@@ -67,10 +66,12 @@ namespace Vertigo.Zone.Views
                 ui_text_next_super_zone_value.text = nextSuper.ToString();
 
             // 2. Update Horizontal Zone Strip Numbers
-            // Calculate start zone so currentZone is centered
-            int startZone = Mathf.Max(1, currentZone - HalfSlots);
+            int totalSlots = ui_slot_texts != null && ui_slot_texts.Count > 0 ? ui_slot_texts.Count : 13;
+            int halfSlots = totalSlots / 2;
 
-            // If currentZone is small (e.g. 1, 2, 3), strip starts at 1
+            // Calculate start zone so currentZone is centered
+            int startZone = Mathf.Max(1, currentZone - halfSlots);
+
             if (ui_slot_texts != null && ui_slot_texts.Count > 0)
             {
                 for (int i = 0; i < ui_slot_texts.Count; i++)
@@ -84,8 +85,8 @@ namespace Vertigo.Zone.Views
                     // Formatting
                     if (zoneNum == currentZone)
                     {
-                        // Current zone text inside the badge
-                        slotTxt.color = Color.black;
+                        // Current zone text inside the silver badge
+                        slotTxt.color = new Color(0.08f, 0.08f, 0.10f, 1f);
                         slotTxt.fontStyle = FontStyles.Bold;
 
                         if (ui_slot_backgrounds != null && i < ui_slot_backgrounds.Count && ui_slot_backgrounds[i] != null)
@@ -102,23 +103,41 @@ namespace Vertigo.Zone.Views
 
                         if (zoneNum < currentZone)
                         {
-                            slotTxt.color = pastZoneColor;
-                            slotTxt.fontStyle = FontStyles.Normal;
-                        }
-                        else if (zoneNum % 30 == 0)
-                        {
-                            slotTxt.color = superColor;
-                            slotTxt.fontStyle = FontStyles.Bold;
-                        }
-                        else if (zoneNum % 5 == 0)
-                        {
-                            slotTxt.color = safeColor;
-                            slotTxt.fontStyle = FontStyles.Bold;
+                            // Past zones
+                            if (zoneNum % 30 == 0)
+                            {
+                                slotTxt.color = pastSuperColor;
+                                slotTxt.fontStyle = FontStyles.Bold;
+                            }
+                            else if (zoneNum % 5 == 0)
+                            {
+                                slotTxt.color = pastSafeColor;
+                                slotTxt.fontStyle = FontStyles.Bold;
+                            }
+                            else
+                            {
+                                slotTxt.color = pastZoneColor;
+                                slotTxt.fontStyle = FontStyles.Normal;
+                            }
                         }
                         else
                         {
-                            slotTxt.color = normalColor;
-                            slotTxt.fontStyle = FontStyles.Normal;
+                            // Upcoming zones
+                            if (zoneNum % 30 == 0)
+                            {
+                                slotTxt.color = superColor;
+                                slotTxt.fontStyle = FontStyles.Bold;
+                            }
+                            else if (zoneNum % 5 == 0)
+                            {
+                                slotTxt.color = safeColor;
+                                slotTxt.fontStyle = FontStyles.Bold;
+                            }
+                            else
+                            {
+                                slotTxt.color = normalColor;
+                                slotTxt.fontStyle = FontStyles.Normal;
+                            }
                         }
                     }
                 }
