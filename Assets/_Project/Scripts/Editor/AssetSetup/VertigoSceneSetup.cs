@@ -606,6 +606,8 @@ namespace Vertigo.Editor
             gmSO.FindProperty("rewardCollectEffect").objectReferenceValue = collectEffectView;
             gmSO.ApplyModifiedProperties();
 
+            RewardShowcaseSetupUtility.SetupRewardShowcase();
+
             // Save Scene
             EditorSceneManager.SaveScene(scene, ScenePath);
 

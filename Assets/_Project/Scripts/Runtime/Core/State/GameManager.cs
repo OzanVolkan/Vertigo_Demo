@@ -27,6 +27,7 @@ namespace Vertigo.Core.State
         [SerializeField] private WheelView wheelView;
         [SerializeField] private InventoryView inventoryView;
         [SerializeField] private RewardCollectEffectView rewardCollectEffect;
+        [SerializeField] private RewardShowcaseView rewardShowcase;
 
         [Header("State")]
         [SerializeField] private GameState currentState = GameState.Initialize;
@@ -52,6 +53,7 @@ namespace Vertigo.Core.State
             if (wheelView == null) wheelView = FindFirstObjectByType<WheelView>();
             if (inventoryView == null) inventoryView = FindFirstObjectByType<InventoryView>();
             if (rewardCollectEffect == null) rewardCollectEffect = FindFirstObjectByType<RewardCollectEffectView>();
+            if (rewardShowcase == null) rewardShowcase = FindFirstObjectByType<RewardShowcaseView>(FindObjectsInactive.Include);
         }
 
         private void Start()
@@ -155,22 +157,6 @@ namespace Vertigo.Core.State
                 inventoryManager.AddReward(slice.Reward, scaledAmount, suppressInventoryUpdateEvent: suppressUpdate);
             }
 
-            // If the target slot is outside the visible scrollview viewport, smoothly scroll to bring it into view!
-            if (inventoryView != null && targetSlot != null && !inventoryView.IsSlotVisible(targetSlot))
-            {
-                Tween scrollTween = inventoryView.ScrollToSlot(targetSlot, smooth: true, duration: 0.32f);
-                if (scrollTween != null && scrollTween.IsActive())
-                {
-                    yield return scrollTween.WaitForCompletion();
-                }
-                else
-                {
-                    yield return new WaitForSeconds(0.15f);
-                }
-            }
-
-            Vector3 startPos = wheelView != null ? wheelView.GetWinningSlicePosition() : transform.position;
-
             WheelType currentWheelType = WheelType.BronzeNormal;
             if (wheelController != null && wheelController.CurrentConfig != null)
             {
@@ -191,6 +177,45 @@ namespace Vertigo.Core.State
                         break;
                 }
             }
+
+            if (rewardShowcase == null)
+            {
+                rewardShowcase = FindFirstObjectByType<RewardShowcaseView>(FindObjectsInactive.Include);
+            }
+
+            // 1. Showcase the won reward prominently on screen (Polish)
+            if (rewardShowcase != null)
+            {
+                bool showcaseFinished = false;
+                string formattedAmount = slice.Reward.FormatAmount(scaledAmount);
+                rewardShowcase.ShowReward(
+                    slice.Reward.Icon,
+                    formattedAmount,
+                    currentWheelType,
+                    () => showcaseFinished = true
+                );
+
+                while (!showcaseFinished)
+                {
+                    yield return null;
+                }
+            }
+
+            // 2. Normal flow: If the target slot is outside the visible scrollview viewport, smoothly scroll to bring it into view!
+            if (inventoryView != null && targetSlot != null && !inventoryView.IsSlotVisible(targetSlot))
+            {
+                Tween scrollTween = inventoryView.ScrollToSlot(targetSlot, smooth: true, duration: 0.32f);
+                if (scrollTween != null && scrollTween.IsActive())
+                {
+                    yield return scrollTween.WaitForCompletion();
+                }
+                else
+                {
+                    yield return new WaitForSeconds(0.15f);
+                }
+            }
+
+            Vector3 startPos = wheelView != null ? wheelView.GetWinningSlicePosition() : transform.position;
 
             if (rewardCollectEffect != null && targetSlot != null)
             {
@@ -293,6 +318,7 @@ namespace Vertigo.Core.State
             if (wheelView == null) wheelView = FindFirstObjectByType<WheelView>();
             if (inventoryView == null) inventoryView = FindFirstObjectByType<InventoryView>();
             if (rewardCollectEffect == null) rewardCollectEffect = FindFirstObjectByType<RewardCollectEffectView>();
+            if (rewardShowcase == null) rewardShowcase = FindFirstObjectByType<RewardShowcaseView>();
         }
     }
 }
