@@ -91,6 +91,10 @@ namespace Vertigo.Zone.Views
             {
                 _slideSequence.Kill();
             }
+            if (ui_container_zone_slots != null)
+            {
+                ui_container_zone_slots.anchoredPosition = Vector2.zero;
+            }
         }
 
         public void UpdateZoneBar(ZoneData zoneData)
@@ -203,23 +207,30 @@ namespace Vertigo.Zone.Views
             else
             {
                 // Case B: Centered Progression (Zones > 7)
-                // The new number is currently at slot (halfSlots + 1)
-                int nextIndex = halfSlots + 1;
-                float nextX = GetSlotLocalX(nextIndex);
+                // Badge remains FIXED at the center!
+                // Only the zone bar (number strip) slides smoothly to the left by 1 slot.
+                float slotStep = GetSlotStepDistance();
                 float centerX = GetSlotLocalX(halfSlots);
 
-                // 1. Badge slides right onto the incoming number!
-                _slideSequence.Append(ui_transform_current_badge.DOAnchorPosX(nextX, slideDuration * 0.75f).SetEase(slideEase));
+                // Ensure badge is at center
+                ui_transform_current_badge.anchoredPosition = new Vector2(centerX, 0);
+
+                // Slide tape smoothly to the left
+                _slideSequence.Append(ui_container_zone_slots.DOAnchorPosX(-slotStep, slideDuration).SetEase(slideEase));
+                if (ui_slot_texts != null && ui_slot_texts.Count > 0 && ui_slot_texts[0] != null)
+                {
+                    _slideSequence.Join(ui_slot_texts[0].DOFade(0f, slideDuration * 0.8f));
+                }
+
                 _slideSequence.AppendCallback(() =>
                 {
-                    // 2. Tape centers the new zone under the badge seamlessly
+                    // Reset container offset seamlessly and update slot numbers
+                    ui_container_zone_slots.anchoredPosition = Vector2.zero;
                     _currentZoneNumber = newZone;
-                    UpdateBadgeVisual(newZone);
                     int startZone = newZone - halfSlots;
                     RefreshSlotNumbers(startZone);
                     RefreshSlotColors(newZone, startZone);
-
-                    ui_transform_current_badge.anchoredPosition = new Vector2(centerX, 0);
+                    UpdateBadgeVisual(newZone);
                     ui_transform_current_badge.DOPunchScale(Vector3.one * punchScaleAmount, 0.2f, 2, 0.5f);
                 });
             }
@@ -351,6 +362,29 @@ namespace Vertigo.Zone.Views
                     }
                 }
             }
+        }
+
+        private float GetSlotStepDistance()
+        {
+            if (ui_container_zone_slots != null)
+            {
+                float containerW = ui_container_zone_slots.rect.width;
+                if (containerW <= 0f) containerW = 725f;
+
+                HorizontalLayoutGroup hlg = ui_container_zone_slots.GetComponent<HorizontalLayoutGroup>();
+                float padLeft = hlg != null ? hlg.padding.left : 0f;
+                float padRight = hlg != null ? hlg.padding.right : 0f;
+                float spacing = hlg != null ? hlg.spacing : 4.5f;
+
+                int count = ui_slot_texts != null && ui_slot_texts.Count > 0 ? ui_slot_texts.Count : 13;
+                float availW = containerW - (padLeft + padRight);
+                float totalSpacing = (count - 1) * spacing;
+                float slotW = count > 0 ? (availW - totalSpacing) / count : 51f;
+
+                return slotW + spacing;
+            }
+
+            return 56.1f;
         }
 
         private float GetSlotLocalX(int index)
