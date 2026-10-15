@@ -1,17 +1,19 @@
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
-using Vertigo.Core.Enums;
-using Vertigo.Zone.Data;
 using Vertigo.Zone.Views;
 
 namespace Vertigo.Editor
 {
     public static class ZoneBarPolishUtility
     {
+        private const string PrefabDir = "Assets/_Project/Prefabs/UI/Components";
+        private const string BadgePrefabPath = "Assets/_Project/Prefabs/UI/Components/ZoneCurrentBadge.prefab";
+
         [MenuItem("Vertigo/UI/Polish Zone Bar")]
         public static void PolishZoneBar()
         {
@@ -22,8 +24,8 @@ namespace Vertigo.Editor
         private static void AutoPolishOnLoad()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
-            if (EditorPrefs.GetBool("ZoneBarPolished_V2", false)) return;
-            EditorPrefs.SetBool("ZoneBarPolished_V2", true);
+            if (EditorPrefs.GetBool("ZoneBarPolished_V4", false)) return;
+            EditorPrefs.SetBool("ZoneBarPolished_V4", true);
 
             EditorApplication.delayCall += () =>
             {
@@ -40,13 +42,16 @@ namespace Vertigo.Editor
                 return;
             }
 
-            Undo.RegisterFullObjectHierarchyUndo(topBarObj, "Polish Zone Bar");
+            Undo.RegisterFullObjectHierarchyUndo(topBarObj, "Polish Zone Bar (Sliding Badge)");
 
-            // 1. Sprites
+            // 1. Load Sprites
             Sprite frameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_zonebar_frame.png");
             Sprite badgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone.png");
 
-            // 2. Bar Dimensions & Frame
+            // 2. Ensure Badge Prefab exists
+            GameObject badgePrefab = EnsureBadgePrefab(badgeSprite);
+
+            // 3. Setup Bar Frame & Dimensions
             RectTransform topBarRT = topBarObj.GetComponent<RectTransform>();
             topBarRT.sizeDelta = new Vector2(650, 48);
             topBarRT.anchoredPosition = new Vector2(0, -25);
@@ -59,13 +64,54 @@ namespace Vertigo.Editor
                 topBarBg.color = Color.white;
             }
 
-            // 3. Container & Layout
+            // 4. Setup or Find the Single Sliding Badge Object
+            Transform badgeT = topBarObj.transform.Find("ui_badge_current_zone");
+            GameObject badgeObj;
+            if (badgeT == null)
+            {
+                if (badgePrefab != null)
+                {
+                    badgeObj = (GameObject)PrefabUtility.InstantiatePrefab(badgePrefab, topBarObj.transform);
+                    badgeObj.name = "ui_badge_current_zone";
+                }
+                else
+                {
+                    badgeObj = new GameObject("ui_badge_current_zone", typeof(RectTransform));
+                    badgeObj.transform.SetParent(topBarObj.transform, false);
+                    Image bImg = badgeObj.AddComponent<Image>();
+                    bImg.sprite = badgeSprite;
+                    bImg.type = Image.Type.Simple;
+                    bImg.preserveAspect = false;
+                    bImg.color = Color.white;
+                    bImg.raycastTarget = false;
+                    bImg.maskable = false;
+                }
+            }
+            else
+            {
+                badgeObj = badgeT.gameObject;
+            }
+
+            RectTransform badgeRT = badgeObj.GetComponent<RectTransform>();
+            badgeRT.anchorMin = new Vector2(0.5f, 0.5f);
+            badgeRT.anchorMax = new Vector2(0.5f, 0.5f);
+            badgeRT.pivot = new Vector2(0.5f, 0.5f);
+            badgeRT.sizeDelta = new Vector2(46, 54);
+            badgeRT.anchoredPosition = new Vector2(-292.615f, 0);
+
+            // Ensure badge is sibling 0 so it renders behind the slot texts
+            badgeObj.transform.SetSiblingIndex(0);
+
+            // 5. Setup Container & Layout
             Transform containerT = topBarObj.transform.Find("ui_container_zone_slots");
             if (containerT == null)
             {
                 Debug.LogError("[ZoneBarPolish] Could not find 'ui_container_zone_slots'!");
                 return;
             }
+
+            // Container must be after badge in hierarchy so texts render on top
+            containerT.SetSiblingIndex(1);
 
             RectTransform containerRT = containerT.GetComponent<RectTransform>();
             containerRT.anchorMin = Vector2.zero;
@@ -82,12 +128,10 @@ namespace Vertigo.Editor
             hlg.childForceExpandWidth = true;
             hlg.childForceExpandHeight = true;
 
-            // 4. Slots (13 slots matching Image 2 reference)
+            // 6. Setup 13 Clean Text Slots (no individual badges)
             const int slotCount = 13;
             List<TMP_Text> slotTexts = new List<TMP_Text>();
-            List<Image> slotBgs = new List<Image>();
 
-            // Destroy excess children if > 13
             while (containerT.childCount > slotCount)
             {
                 Object.DestroyImmediate(containerT.GetChild(containerT.childCount - 1).gameObject);
@@ -108,46 +152,20 @@ namespace Vertigo.Editor
                     slotObj.name = $"ui_slot_{i}";
                 }
 
-                // Remove Image directly on slot root if present
+                // Remove legacy badge inside slot if present
+                Transform legacyBadge = slotObj.transform.Find("ui_image_badge");
+                if (legacyBadge != null)
+                {
+                    Object.DestroyImmediate(legacyBadge.gameObject);
+                }
+
                 Image directImg = slotObj.GetComponent<Image>();
                 if (directImg != null)
                 {
                     Object.DestroyImmediate(directImg);
                 }
 
-                // Child Badge Object (ui_image_badge)
-                Transform badgeT = slotObj.transform.Find("ui_image_badge");
-                GameObject badgeObj;
-                if (badgeT == null)
-                {
-                    badgeObj = new GameObject("ui_image_badge", typeof(RectTransform));
-                    badgeObj.transform.SetParent(slotObj.transform, false);
-                }
-                else
-                {
-                    badgeObj = badgeT.gameObject;
-                }
-
-                RectTransform badgeRT = badgeObj.GetComponent<RectTransform>();
-                badgeRT.anchorMin = new Vector2(0.5f, 0.5f);
-                badgeRT.anchorMax = new Vector2(0.5f, 0.5f);
-                badgeRT.pivot = new Vector2(0.5f, 0.5f);
-                badgeRT.anchoredPosition = Vector2.zero;
-                badgeRT.sizeDelta = new Vector2(46, 54);
-
-                Image badgeImg = badgeObj.GetComponent<Image>();
-                if (badgeImg == null) badgeImg = badgeObj.AddComponent<Image>();
-                badgeImg.sprite = badgeSprite;
-                badgeImg.type = Image.Type.Simple;
-                badgeImg.preserveAspect = false;
-                badgeImg.color = Color.white;
-                badgeImg.raycastTarget = false;
-                badgeImg.maskable = false;
-                badgeImg.enabled = (i == 0);
-
-                slotBgs.Add(badgeImg);
-
-                // Child Text Object (ui_text_slot_value)
+                // Slot Text
                 Transform textT = slotObj.transform.Find("ui_text_slot_value");
                 GameObject textObj;
                 if (textT == null)
@@ -159,8 +177,6 @@ namespace Vertigo.Editor
                 {
                     textObj = textT.gameObject;
                 }
-
-                textObj.transform.SetAsLastSibling();
 
                 RectTransform textRT = textObj.GetComponent<RectTransform>();
                 textRT.anchorMin = Vector2.zero;
@@ -182,12 +198,19 @@ namespace Vertigo.Editor
                 slotTexts.Add(tmp);
             }
 
-            // 5. Wire ZoneBarView
+            // Force layout update so slot world positions are accurate immediately
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(containerRT);
+
+            // 7. Wire ZoneBarView
             ZoneBarView zoneBarView = topBarObj.GetComponent<ZoneBarView>();
             if (zoneBarView != null)
             {
                 SerializedObject so = new SerializedObject(zoneBarView);
-                
+
+                so.FindProperty("ui_container_zone_slots").objectReferenceValue = containerRT;
+                so.FindProperty("ui_transform_current_badge").objectReferenceValue = badgeRT;
+
                 SerializedProperty textsProp = so.FindProperty("ui_slot_texts");
                 textsProp.ClearArray();
                 for (int i = 0; i < slotTexts.Count; i++)
@@ -198,21 +221,46 @@ namespace Vertigo.Editor
 
                 SerializedProperty bgsProp = so.FindProperty("ui_slot_backgrounds");
                 bgsProp.ClearArray();
-                for (int i = 0; i < slotBgs.Count; i++)
-                {
-                    bgsProp.InsertArrayElementAtIndex(i);
-                    bgsProp.GetArrayElementAtIndex(i).objectReferenceValue = slotBgs[i];
-                }
 
                 so.ApplyModifiedProperties();
 
-                // Trigger immediate visual refresh for current zone (Zone 1)
-                zoneBarView.UpdateZoneBar(new ZoneData(1, ZoneType.Normal, null, 1f));
+                // Snap badge and colors to Zone 1
+                zoneBarView.SnapToZone(1);
             }
 
             EditorSceneManager.MarkSceneDirty(topBarObj.scene);
             EditorSceneManager.SaveScene(topBarObj.scene);
-            Debug.Log("[ZoneBarPolish] Zone Bar polished successfully with 13 slots, metallic frame, and silver notch badge!");
+            Debug.Log("[ZoneBarPolish] Single Sliding Badge & Zone Bar configured successfully!");
+        }
+
+        private static GameObject EnsureBadgePrefab(Sprite badgeSprite)
+        {
+            if (!Directory.Exists(PrefabDir))
+            {
+                Directory.CreateDirectory(PrefabDir);
+            }
+
+            GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(BadgePrefabPath);
+            if (existing != null) return existing;
+
+            GameObject temp = new GameObject("ZoneCurrentBadge", typeof(RectTransform));
+            RectTransform rt = temp.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(46, 54);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+
+            Image img = temp.AddComponent<Image>();
+            img.sprite = badgeSprite;
+            img.type = Image.Type.Simple;
+            img.preserveAspect = false;
+            img.color = Color.white;
+            img.raycastTarget = false;
+            img.maskable = false;
+
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, BadgePrefabPath);
+            Object.DestroyImmediate(temp);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[ZoneBarPolish] Created sliding badge prefab at {BadgePrefabPath}");
+            return prefab;
         }
     }
 }

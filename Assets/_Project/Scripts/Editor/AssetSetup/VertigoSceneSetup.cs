@@ -127,12 +127,33 @@ namespace Vertigo.Editor
             ZoneBarView zoneBarView = topBarObj.AddComponent<ZoneBarView>();
             SerializedObject zoneBarSO = new SerializedObject(zoneBarView);
 
+            // Single Sliding Badge (child 0, behind texts)
+            GameObject badgeObj = CreateUIObject("ui_badge_current_zone", topBarObj.transform);
+            RectTransform badgeRT = badgeObj.GetComponent<RectTransform>();
+            badgeRT.anchorMin = new Vector2(0.5f, 0.5f);
+            badgeRT.anchorMax = new Vector2(0.5f, 0.5f);
+            badgeRT.pivot = new Vector2(0.5f, 0.5f);
+            badgeRT.sizeDelta = new Vector2(46, 54);
+            badgeRT.anchoredPosition = new Vector2(-292.615f, 0);
+
+            Image badgeImg = badgeObj.AddComponent<Image>();
+            badgeImg.sprite = zoneCurrentBadge;
+            badgeImg.type = Image.Type.Simple;
+            badgeImg.preserveAspect = false;
+            badgeImg.color = Color.white;
+            badgeImg.raycastTarget = false;
+            badgeImg.maskable = false;
+
+            zoneBarSO.FindProperty("ui_transform_current_badge").objectReferenceValue = badgeRT;
+
             // Container for horizontal zone slots
             GameObject slotsContainer = CreateUIObject("ui_container_zone_slots", topBarObj.transform);
             RectTransform slotsRT = slotsContainer.GetComponent<RectTransform>();
             SetAnchors(slotsRT, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
             slotsRT.offsetMin = new Vector2(10, 0);
             slotsRT.offsetMax = new Vector2(-10, 0);
+
+            zoneBarSO.FindProperty("ui_container_zone_slots").objectReferenceValue = slotsRT;
 
             HorizontalLayoutGroup hlg = slotsContainer.AddComponent<HorizontalLayoutGroup>();
             hlg.childAlignment = TextAnchor.MiddleCenter;
@@ -142,7 +163,7 @@ namespace Vertigo.Editor
             hlg.childForceExpandWidth = true;
             hlg.childForceExpandHeight = true;
 
-            // Generate 13 slots (matching Image 2 reference)
+            // Generate 13 clean text slots (matching Image 2 reference)
             const int slotCount = 13;
             SerializedProperty slotTextsProp = zoneBarSO.FindProperty("ui_slot_texts");
             SerializedProperty slotBgsProp = zoneBarSO.FindProperty("ui_slot_backgrounds");
@@ -152,24 +173,6 @@ namespace Vertigo.Editor
             for (int i = 0; i < slotCount; i++)
             {
                 GameObject slot = CreateUIObject($"ui_slot_{i}", slotsContainer.transform);
-
-                // Child Badge (ui_image_badge)
-                GameObject badgeObj = CreateUIObject("ui_image_badge", slot.transform);
-                RectTransform badgeRT = badgeObj.GetComponent<RectTransform>();
-                badgeRT.anchorMin = new Vector2(0.5f, 0.5f);
-                badgeRT.anchorMax = new Vector2(0.5f, 0.5f);
-                badgeRT.pivot = new Vector2(0.5f, 0.5f);
-                badgeRT.anchoredPosition = Vector2.zero;
-                badgeRT.sizeDelta = new Vector2(46, 54);
-
-                Image slotBg = badgeObj.AddComponent<Image>();
-                slotBg.sprite = zoneCurrentBadge;
-                slotBg.type = Image.Type.Simple;
-                slotBg.preserveAspect = false;
-                slotBg.color = Color.white;
-                slotBg.raycastTarget = false;
-                slotBg.maskable = false;
-                slotBg.enabled = (i == 0); // Slot 0 is current zone 1
 
                 // Child Text (ui_text_slot_value)
                 GameObject slotTextObj = CreateUIObject("ui_text_slot_value", slot.transform);
@@ -189,9 +192,6 @@ namespace Vertigo.Editor
 
                 slotTextsProp.InsertArrayElementAtIndex(i);
                 slotTextsProp.GetArrayElementAtIndex(i).objectReferenceValue = slotTxt;
-
-                slotBgsProp.InsertArrayElementAtIndex(i);
-                slotBgsProp.GetArrayElementAtIndex(i).objectReferenceValue = slotBg;
             }
 
             // =========================================================================
