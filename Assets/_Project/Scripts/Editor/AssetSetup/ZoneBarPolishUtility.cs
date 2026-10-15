@@ -24,8 +24,8 @@ namespace Vertigo.Editor
         private static void AutoPolishOnLoad()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
-            if (EditorPrefs.GetBool("ZoneBarPolished_V4", false)) return;
-            EditorPrefs.SetBool("ZoneBarPolished_V4", true);
+            if (EditorPrefs.GetBool("ZoneBarPolished_V6", false)) return;
+            EditorPrefs.SetBool("ZoneBarPolished_V6", true);
 
             EditorApplication.delayCall += () =>
             {
@@ -47,13 +47,15 @@ namespace Vertigo.Editor
             // 1. Load Sprites
             Sprite frameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_zonebar_frame.png");
             Sprite badgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone.png");
+            Sprite safeBadgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone_safe.png");
+            Sprite superBadgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone_super.png");
 
             // 2. Ensure Badge Prefab exists
             GameObject badgePrefab = EnsureBadgePrefab(badgeSprite);
 
-            // 3. Setup Bar Frame & Dimensions
+            // 3. Setup Bar Frame & Dimensions (15% scaled: 650x48 -> 748x55)
             RectTransform topBarRT = topBarObj.GetComponent<RectTransform>();
-            topBarRT.sizeDelta = new Vector2(650, 48);
+            topBarRT.sizeDelta = new Vector2(748, 55);
             topBarRT.anchoredPosition = new Vector2(0, -25);
 
             Image topBarBg = topBarObj.GetComponent<Image>();
@@ -96,13 +98,12 @@ namespace Vertigo.Editor
             badgeRT.anchorMin = new Vector2(0.5f, 0.5f);
             badgeRT.anchorMax = new Vector2(0.5f, 0.5f);
             badgeRT.pivot = new Vector2(0.5f, 0.5f);
-            badgeRT.sizeDelta = new Vector2(46, 54);
-            badgeRT.anchoredPosition = new Vector2(-292.615f, 0);
+            badgeRT.sizeDelta = new Vector2(53, 62);
 
             // Ensure badge is sibling 0 so it renders behind the slot texts
             badgeObj.transform.SetSiblingIndex(0);
 
-            // 5. Setup Container & Layout
+            // 5. Setup Container & Layout (15% scaled)
             Transform containerT = topBarObj.transform.Find("ui_container_zone_slots");
             if (containerT == null)
             {
@@ -116,12 +117,12 @@ namespace Vertigo.Editor
             RectTransform containerRT = containerT.GetComponent<RectTransform>();
             containerRT.anchorMin = Vector2.zero;
             containerRT.anchorMax = Vector2.one;
-            containerRT.offsetMin = new Vector2(10, 0);
-            containerRT.offsetMax = new Vector2(-10, 0);
+            containerRT.offsetMin = new Vector2(11.5f, 0);
+            containerRT.offsetMax = new Vector2(-11.5f, 0);
 
             HorizontalLayoutGroup hlg = containerT.GetComponent<HorizontalLayoutGroup>();
             if (hlg == null) hlg = containerT.gameObject.AddComponent<HorizontalLayoutGroup>();
-            hlg.spacing = 4;
+            hlg.spacing = 4.5f;
             hlg.childAlignment = TextAnchor.MiddleCenter;
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
@@ -188,7 +189,7 @@ namespace Vertigo.Editor
                 TMP_Text tmp = textObj.GetComponent<TextMeshProUGUI>();
                 if (tmp == null) tmp = textObj.AddComponent<TextMeshProUGUI>();
                 tmp.text = (i + 1).ToString();
-                tmp.fontSize = 24;
+                tmp.fontSize = 28;
                 tmp.fontStyle = (i == 0) ? FontStyles.Bold : FontStyles.Normal;
                 tmp.alignment = TextAlignmentOptions.Center;
                 tmp.color = (i == 0) ? new Color(0.08f, 0.08f, 0.10f, 1f) : Color.white;
@@ -210,6 +211,10 @@ namespace Vertigo.Editor
 
                 so.FindProperty("ui_container_zone_slots").objectReferenceValue = containerRT;
                 so.FindProperty("ui_transform_current_badge").objectReferenceValue = badgeRT;
+                so.FindProperty("ui_image_current_badge").objectReferenceValue = badgeObj.GetComponent<Image>();
+                so.FindProperty("badgeNormalSprite").objectReferenceValue = badgeSprite;
+                so.FindProperty("badgeSafeSprite").objectReferenceValue = safeBadgeSprite;
+                so.FindProperty("badgeSuperSprite").objectReferenceValue = superBadgeSprite;
 
                 SerializedProperty textsProp = so.FindProperty("ui_slot_texts");
                 textsProp.ClearArray();
@@ -241,11 +246,21 @@ namespace Vertigo.Editor
             }
 
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(BadgePrefabPath);
-            if (existing != null) return existing;
+            if (existing != null)
+            {
+                RectTransform exRT = existing.GetComponent<RectTransform>();
+                if (exRT != null && exRT.sizeDelta != new Vector2(53, 62))
+                {
+                    exRT.sizeDelta = new Vector2(53, 62);
+                    EditorUtility.SetDirty(existing);
+                    AssetDatabase.SaveAssets();
+                }
+                return existing;
+            }
 
             GameObject temp = new GameObject("ZoneCurrentBadge", typeof(RectTransform));
             RectTransform rt = temp.GetComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(46, 54);
+            rt.sizeDelta = new Vector2(53, 62);
             rt.pivot = new Vector2(0.5f, 0.5f);
 
             Image img = temp.AddComponent<Image>();

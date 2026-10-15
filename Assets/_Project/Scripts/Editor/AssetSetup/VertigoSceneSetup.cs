@@ -81,6 +81,8 @@ namespace Vertigo.Editor
             Sprite zoneMapFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_zonebar_frame.png");
             Sprite zoneBg = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_bg.png");
             Sprite zoneCurrentBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone.png");
+            Sprite zoneSafeBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone_safe.png");
+            Sprite zoneSuperBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone_super.png");
             Sprite superBadgeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_frame_super.png");
             Sprite safeBadgeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_frame_safe.png");
             Sprite superSwordIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_icon_badge_sword.png");
@@ -110,13 +112,13 @@ namespace Vertigo.Editor
             canvasObj.AddComponent<GraphicRaycaster>();
 
             // =========================================================================
-            // A. TOP ZONE BAR (Matching Screenshot)
+            // A. TOP ZONE BAR (Matching Screenshot, 15% scaled: 748x55)
             // =========================================================================
             GameObject topBarObj = CreateUIObject("ui_panel_top_zonebar", canvasObj.transform);
             RectTransform topBarRT = topBarObj.GetComponent<RectTransform>();
             SetAnchors(topBarRT, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
             topBarRT.anchoredPosition = new Vector2(0, -25);
-            topBarRT.sizeDelta = new Vector2(650, 48);
+            topBarRT.sizeDelta = new Vector2(748, 55);
 
             Image topBarBg = topBarObj.AddComponent<Image>();
             topBarBg.sprite = zoneMapFrame;
@@ -133,8 +135,7 @@ namespace Vertigo.Editor
             badgeRT.anchorMin = new Vector2(0.5f, 0.5f);
             badgeRT.anchorMax = new Vector2(0.5f, 0.5f);
             badgeRT.pivot = new Vector2(0.5f, 0.5f);
-            badgeRT.sizeDelta = new Vector2(46, 54);
-            badgeRT.anchoredPosition = new Vector2(-292.615f, 0);
+            badgeRT.sizeDelta = new Vector2(53, 62);
 
             Image badgeImg = badgeObj.AddComponent<Image>();
             badgeImg.sprite = zoneCurrentBadge;
@@ -145,19 +146,23 @@ namespace Vertigo.Editor
             badgeImg.maskable = false;
 
             zoneBarSO.FindProperty("ui_transform_current_badge").objectReferenceValue = badgeRT;
+            zoneBarSO.FindProperty("ui_image_current_badge").objectReferenceValue = badgeImg;
+            zoneBarSO.FindProperty("badgeNormalSprite").objectReferenceValue = zoneCurrentBadge;
+            zoneBarSO.FindProperty("badgeSafeSprite").objectReferenceValue = zoneSafeBadge;
+            zoneBarSO.FindProperty("badgeSuperSprite").objectReferenceValue = zoneSuperBadge;
 
             // Container for horizontal zone slots
             GameObject slotsContainer = CreateUIObject("ui_container_zone_slots", topBarObj.transform);
             RectTransform slotsRT = slotsContainer.GetComponent<RectTransform>();
             SetAnchors(slotsRT, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
-            slotsRT.offsetMin = new Vector2(10, 0);
-            slotsRT.offsetMax = new Vector2(-10, 0);
+            slotsRT.offsetMin = new Vector2(11.5f, 0);
+            slotsRT.offsetMax = new Vector2(-11.5f, 0);
 
             zoneBarSO.FindProperty("ui_container_zone_slots").objectReferenceValue = slotsRT;
 
             HorizontalLayoutGroup hlg = slotsContainer.AddComponent<HorizontalLayoutGroup>();
             hlg.childAlignment = TextAnchor.MiddleCenter;
-            hlg.spacing = 4;
+            hlg.spacing = 4.5f;
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
             hlg.childForceExpandWidth = true;
@@ -183,7 +188,7 @@ namespace Vertigo.Editor
 
                 TMP_Text slotTxt = slotTextObj.AddComponent<TextMeshProUGUI>();
                 slotTxt.text = (i + 1).ToString();
-                slotTxt.fontSize = 24;
+                slotTxt.fontSize = 28;
                 slotTxt.fontStyle = (i == 0) ? FontStyles.Bold : FontStyles.Normal;
                 slotTxt.alignment = TextAlignmentOptions.Center;
                 slotTxt.color = (i == 0) ? new Color(0.08f, 0.08f, 0.10f, 1f) : Color.white;
