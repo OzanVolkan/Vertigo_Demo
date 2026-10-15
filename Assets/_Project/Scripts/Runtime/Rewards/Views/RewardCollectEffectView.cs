@@ -42,6 +42,15 @@ namespace Vertigo.Rewards.Views
             if (ui_particle_container == null)
             {
                 ui_particle_container = GetComponent<RectTransform>();
+                if (ui_particle_container == null)
+                {
+                    Canvas canvas = GetComponentInParent<Canvas>();
+                    if (canvas == null) canvas = FindFirstObjectByType<Canvas>();
+                    if (canvas != null)
+                    {
+                        ui_particle_container = canvas.GetComponent<RectTransform>();
+                    }
+                }
             }
         }
 
@@ -92,36 +101,45 @@ namespace Vertigo.Rewards.Views
 
             Transform parentTransform = ui_particle_container != null ? ui_particle_container : transform;
 
+            // Convert world positions to Canvas local space so effect scales 1:1 with CanvasScaler across all resolutions
+            Vector3 startLocalPos = parentTransform.InverseTransformPoint(startWorldPos);
+            startLocalPos.z = 0f;
+
+            Vector3 targetLocalPos = targetSlot != null 
+                ? parentTransform.InverseTransformPoint(targetSlot.IconWorldPosition) 
+                : startLocalPos;
+            targetLocalPos.z = 0f;
+
             for (int i = 0; i < count; i++)
             {
                 int particleIndex = i;
                 GameObject pObj = CreateParticleObject(rewardIcon, frameSprite, parentTransform);
-                pObj.transform.position = startWorldPos;
+                pObj.transform.localPosition = startLocalPos;
                 pObj.transform.localScale = Vector3.zero;
                 _activeParticles.Add(pObj);
 
-                // Scatter angle & radius
+                // Scatter angle & radius (in Canvas reference units)
                 float angle = (360f / count) * particleIndex + UnityEngine.Random.Range(-25f, 25f);
                 float rad = angle * Mathf.Deg2Rad;
                 float dist = UnityEngine.Random.Range(burstMinRadius, burstMaxRadius);
                 Vector3 burstOffset = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0f) * dist;
-                Vector3 burstWorldPos = startWorldPos + burstOffset;
+                Vector3 burstLocalPos = startLocalPos + burstOffset;
+                burstLocalPos.z = 0f;
                 float tiltAngle = UnityEngine.Random.Range(-20f, 20f);
 
                 Sequence seq = DOTween.Sequence();
                 _activeSequences.Add(seq);
 
-                // 1. Burst Outwards
+                // 1. Burst Outwards (Local Canvas space)
                 seq.Append(pObj.transform.DOScale(Vector3.one, burstDuration).SetEase(Ease.OutBack, 1.4f));
-                seq.Join(pObj.transform.DOMove(burstWorldPos, burstDuration).SetEase(Ease.OutCubic));
+                seq.Join(pObj.transform.DOLocalMove(burstLocalPos, burstDuration).SetEase(Ease.OutCubic));
                 seq.Join(pObj.transform.DORotate(new Vector3(0, 0, tiltAngle), burstDuration).SetEase(Ease.OutQuad));
 
                 // 2. Pause in burst formation + stagger
                 seq.AppendInterval(burstPauseDuration + (particleIndex * staggerDelay));
 
-                // 3. Flight to target inventory slot
-                Vector3 targetPos = targetSlot != null ? targetSlot.IconWorldPosition : burstWorldPos;
-                seq.Append(pObj.transform.DOMove(targetPos, flyDuration).SetEase(Ease.InCubic));
+                // 3. Flight to target inventory slot (Local Canvas space)
+                seq.Append(pObj.transform.DOLocalMove(targetLocalPos, flyDuration).SetEase(Ease.InCubic));
                 seq.Join(pObj.transform.DORotate(Vector3.zero, flyDuration).SetEase(Ease.InQuad));
 
                 // 4. Hit target

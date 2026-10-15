@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
@@ -152,6 +153,20 @@ namespace Vertigo.Core.State
             if (inventoryManager != null)
             {
                 inventoryManager.AddReward(slice.Reward, scaledAmount, suppressInventoryUpdateEvent: suppressUpdate);
+            }
+
+            // If the target slot is outside the visible scrollview viewport, smoothly scroll to bring it into view!
+            if (inventoryView != null && targetSlot != null && !inventoryView.IsSlotVisible(targetSlot))
+            {
+                Tween scrollTween = inventoryView.ScrollToSlot(targetSlot, smooth: true, duration: 0.32f);
+                if (scrollTween != null && scrollTween.IsActive())
+                {
+                    yield return scrollTween.WaitForCompletion();
+                }
+                else
+                {
+                    yield return new WaitForSeconds(0.15f);
+                }
             }
 
             Vector3 startPos = wheelView != null ? wheelView.GetWinningSlicePosition() : transform.position;

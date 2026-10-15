@@ -33,6 +33,7 @@ namespace Vertigo.Rewards.Views
             {
                 ui_button_cashout.onClick.AddListener(OnCashOutClicked);
             }
+            SetManualScrollEnabled(true);
         }
 
         private void OnEnable()
@@ -58,6 +59,22 @@ namespace Vertigo.Rewards.Views
         {
             _isSpinning = (state == GameState.Spinning || state == GameState.Evaluating);
             UpdateCashOutButtonState();
+
+            // Disable manual scrolling during spin/award/transition, re-enable when Idle
+            bool allowManualScroll = (state == GameState.Idle);
+            SetManualScrollEnabled(allowManualScroll);
+        }
+
+        public void SetManualScrollEnabled(bool isEnabled)
+        {
+            if (ui_scroll_rect != null)
+            {
+                ui_scroll_rect.vertical = isEnabled;
+                if (!isEnabled)
+                {
+                    ui_scroll_rect.StopMovement();
+                }
+            }
         }
 
         private void OnZoneChanged(ZoneData zone)
@@ -92,16 +109,42 @@ namespace Vertigo.Rewards.Views
                         Canvas.ForceUpdateCanvases();
                         LayoutRebuilder.ForceRebuildLayoutImmediate(containerRT);
                     }
-
-                    ScrollToSlot(slotView, smooth: false);
                 }
             }
             return slotView;
         }
 
-        public void ScrollToSlot(InventoryRewardSlotView slotView, bool smooth = true)
+        public bool IsSlotVisible(InventoryRewardSlotView slotView, float tolerance = 15f)
         {
-            if (ui_scroll_rect == null || slotView == null) return;
+            if (ui_scroll_rect == null || slotView == null) return false;
+
+            RectTransform viewportRT = ui_scroll_rect.viewport != null 
+                ? ui_scroll_rect.viewport 
+                : ui_scroll_rect.GetComponent<RectTransform>();
+
+            if (viewportRT == null) return false;
+
+            RectTransform slotRT = slotView.GetComponent<RectTransform>();
+            Vector3[] slotCorners = new Vector3[4];
+            slotRT.GetWorldCorners(slotCorners);
+
+            float slotMinY = float.MaxValue;
+            float slotMaxY = float.MinValue;
+
+            for (int i = 0; i < 4; i++)
+            {
+                Vector3 localPos = viewportRT.InverseTransformPoint(slotCorners[i]);
+                if (localPos.y < slotMinY) slotMinY = localPos.y;
+                if (localPos.y > slotMaxY) slotMaxY = localPos.y;
+            }
+
+            Rect viewRect = viewportRT.rect;
+            return (slotMinY >= viewRect.yMin + tolerance && slotMaxY <= viewRect.yMax - tolerance);
+        }
+
+        public Tween ScrollToSlot(InventoryRewardSlotView slotView, bool smooth = true, float duration = 0.35f)
+        {
+            if (ui_scroll_rect == null || slotView == null) return null;
 
             RectTransform viewportRT = ui_scroll_rect.viewport != null 
                 ? ui_scroll_rect.viewport 
@@ -118,28 +161,31 @@ namespace Vertigo.Rewards.Views
                 if (contentHeight <= viewportHeight)
                 {
                     ui_scroll_rect.verticalNormalizedPosition = 1f;
-                    return;
+                    return null;
                 }
 
                 RectTransform slotRT = slotView.GetComponent<RectTransform>();
-                float slotCenterY = -slotRT.anchoredPosition.y;
+                Vector3 slotLocalInContent = contentRT.InverseTransformPoint(slotRT.position);
+                float slotCenterY = -slotLocalInContent.y;
                 float targetY = slotCenterY - (viewportHeight * 0.5f);
                 float maxScroll = contentHeight - viewportHeight;
                 float targetNorm = 1f - Mathf.Clamp01(targetY / maxScroll);
 
+                ui_scroll_rect.DOKill();
                 if (smooth)
                 {
-                    ui_scroll_rect.DOKill();
-                    DOTween.To(() => ui_scroll_rect.verticalNormalizedPosition, 
+                    return DOTween.To(() => ui_scroll_rect.verticalNormalizedPosition, 
                                x => ui_scroll_rect.verticalNormalizedPosition = x, 
-                               targetNorm, 0.35f)
+                               targetNorm, duration)
                            .SetEase(Ease.OutQuad);
                 }
                 else
                 {
                     ui_scroll_rect.verticalNormalizedPosition = targetNorm;
+                    return null;
                 }
             }
+            return null;
         }
 
         public void ScrollToTop(bool smooth = true)
