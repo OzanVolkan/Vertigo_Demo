@@ -522,6 +522,7 @@ namespace Vertigo.Editor
 
             wheelViewSO.ApplyModifiedProperties();
             wheelView.ApplySliceLayout();
+            WheelLabelsSetupUtility.ApplyWheelLabelsToExistingScene();
 
             // =========================================================================
             // E. BOMB GAME OVER POPUP

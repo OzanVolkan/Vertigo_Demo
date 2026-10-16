@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16949e308530ce14ea45304808875faa, type: 3}
   m_Name: ZoneConfig_Default
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Zone.Data.ZoneManagerConfigSO
+  maxZone: 60
+  multiplierStepPerZone: 1
   safeZoneInterval: 5
   superZoneInterval: 30
   defaultNormalWheel: {fileID: 11400000, guid: d7b44b25e42baf444a247a22de1b8636, type: 2}

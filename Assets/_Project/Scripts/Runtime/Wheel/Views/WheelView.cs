@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Globalization;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Vertigo.Core.Enums;
@@ -18,6 +20,17 @@ namespace Vertigo.Wheel.Views
         [SerializeField] private RectTransform ui_transform_indicator;
         [SerializeField] private Image ui_image_wheel_indicator;
         [SerializeField] private Button ui_button_spin;
+
+        [Header("Wheel Header & Footer Labels")]
+        [SerializeField] private TMP_Text ui_text_wheel_title_value;
+        [SerializeField] private TMP_Text ui_text_wheel_subtitle_value;
+        [SerializeField] private string bronzeTitle = "BRONZE SPIN";
+        [SerializeField] private string silverTitle = "SILVER SPIN";
+        [SerializeField] private string goldTitle = "GOLD SPIN";
+        [SerializeField] private string subtitleFormat = "Up To x{0} Rewards";
+        [SerializeField] private Color bronzeTextColor = new Color(0.96f, 0.68f, 0.32f, 1f);
+        [SerializeField] private Color silverTextColor = new Color(0.86f, 0.94f, 1.00f, 1f);
+        [SerializeField] private Color goldTextColor = new Color(1.00f, 0.82f, 0.08f, 1f);
 
         [Header("Slices")]
         [SerializeField] private List<WheelSliceView> ui_slice_views = new List<WheelSliceView>();
@@ -124,6 +137,9 @@ namespace Vertigo.Wheel.Views
             if (ui_image_wheel_indicator != null && config.IndicatorSprite != null)
                 ui_image_wheel_indicator.sprite = config.IndicatorSprite;
 
+            // Update Top Title (BRONZE SPIN / SILVER SPIN / GOLD SPIN) & Bottom Multiplier Subtitle
+            UpdateWheelLabels(config.WheelType, zone.RewardMultiplier);
+
             // Populate 8 slices with zone reward multiplier applied
             for (int i = 0; i < ui_slice_views.Count; i++)
             {
@@ -131,6 +147,29 @@ namespace Vertigo.Wheel.Views
                 {
                     ui_slice_views[i].Setup(config.GetSlice(i), zone.RewardMultiplier);
                 }
+            }
+        }
+
+        public void UpdateWheelLabels(WheelType wheelType, float rewardMultiplier)
+        {
+            var (title, themeColor) = wheelType switch
+            {
+                WheelType.SilverSafe => (silverTitle, silverTextColor),
+                WheelType.GoldenSuper => (goldTitle, goldTextColor),
+                _ => (bronzeTitle, bronzeTextColor)
+            };
+
+            if (ui_text_wheel_title_value != null)
+            {
+                ui_text_wheel_title_value.text = title;
+                ui_text_wheel_title_value.color = themeColor;
+            }
+
+            if (ui_text_wheel_subtitle_value != null)
+            {
+                int intMult = Mathf.Max(1, Mathf.RoundToInt(rewardMultiplier));
+                ui_text_wheel_subtitle_value.text = string.Format(subtitleFormat, intMult.ToString(CultureInfo.InvariantCulture));
+                ui_text_wheel_subtitle_value.color = themeColor;
             }
         }
 
@@ -243,6 +282,18 @@ namespace Vertigo.Wheel.Views
             {
                 var tr = transform.Find("ui_button_spin");
                 if (tr != null) ui_button_spin = tr.GetComponent<Button>();
+            }
+
+            if (ui_text_wheel_title_value == null)
+            {
+                var tr = transform.Find("ui_text_wheel_title_value");
+                if (tr != null) ui_text_wheel_title_value = tr.GetComponent<TMP_Text>();
+            }
+
+            if (ui_text_wheel_subtitle_value == null)
+            {
+                var tr = transform.Find("ui_text_wheel_subtitle_value");
+                if (tr != null) ui_text_wheel_subtitle_value = tr.GetComponent<TMP_Text>();
             }
 
             if (wheelController == null)
