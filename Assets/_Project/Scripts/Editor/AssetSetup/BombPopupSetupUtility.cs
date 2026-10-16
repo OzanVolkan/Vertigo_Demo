@@ -14,10 +14,17 @@ namespace Vertigo.Editor
         private const string CircularBombPrefKey = "Vertigo_BombPopup_CircularCenterpiece_V1";
         private const string RedVignettePrefKey = "Vertigo_BombPopup_FourCornerVignette_V1";
         private const string ThreeButtonsPrefKey = "Vertigo_BombPopup_ThreeButtons_V1";
+        private const string WalletCurrencyBarPrefKey = "Vertigo_BombPopup_WalletCurrencyBar_V2";
         private const string TrashIconPath = "Assets/2D/demo_content/ui_icon_trash.png";
         private const string BombCircleBgPath = "Assets/2D/demo_content/ui_bomb_circle_bg.png";
         private const string RedVignettePath = "Assets/2D/demo_content/ui_red_vignette.png";
         private const string VideoAdIconPath = "Assets/2D/demo_content/ui_icon_video_ad.png";
+
+        [MenuItem("Vertigo/UI/Apply Bomb Popup Top-Right Wallet Bar")]
+        public static void ApplyWalletCurrencyBar()
+        {
+            ApplyWalletCurrencyBarToExistingScene();
+        }
 
         [MenuItem("Vertigo/UI/Apply Bomb Popup 3 Buttons (Give Up + Coin Revive + Ad Revive)")]
         public static void ApplyThreeBombButtons()
@@ -58,21 +65,158 @@ namespace Vertigo.Editor
             bool needsCircular = !EditorPrefs.GetBool(CircularBombPrefKey, false);
             bool needsVignette = !EditorPrefs.GetBool(RedVignettePrefKey, false);
             bool needsThreeButtons = !EditorPrefs.GetBool(ThreeButtonsPrefKey, false);
+            bool needsWalletBar = !EditorPrefs.GetBool(WalletCurrencyBarPrefKey, false);
 
-            if (needsTrash || needsCircular || needsVignette || needsThreeButtons)
+            if (needsTrash || needsCircular || needsVignette || needsThreeButtons || needsWalletBar)
             {
                 EditorPrefs.SetBool(TrashIconPrefKey, true);
                 EditorPrefs.SetBool(CircularBombPrefKey, true);
                 EditorPrefs.SetBool(RedVignettePrefKey, true);
                 EditorPrefs.SetBool(ThreeButtonsPrefKey, true);
+                EditorPrefs.SetBool(WalletCurrencyBarPrefKey, true);
                 EditorApplication.delayCall += () =>
                 {
                     if (needsTrash) ApplyGiveUpTrashIconToExistingScene();
                     if (needsCircular) ApplyCircularBombCenterpieceToExistingScene();
                     if (needsVignette) ApplyFourCornerRedVignetteToExistingScene();
                     if (needsThreeButtons) ApplyThreeBombButtonsToExistingScene();
+                    if (needsWalletBar) ApplyWalletCurrencyBarToExistingScene();
                 };
             }
+        }
+
+        /// <summary>
+        /// Surgically updates the top-right wallet currency display ('ui_transform_currency_bar')
+        /// with larger Cash & Gold icons/text and shifts 'ui_panel_top_right_badges' (Safe & Super Zone)
+        /// down so they never overlap.
+        /// </summary>
+        public static void ApplyWalletCurrencyBarToExistingScene()
+        {
+            GameObject canvasObj = GameObject.Find("ui_canvas_main");
+            if (canvasObj == null) return;
+
+            // 1. Shift Safe Zone & Super Zone badges ('ui_panel_top_right_badges') down below the currency bar
+            Transform topRightBadgesTr = canvasObj.transform.Find("ui_panel_top_right_badges");
+            if (topRightBadgesTr != null && topRightBadgesTr.TryGetComponent(out RectTransform badgesRT))
+            {
+                badgesRT.anchoredPosition = new Vector2(badgesRT.anchoredPosition.x, -82f);
+                EditorUtility.SetDirty(badgesRT);
+            }
+
+            Transform bombPopupTr = canvasObj.transform.Find("ui_panel_bomb_popup");
+            if (bombPopupTr == null) return;
+
+            Sprite cashSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_cash.png");
+            Sprite goldSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_gold.png");
+
+            Transform currencyTr = bombPopupTr.Find("ui_transform_currency_bar");
+            GameObject currencyObj = currencyTr != null ? currencyTr.gameObject : CreateUIObject("ui_transform_currency_bar", bombPopupTr);
+
+            ConfigureWalletCurrencyBar(
+                currencyObj,
+                cashSprite,
+                goldSprite,
+                out RectTransform currencyBarRT,
+                out TMP_Text cashText,
+                out TMP_Text goldText);
+
+            BombPopupView popupView = bombPopupTr.GetComponent<BombPopupView>();
+            if (popupView != null)
+            {
+                SerializedObject bpSO = new SerializedObject(popupView);
+                bpSO.FindProperty("ui_transform_currency_bar").objectReferenceValue = currencyBarRT;
+                bpSO.FindProperty("ui_text_bank_cash_value").objectReferenceValue = cashText;
+                bpSO.FindProperty("ui_text_bank_gold_value").objectReferenceValue = goldText;
+                bpSO.ApplyModifiedProperties();
+                popupView.RefreshWalletAndReviveState();
+                EditorUtility.SetDirty(popupView);
+            }
+
+            EditorUtility.SetDirty(currencyObj);
+            EditorSceneManager.MarkSceneDirty(canvasObj.scene);
+            EditorSceneManager.SaveScene(canvasObj.scene);
+
+            Debug.Log("[BombPopupSetup] Enlarged top-right Money & Gold UI and shifted Safe/Super Zone badges down!");
+        }
+
+        private static void ConfigureWalletCurrencyBar(
+            GameObject currencyObj,
+            Sprite cashSprite,
+            Sprite goldSprite,
+            out RectTransform currencyBarRT,
+            out TMP_Text cashText,
+            out TMP_Text goldText)
+        {
+            currencyBarRT = currencyObj.GetComponent<RectTransform>();
+            currencyBarRT.anchorMin = new Vector2(1f, 1f);
+            currencyBarRT.anchorMax = new Vector2(1f, 1f);
+            currencyBarRT.pivot = new Vector2(1f, 1f);
+            currencyBarRT.anchoredPosition = new Vector2(-40f, -18f);
+            currencyBarRT.sizeDelta = new Vector2(420f, 48f);
+
+            for (int i = currencyObj.transform.childCount - 1; i >= 0; i--)
+            {
+                Object.DestroyImmediate(currencyObj.transform.GetChild(i).gameObject);
+            }
+
+            HorizontalLayoutGroup hlg = currencyObj.GetComponent<HorizontalLayoutGroup>();
+            if (hlg == null) hlg = currencyObj.AddComponent<HorizontalLayoutGroup>();
+            hlg.childAlignment = TextAnchor.MiddleRight;
+            hlg.spacing = 10f;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
+
+            ContentSizeFitter csf = currencyObj.GetComponent<ContentSizeFitter>();
+            if (csf == null) csf = currencyObj.AddComponent<ContentSizeFitter>();
+            csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            csf.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            // 1. Cash Icon (Larger: 42x42)
+            GameObject cashIconObj = CreateUIObject("ui_image_cash_icon", currencyObj.transform);
+            Image cashIconImg = cashIconObj.AddComponent<Image>();
+            cashIconImg.sprite = cashSprite;
+            cashIconImg.preserveAspect = true;
+            cashIconImg.raycastTarget = false;
+            cashIconImg.maskable = false;
+            LayoutElement cashIconLE = cashIconObj.AddComponent<LayoutElement>();
+            cashIconLE.preferredWidth = 42f;
+            cashIconLE.preferredHeight = 42f;
+
+            // 2. Banked Cash Value Text (Larger: 28pt)
+            cashText = CreateTMPText(
+                "ui_text_bank_cash_value",
+                currencyObj.transform,
+                "0",
+                28f,
+                FontStyles.Bold,
+                TextAlignmentOptions.MidlineLeft);
+            cashText.color = new Color(0.72f, 0.96f, 1.00f, 1f);
+            cashText.textWrappingMode = TextWrappingModes.NoWrap;
+            cashText.margin = new Vector4(0f, 0f, 22f, 0f);
+
+            // 3. Gold Coin Icon (Larger: 40x40)
+            GameObject goldIconObj = CreateUIObject("ui_image_gold_icon", currencyObj.transform);
+            Image goldIconImg = goldIconObj.AddComponent<Image>();
+            goldIconImg.sprite = goldSprite;
+            goldIconImg.preserveAspect = true;
+            goldIconImg.raycastTarget = false;
+            goldIconImg.maskable = false;
+            LayoutElement goldIconLE = goldIconObj.AddComponent<LayoutElement>();
+            goldIconLE.preferredWidth = 40f;
+            goldIconLE.preferredHeight = 40f;
+
+            // 4. Banked Gold Value Text (Larger: 28pt)
+            goldText = CreateTMPText(
+                "ui_text_bank_gold_value",
+                currencyObj.transform,
+                "0",
+                28f,
+                FontStyles.Bold,
+                TextAlignmentOptions.MidlineLeft);
+            goldText.color = new Color(1.00f, 0.84f, 0.16f, 1f);
+            goldText.textWrappingMode = TextWrappingModes.NoWrap;
         }
 
         private static Sprite EnsureSpriteImported(string assetPath)
@@ -708,6 +852,17 @@ namespace Vertigo.Editor
                 out Button reviveAdBtn,
                 out TMP_Text reviveCostText);
 
+            // 5b. Top-Right Wallet Currency Bar
+            Sprite cashSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_cash.png");
+            GameObject currencyObj = CreateUIObject("ui_transform_currency_bar", rootObj.transform);
+            ConfigureWalletCurrencyBar(
+                currencyObj,
+                cashSprite,
+                goldCoinSprite,
+                out RectTransform currencyBarRT,
+                out TMP_Text cashText,
+                out TMP_Text goldText);
+
             // =========================================================================
             // 6. WIRE BOMBPOPUPVIEW & GAMEMANAGER
             // =========================================================================
@@ -718,6 +873,9 @@ namespace Vertigo.Editor
             bpSO.FindProperty("ui_transform_header").objectReferenceValue = headerRT;
             bpSO.FindProperty("ui_transform_box").objectReferenceValue = cardRT;
             bpSO.FindProperty("ui_transform_buttons").objectReferenceValue = buttonsRT;
+            bpSO.FindProperty("ui_transform_currency_bar").objectReferenceValue = currencyBarRT;
+            bpSO.FindProperty("ui_text_bank_cash_value").objectReferenceValue = cashText;
+            bpSO.FindProperty("ui_text_bank_gold_value").objectReferenceValue = goldText;
             bpSO.FindProperty("ui_image_red_glow").objectReferenceValue = redGlowImg;
             bpSO.FindProperty("ui_transform_danger_rays").objectReferenceValue = dangerRaysRT;
             bpSO.FindProperty("ui_image_circle_bg").objectReferenceValue = circleBgImg;

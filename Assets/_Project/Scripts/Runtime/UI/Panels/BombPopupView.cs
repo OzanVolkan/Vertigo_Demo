@@ -1,8 +1,10 @@
+using System.Globalization;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Vertigo.Core.Events;
+using Vertigo.Rewards.Controllers;
 
 namespace Vertigo.UI.Panels
 {
@@ -14,6 +16,11 @@ namespace Vertigo.UI.Panels
         [SerializeField] private RectTransform ui_transform_header;
         [SerializeField] private RectTransform ui_transform_box;
         [SerializeField] private RectTransform ui_transform_buttons;
+
+        [Header("Top-Right Wallet Currency Bar")]
+        [SerializeField] private RectTransform ui_transform_currency_bar;
+        [SerializeField] private TMP_Text ui_text_bank_cash_value;
+        [SerializeField] private TMP_Text ui_text_bank_gold_value;
 
         [Header("Visual Elements")]
         [SerializeField] private Image ui_image_red_glow;
@@ -28,15 +35,23 @@ namespace Vertigo.UI.Panels
         [SerializeField] private Button ui_button_revive_ad;
 
         [Header("Settings")]
+        [Tooltip("Starting Gold cost for the first revive in a run")]
         [SerializeField] private int reviveCost = 25;
+        [Tooltip("How much the Gold revive cost increases after each Gold revive in the same run")]
+        [SerializeField] private int reviveCostStep = 25;
 
+        private int _goldReviveCountThisRun = 0;
         private Sequence _showSequence;
         private Tween _glowPulseTween;
         private Tween _raysRotateTween;
         private Tween _iconIdleTween;
 
+        public int CurrentReviveCost => Mathf.Max(1, reviveCost + (_goldReviveCountThisRun * Mathf.Max(0, reviveCostStep)));
+
         private void Awake()
         {
+            _goldReviveCountThisRun = 0;
+
             if (ui_panel_popup_root == null)
                 ui_panel_popup_root = gameObject;
 
@@ -51,19 +66,19 @@ namespace Vertigo.UI.Panels
 
             if (ui_button_revive != null)
             {
-                ui_button_revive.onClick.RemoveListener(OnReviveClicked);
-                ui_button_revive.onClick.AddListener(OnReviveClicked);
+                ui_button_revive.onClick.RemoveListener(OnGoldReviveClicked);
+                ui_button_revive.onClick.AddListener(OnGoldReviveClicked);
             }
 
             if (ui_button_revive_ad != null)
             {
-                ui_button_revive_ad.onClick.RemoveListener(OnReviveClicked);
-                ui_button_revive_ad.onClick.AddListener(OnReviveClicked);
+                ui_button_revive_ad.onClick.RemoveListener(OnAdReviveClicked);
+                ui_button_revive_ad.onClick.AddListener(OnAdReviveClicked);
             }
 
             if (ui_text_revive_cost_value != null)
             {
-                ui_text_revive_cost_value.text = reviveCost.ToString();
+                ui_text_revive_cost_value.text = CurrentReviveCost.ToString(CultureInfo.InvariantCulture);
             }
 
             HideImmediate();
@@ -73,15 +88,23 @@ namespace Vertigo.UI.Panels
         {
             GameEvents.OnBombTriggered += ShowPopup;
             GameEvents.OnReviveSuccess += HidePopup;
-            GameEvents.OnGameRestartRequested += HidePopup;
+            GameEvents.OnGameRestartRequested += OnRunReset;
+            GameEvents.OnCashOutRequested += OnRunReset;
         }
 
         private void OnDisable()
         {
             GameEvents.OnBombTriggered -= ShowPopup;
             GameEvents.OnReviveSuccess -= HidePopup;
-            GameEvents.OnGameRestartRequested -= HidePopup;
+            GameEvents.OnGameRestartRequested -= OnRunReset;
+            GameEvents.OnCashOutRequested -= OnRunReset;
             KillTweens();
+        }
+
+        private void OnRunReset()
+        {
+            _goldReviveCountThisRun = 0;
+            HidePopup();
         }
 
         private void OnDestroy()
@@ -97,6 +120,46 @@ namespace Vertigo.UI.Panels
             _iconIdleTween?.Kill();
         }
 
+        public void RefreshWalletAndReviveState()
+        {
+            int bankedCash = SessionInventoryManager.GetBankedCash();
+            int bankedGold = SessionInventoryManager.GetBankedGold();
+            int currentCost = CurrentReviveCost;
+
+            if (ui_text_bank_cash_value != null)
+            {
+                ui_text_bank_cash_value.text = bankedCash.ToString("N0", CultureInfo.InvariantCulture);
+            }
+
+            if (ui_text_bank_gold_value != null)
+            {
+                ui_text_bank_gold_value.text = bankedGold.ToString("N0", CultureInfo.InvariantCulture);
+            }
+
+            if (ui_text_revive_cost_value != null)
+            {
+                ui_text_revive_cost_value.text = currentCost.ToString(CultureInfo.InvariantCulture);
+            }
+
+            bool canAffordGoldRevive = bankedGold >= currentCost;
+            if (ui_button_revive != null)
+            {
+                ui_button_revive.interactable = canAffordGoldRevive;
+
+                CanvasGroup reviveBtnCg = ui_button_revive.GetComponent<CanvasGroup>();
+                if (reviveBtnCg == null)
+                {
+                    reviveBtnCg = ui_button_revive.gameObject.AddComponent<CanvasGroup>();
+                }
+                reviveBtnCg.alpha = canAffordGoldRevive ? 1f : 0.45f;
+            }
+
+            if (ui_button_revive_ad != null)
+            {
+                ui_button_revive_ad.interactable = true;
+            }
+        }
+
         public void ShowPopup()
         {
             KillTweens();
@@ -106,10 +169,7 @@ namespace Vertigo.UI.Panels
                 ui_panel_popup_root.SetActive(true);
             }
 
-            if (ui_text_revive_cost_value != null)
-            {
-                ui_text_revive_cost_value.text = reviveCost.ToString();
-            }
+            RefreshWalletAndReviveState();
 
             if (ui_canvas_group != null)
             {
@@ -239,7 +299,22 @@ namespace Vertigo.UI.Panels
             GameEvents.FireGameRestartRequested();
         }
 
-        private void OnReviveClicked()
+        private void OnGoldReviveClicked()
+        {
+            int costToSpend = CurrentReviveCost;
+            if (!SessionInventoryManager.TrySpendBankedGold(costToSpend))
+            {
+                RefreshWalletAndReviveState();
+                return;
+            }
+
+            _goldReviveCountThisRun++;
+            RefreshWalletAndReviveState();
+            HidePopup();
+            GameEvents.FireReviveRequested();
+        }
+
+        private void OnAdReviveClicked()
         {
             HidePopup();
             GameEvents.FireReviveRequested();
@@ -252,6 +327,26 @@ namespace Vertigo.UI.Panels
 
             if (ui_canvas_group == null)
                 ui_canvas_group = GetComponent<CanvasGroup>();
+
+            if (ui_transform_currency_bar == null)
+            {
+                var tr = transform.Find("ui_transform_currency_bar");
+                if (tr != null) ui_transform_currency_bar = tr.GetComponent<RectTransform>();
+            }
+
+            if (ui_transform_currency_bar != null)
+            {
+                if (ui_text_bank_cash_value == null)
+                {
+                    var cashTr = ui_transform_currency_bar.Find("ui_text_bank_cash_value");
+                    if (cashTr != null) ui_text_bank_cash_value = cashTr.GetComponent<TMP_Text>();
+                }
+                if (ui_text_bank_gold_value == null)
+                {
+                    var goldTr = ui_transform_currency_bar.Find("ui_text_bank_gold_value");
+                    if (goldTr != null) ui_text_bank_gold_value = goldTr.GetComponent<TMP_Text>();
+                }
+            }
 
             if (ui_button_giveup == null)
             {

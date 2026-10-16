@@ -210,7 +210,7 @@ namespace Vertigo.Editor
             GameObject badgesObj = CreateUIObject("ui_panel_top_right_badges", canvasObj.transform);
             RectTransform badgesRT = badgesObj.GetComponent<RectTransform>();
             SetAnchors(badgesRT, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f));
-            badgesRT.anchoredPosition = new Vector2(-40, -20);
+            badgesRT.anchoredPosition = new Vector2(-40, -82);
             badgesRT.sizeDelta = new Vector2(BadgeWidth, BadgeHeight * 2 + BadgeSpacing);
 
             // Super Zone Badge (Top) - Custom gold frame & claymore sword
