@@ -114,7 +114,7 @@ namespace Vertigo.Editor
                 GUI.backgroundColor = new Color(0.4f, 0.85f, 1f, 1f); // Blue
                 if (GUILayout.Button("Cash Out (Leave)", GUILayout.Height(26)))
                 {
-                    GameEvents.FireCashOutRequested();
+                    GameEvents.FireCashOutPromptRequested();
                 }
                 GUI.backgroundColor = prevBg;
                 EditorGUILayout.EndHorizontal();

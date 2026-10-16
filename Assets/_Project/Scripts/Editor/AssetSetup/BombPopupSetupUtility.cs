@@ -12,8 +12,16 @@ namespace Vertigo.Editor
     {
         private const string TrashIconPrefKey = "Vertigo_BombPopup_GiveUpTrashIcon_V1";
         private const string CircularBombPrefKey = "Vertigo_BombPopup_CircularCenterpiece_V1";
+        private const string RedVignettePrefKey = "Vertigo_BombPopup_FourCornerVignette_V1";
         private const string TrashIconPath = "Assets/2D/demo_content/ui_icon_trash.png";
         private const string BombCircleBgPath = "Assets/2D/demo_content/ui_bomb_circle_bg.png";
+        private const string RedVignettePath = "Assets/2D/demo_content/ui_red_vignette.png";
+
+        [MenuItem("Vertigo/UI/Apply 4-Corner Red Vignette")]
+        public static void ApplyFourCornerRedVignette()
+        {
+            ApplyFourCornerRedVignetteToExistingScene();
+        }
 
         [MenuItem("Vertigo/UI/Apply Circular Bomb Centerpiece")]
         public static void ApplyCircularBombCenterpiece()
@@ -40,15 +48,18 @@ namespace Vertigo.Editor
 
             bool needsTrash = !EditorPrefs.GetBool(TrashIconPrefKey, false);
             bool needsCircular = !EditorPrefs.GetBool(CircularBombPrefKey, false);
+            bool needsVignette = !EditorPrefs.GetBool(RedVignettePrefKey, false);
 
-            if (needsTrash || needsCircular)
+            if (needsTrash || needsCircular || needsVignette)
             {
                 EditorPrefs.SetBool(TrashIconPrefKey, true);
                 EditorPrefs.SetBool(CircularBombPrefKey, true);
+                EditorPrefs.SetBool(RedVignettePrefKey, true);
                 EditorApplication.delayCall += () =>
                 {
                     if (needsTrash) ApplyGiveUpTrashIconToExistingScene();
                     if (needsCircular) ApplyCircularBombCenterpieceToExistingScene();
+                    if (needsVignette) ApplyFourCornerRedVignetteToExistingScene();
                 };
             }
         }
@@ -67,6 +78,54 @@ namespace Vertigo.Editor
             }
 
             return AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+        }
+
+        /// <summary>
+        /// Surgically updates ONLY 'ui_image_top_red_vignette' inside 'ui_panel_bomb_popup'
+        /// to use the 4-corner full-screen red vignette sprite, preserving all user scene layout changes.
+        /// </summary>
+        public static void ApplyFourCornerRedVignetteToExistingScene()
+        {
+            GameObject canvasObj = GameObject.Find("ui_canvas_main");
+            if (canvasObj == null) return;
+
+            Transform bombPopupTr = canvasObj.transform.Find("ui_panel_bomb_popup");
+            if (bombPopupTr == null) return;
+
+            Transform vignetteTr = bombPopupTr.Find("ui_image_top_red_vignette");
+            if (vignetteTr == null)
+            {
+                Debug.LogWarning("[BombPopupSetup] 'ui_image_top_red_vignette' not found inside 'ui_panel_bomb_popup'.");
+                return;
+            }
+
+            Sprite redVignetteSprite = EnsureSpriteImported(RedVignettePath);
+            ConfigureFourCornerVignette(vignetteTr.gameObject, redVignetteSprite);
+
+            EditorUtility.SetDirty(vignetteTr.gameObject);
+            EditorSceneManager.MarkSceneDirty(canvasObj.scene);
+            EditorSceneManager.SaveScene(canvasObj.scene);
+
+            Debug.Log("[BombPopupSetup] Applied 4-corner red vignette to 'ui_image_top_red_vignette'!");
+        }
+
+        private static void ConfigureFourCornerVignette(GameObject vignetteObj, Sprite redVignetteSprite)
+        {
+            RectTransform rt = vignetteObj.GetComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+
+            Image img = vignetteObj.GetComponent<Image>();
+            if (img == null) img = vignetteObj.AddComponent<Image>();
+            img.sprite = redVignetteSprite;
+            img.type = Image.Type.Simple;
+            img.preserveAspect = false;
+            img.color = new Color(1f, 1f, 1f, 0.78f);
+            img.raycastTarget = false;
+            img.maskable = false;
         }
 
         /// <summary>
@@ -345,19 +404,9 @@ namespace Vertigo.Editor
             dimmerImg.color = new Color(0.03f, 0.02f, 0.03f, 0.85f);
             dimmerImg.raycastTarget = true;
 
-            // 2. Top Red Danger Atmosphere Vignette
+            // 2. 4-Corner Red Danger Atmosphere Vignette
             GameObject topVignetteObj = CreateUIObject("ui_image_top_red_vignette", rootObj.transform);
-            RectTransform topVignetteRT = topVignetteObj.GetComponent<RectTransform>();
-            topVignetteRT.anchorMin = new Vector2(0f, 1f);
-            topVignetteRT.anchorMax = new Vector2(1f, 1f);
-            topVignetteRT.pivot = new Vector2(0.5f, 1f);
-            topVignetteRT.anchoredPosition = new Vector2(0f, 120f);
-            topVignetteRT.sizeDelta = new Vector2(200f, 520f);
-            Image topVignetteImg = topVignetteObj.AddComponent<Image>();
-            topVignetteImg.sprite = glowSprite;
-            topVignetteImg.color = new Color(0.90f, 0.06f, 0.06f, 0.42f);
-            topVignetteImg.raycastTarget = false;
-            topVignetteImg.maskable = false;
+            ConfigureFourCornerVignette(topVignetteObj, EnsureSpriteImported(RedVignettePath));
 
             float centerX = 75f; // Aligned with wheel & zone bar horizontal center
 

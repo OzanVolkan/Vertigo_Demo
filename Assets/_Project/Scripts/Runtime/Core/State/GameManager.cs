@@ -30,6 +30,7 @@ namespace Vertigo.Core.State
         [SerializeField] private RewardCollectEffectView rewardCollectEffect;
         [SerializeField] private RewardShowcaseView rewardShowcase;
         [SerializeField] private BombPopupView bombPopupView;
+        [SerializeField] private CashOutPopupView cashOutPopupView;
 
         [Header("State")]
         [SerializeField] private GameState currentState = GameState.Initialize;
@@ -57,10 +58,16 @@ namespace Vertigo.Core.State
             if (rewardCollectEffect == null) rewardCollectEffect = FindFirstObjectByType<RewardCollectEffectView>();
             if (rewardShowcase == null) rewardShowcase = FindFirstObjectByType<RewardShowcaseView>(FindObjectsInactive.Include);
             if (bombPopupView == null) bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
+            if (cashOutPopupView == null) cashOutPopupView = FindFirstObjectByType<CashOutPopupView>(FindObjectsInactive.Include);
 
             if (bombPopupView != null && !bombPopupView.gameObject.activeSelf)
             {
                 bombPopupView.HideImmediate();
+            }
+
+            if (cashOutPopupView != null && !cashOutPopupView.gameObject.activeSelf)
+            {
+                cashOutPopupView.HideImmediate();
             }
         }
 
@@ -315,7 +322,7 @@ namespace Vertigo.Core.State
 
         private IEnumerator PostCashOutRoutine()
         {
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(0.25f);
             if (zoneManager != null)
             {
                 zoneManager.ResetToStart();
@@ -341,7 +348,9 @@ namespace Vertigo.Core.State
             if (wheelView == null) wheelView = FindFirstObjectByType<WheelView>();
             if (inventoryView == null) inventoryView = FindFirstObjectByType<InventoryView>();
             if (rewardCollectEffect == null) rewardCollectEffect = FindFirstObjectByType<RewardCollectEffectView>();
-            if (rewardShowcase == null) rewardShowcase = FindFirstObjectByType<RewardShowcaseView>();
+            if (rewardShowcase == null) rewardShowcase = FindFirstObjectByType<RewardShowcaseView>(FindObjectsInactive.Include);
+            if (bombPopupView == null) bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
+            if (cashOutPopupView == null) cashOutPopupView = FindFirstObjectByType<CashOutPopupView>(FindObjectsInactive.Include);
         }
     }
 }

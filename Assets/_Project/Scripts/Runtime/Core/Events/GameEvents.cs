@@ -31,6 +31,7 @@ namespace Vertigo.Core.Events
         public static event Action OnBombTriggered;
         public static event Action OnReviveRequested;
         public static event Action OnReviveSuccess;
+        public static event Action OnCashOutPromptRequested;
         public static event Action OnCashOutRequested;
         public static event Action<IReadOnlyDictionary<string, (IRewardData reward, int amount)>> OnCashOutSuccess;
         public static event Action OnGameRestartRequested;
@@ -48,6 +49,7 @@ namespace Vertigo.Core.Events
         public static void FireBombTriggered() => OnBombTriggered?.Invoke();
         public static void FireReviveRequested() => OnReviveRequested?.Invoke();
         public static void FireReviveSuccess() => OnReviveSuccess?.Invoke();
+        public static void FireCashOutPromptRequested() => OnCashOutPromptRequested?.Invoke();
         public static void FireCashOutRequested() => OnCashOutRequested?.Invoke();
         public static void FireCashOutSuccess(IReadOnlyDictionary<string, (IRewardData reward, int amount)> banked) => OnCashOutSuccess?.Invoke(banked);
         public static void FireGameRestartRequested() => OnGameRestartRequested?.Invoke();
@@ -66,6 +68,7 @@ namespace Vertigo.Core.Events
             OnBombTriggered = null;
             OnReviveRequested = null;
             OnReviveSuccess = null;
+            OnCashOutPromptRequested = null;
             OnCashOutRequested = null;
             OnCashOutSuccess = null;
             OnGameRestartRequested = null;

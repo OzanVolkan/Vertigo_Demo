@@ -609,6 +609,7 @@ namespace Vertigo.Editor
 
             RewardShowcaseSetupUtility.SetupRewardShowcase();
             BombPopupSetupUtility.SetupBombPopup();
+            CashOutPopupSetupUtility.SetupCashOutPopup();
 
             // Save Scene
             EditorSceneManager.SaveScene(scene, ScenePath);

@@ -52,7 +52,7 @@ namespace Vertigo.Rewards.Views
 
         private void OnCashOutClicked()
         {
-            GameEvents.FireCashOutRequested();
+            GameEvents.FireCashOutPromptRequested();
         }
 
         private void OnGameStateChanged(GameState state)
@@ -79,7 +79,7 @@ namespace Vertigo.Rewards.Views
 
         private void OnZoneChanged(ZoneData zone)
         {
-            _canCashOutInZone = zone != null && zone.CanCashOut;
+            _canCashOutInZone = true;
             UpdateCashOutButtonState();
         }
 
@@ -87,8 +87,8 @@ namespace Vertigo.Rewards.Views
         {
             if (ui_button_cashout != null)
             {
-                // Can only cash out when wheel is NOT spinning AND zone is safe/super
-                ui_button_cashout.interactable = _canCashOutInZone && !_isSpinning;
+                // Can cash out in any zone whenever the wheel is Idle
+                ui_button_cashout.interactable = !_isSpinning;
             }
         }
 
