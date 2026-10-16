@@ -10,7 +10,7 @@ namespace Vertigo.Editor
 {
     public static class CashOutSummarySetupUtility
     {
-        private const string PrefKey = "Vertigo_CashOutSummarySetup_V7";
+        private const string PrefKey = "Vertigo_CashOutSummarySetup_V8";
 
         private const string ChestSpritePath = "Assets/2D/demo_content/UI_icon_chest_gold_nolight.png";
         private const string BadgeCardStackSpritePath = "Assets/2D/demo_content/ui_badge_card_stack.png";
@@ -317,6 +317,11 @@ namespace Vertigo.Editor
             viewportRT.anchorMax = Vector2.one;
             viewportRT.offsetMin = Vector2.zero;
             viewportRT.offsetMax = Vector2.zero;
+
+            Image viewportImg = viewportObj.AddComponent<Image>();
+            viewportImg.color = Color.clear;
+            viewportImg.raycastTarget = true;
+
             viewportObj.AddComponent<RectMask2D>();
             scrollRect.viewport = viewportRT;
 
@@ -324,13 +329,14 @@ namespace Vertigo.Editor
             GameObject contentObj = CreateUIObject("ui_container_cards", viewportObj.transform);
             RectTransform contentRT = contentObj.GetComponent<RectTransform>();
             contentRT.anchorMin = new Vector2(0f, 0.5f);
-            contentRT.anchorMax = new Vector2(1f, 0.5f);
-            contentRT.pivot = new Vector2(0.5f, 0.5f);
+            contentRT.anchorMax = new Vector2(0f, 0.5f);
+            contentRT.pivot = new Vector2(0f, 0.5f);
             contentRT.anchoredPosition = Vector2.zero;
             contentRT.sizeDelta = new Vector2(0f, 360f);
 
             HorizontalLayoutGroup hlg = contentObj.AddComponent<HorizontalLayoutGroup>();
-            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.padding = new RectOffset(40, 40, 0, 0);
             hlg.spacing = 24f;
             hlg.childControlWidth = false;
             hlg.childControlHeight = false;
@@ -342,6 +348,10 @@ namespace Vertigo.Editor
             csf.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
             scrollRect.content = contentRT;
+            scrollRect.horizontal = true;
+            scrollRect.vertical = false;
+            scrollRect.movementType = ScrollRect.MovementType.Elastic;
+            scrollRect.scrollSensitivity = 25f;
 
             // Continue Button (Bottom Center)
             GameObject contBtnObj = CreateUIObject("ui_button_continue", summaryStageObj.transform);
@@ -452,7 +462,7 @@ namespace Vertigo.Editor
             bgImg.sprite = cardSprite;
             bgImg.color = Color.white;
             bgImg.preserveAspect = true;
-            bgImg.raycastTarget = false;
+            bgImg.raycastTarget = true;
 
             // Card Header Text - precisely centered in top compartment
             Color textColor = isGold ? new Color(1f, 0.85f, 0.35f, 1f) : Color.white;
@@ -530,7 +540,7 @@ namespace Vertigo.Editor
             tmp.fontStyle = style;
             tmp.alignment = alignment;
             tmp.raycastTarget = false;
-            tmp.maskable = false;
+            tmp.maskable = true;
             if (autoSize)
             {
                 tmp.enableAutoSizing = true;

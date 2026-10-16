@@ -23,6 +23,19 @@ namespace Vertigo.UI.Panels
         [SerializeField] private Sprite silverCardSprite;
         [SerializeField] private Sprite goldCardSprite;
 
+        private void Awake()
+        {
+            EnsureMaskable();
+        }
+
+        private void EnsureMaskable()
+        {
+            if (ui_text_name != null) ui_text_name.maskable = true;
+            if (ui_text_amount != null) ui_text_amount.maskable = true;
+            if (ui_image_icon != null) ui_image_icon.maskable = true;
+            if (ui_image_bg != null) ui_image_bg.maskable = true;
+        }
+
         public void Setup(IRewardData reward, int amount)
         {
             Setup(reward, amount, silverCardSprite, goldCardSprite);
@@ -30,6 +43,7 @@ namespace Vertigo.UI.Panels
 
         public void Setup(IRewardData reward, int amount, Sprite defaultSilver, Sprite defaultGold)
         {
+            EnsureMaskable();
             bool isValuable = reward != null && reward.IsValuable;
             Sprite sSprite = silverCardSprite != null ? silverCardSprite : defaultSilver;
             Sprite gSprite = goldCardSprite != null ? goldCardSprite : defaultGold;

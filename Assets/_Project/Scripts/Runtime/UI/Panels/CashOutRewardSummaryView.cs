@@ -448,6 +448,34 @@ namespace Vertigo.UI.Panels
 
             if (ui_container_cards == null) return;
 
+            // Ensure ScrollRect can receive drags and scroll events
+            if (ui_scroll_rect != null)
+            {
+                ui_scroll_rect.horizontal = true;
+                ui_scroll_rect.vertical = false;
+                ui_scroll_rect.scrollSensitivity = 25f;
+
+                if (ui_scroll_rect.viewport != null)
+                {
+                    Image vpImg = ui_scroll_rect.viewport.GetComponent<Image>();
+                    if (vpImg == null)
+                    {
+                        vpImg = ui_scroll_rect.viewport.gameObject.AddComponent<Image>();
+                        vpImg.color = Color.clear;
+                    }
+                    vpImg.raycastTarget = true;
+                }
+            }
+
+            // Ensure content container anchors are properly left-aligned for horizontal scrolling
+            if (ui_container_cards is RectTransform contentRT)
+            {
+                contentRT.anchorMin = new Vector2(0f, 0.5f);
+                contentRT.anchorMax = new Vector2(0f, 0.5f);
+                contentRT.pivot = new Vector2(0f, 0.5f);
+                contentRT.anchoredPosition = Vector2.zero;
+            }
+
             // Instantiate cards from distinct Silver and Gold prefabs
             for (int i = 0; i < _itemsList.Count; i++)
             {
@@ -471,9 +499,35 @@ namespace Vertigo.UI.Panels
                 cardView.transform.DOScale(1f, 0.35f).SetEase(Ease.OutBack).SetDelay(delay);
             }
 
+            // Force layout rebuild so ScrollRect immediately computes the exact content width
+            if (ui_container_cards is RectTransform cRT)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(cRT);
+
+                float viewportWidth = ui_scroll_rect != null && ui_scroll_rect.viewport != null
+                    ? ui_scroll_rect.viewport.rect.width
+                    : 1720f;
+
+                if (cRT.rect.width < viewportWidth)
+                {
+                    cRT.anchorMin = new Vector2(0.5f, 0.5f);
+                    cRT.anchorMax = new Vector2(0.5f, 0.5f);
+                    cRT.pivot = new Vector2(0.5f, 0.5f);
+                    cRT.anchoredPosition = Vector2.zero;
+                }
+                else
+                {
+                    cRT.anchorMin = new Vector2(0f, 0.5f);
+                    cRT.anchorMax = new Vector2(0f, 0.5f);
+                    cRT.pivot = new Vector2(0f, 0.5f);
+                    cRT.anchoredPosition = Vector2.zero;
+                }
+            }
+
             // Reset scroll position to beginning
             if (ui_scroll_rect != null)
             {
+                Canvas.ForceUpdateCanvases();
                 ui_scroll_rect.horizontalNormalizedPosition = 0f;
             }
         }
