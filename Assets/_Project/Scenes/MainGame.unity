@@ -1738,6 +1738,10 @@ MonoBehaviour:
   ui_image_icon: {fileID: 1549484768}
   ui_text_amount_value: {fileID: 529869415}
   ui_image_shine: {fileID: 1438591413}
+  standardIconSize: {x: 50, y: 50}
+  standardIconOffset: {x: 0, y: 12}
+  bombIconSize: {x: 68, y: 68}
+  bombIconOffset: {x: 0, y: 0}
 --- !u!1 &227236562
 GameObject:
   m_ObjectHideFlags: 0
@@ -2304,6 +2308,10 @@ MonoBehaviour:
   ui_image_icon: {fileID: 501598150}
   ui_text_amount_value: {fileID: 878994301}
   ui_image_shine: {fileID: 763350588}
+  standardIconSize: {x: 50, y: 50}
+  standardIconOffset: {x: 0, y: 12}
+  bombIconSize: {x: 68, y: 68}
+  bombIconOffset: {x: 0, y: 0}
 --- !u!1 &269802039
 GameObject:
   m_ObjectHideFlags: 0
@@ -2975,6 +2983,8 @@ MonoBehaviour:
   sliceContentSize: {x: 90, y: 90}
   iconSize: {x: 50, y: 50}
   iconOffset: {x: 0, y: 12}
+  bombIconSize: {x: 68, y: 68}
+  bombIconOffset: {x: 0, y: 0}
   textSize: {x: 90, y: 26}
   textOffset: {x: 0, y: -22}
   textFontSize: 18
@@ -4468,6 +4478,10 @@ MonoBehaviour:
   ui_image_icon: {fileID: 871300839}
   ui_text_amount_value: {fileID: 85809429}
   ui_image_shine: {fileID: 961160036}
+  standardIconSize: {x: 50, y: 50}
+  standardIconOffset: {x: 0, y: 12}
+  bombIconSize: {x: 68, y: 68}
+  bombIconOffset: {x: 0, y: 0}
 --- !u!1 &828804725
 GameObject:
   m_ObjectHideFlags: 0
@@ -5254,6 +5268,10 @@ MonoBehaviour:
   ui_image_icon: {fileID: 665857855}
   ui_text_amount_value: {fileID: 255963134}
   ui_image_shine: {fileID: 66588353}
+  standardIconSize: {x: 50, y: 50}
+  standardIconOffset: {x: 0, y: 12}
+  bombIconSize: {x: 68, y: 68}
+  bombIconOffset: {x: 0, y: 0}
 --- !u!1 &994442863
 GameObject:
   m_ObjectHideFlags: 0
@@ -6315,6 +6333,10 @@ MonoBehaviour:
   ui_image_icon: {fileID: 559220835}
   ui_text_amount_value: {fileID: 227236564}
   ui_image_shine: {fileID: 526600981}
+  standardIconSize: {x: 50, y: 50}
+  standardIconOffset: {x: 0, y: 12}
+  bombIconSize: {x: 68, y: 68}
+  bombIconOffset: {x: 0, y: 0}
 --- !u!1 &1183021124
 GameObject:
   m_ObjectHideFlags: 0
@@ -6873,6 +6895,10 @@ MonoBehaviour:
   ui_image_icon: {fileID: 734677785}
   ui_text_amount_value: {fileID: 994442865}
   ui_image_shine: {fileID: 1664700971}
+  standardIconSize: {x: 50, y: 50}
+  standardIconOffset: {x: 0, y: 12}
+  bombIconSize: {x: 68, y: 68}
+  bombIconOffset: {x: 0, y: 0}
 --- !u!1 &1327374645
 GameObject:
   m_ObjectHideFlags: 0
@@ -7952,6 +7978,10 @@ MonoBehaviour:
   ui_image_icon: {fileID: 1866537835}
   ui_text_amount_value: {fileID: 1008471248}
   ui_image_shine: {fileID: 269802041}
+  standardIconSize: {x: 50, y: 50}
+  standardIconOffset: {x: 0, y: 12}
+  bombIconSize: {x: 68, y: 68}
+  bombIconOffset: {x: 0, y: 0}
 --- !u!1 &1664700969
 GameObject:
   m_ObjectHideFlags: 0
@@ -9505,6 +9535,10 @@ MonoBehaviour:
   ui_image_icon: {fileID: 1252053016}
   ui_text_amount_value: {fileID: 1327374647}
   ui_image_shine: {fileID: 112383407}
+  standardIconSize: {x: 50, y: 50}
+  standardIconOffset: {x: 0, y: 12}
+  bombIconSize: {x: 68, y: 68}
+  bombIconOffset: {x: 0, y: 0}
 --- !u!1 &2008818606
 GameObject:
   m_ObjectHideFlags: 0

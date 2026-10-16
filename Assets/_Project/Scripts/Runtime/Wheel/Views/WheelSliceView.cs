@@ -14,6 +14,12 @@ namespace Vertigo.Wheel.Views
         [SerializeField] private TMP_Text ui_text_amount_value;
         [SerializeField] private Image ui_image_shine;
 
+        [Header("Layout Settings")]
+        [SerializeField] private Vector2 standardIconSize = new Vector2(50f, 50f);
+        [SerializeField] private Vector2 standardIconOffset = new Vector2(0f, 12f);
+        [SerializeField] private Vector2 bombIconSize = new Vector2(68f, 68f);
+        [SerializeField] private Vector2 bombIconOffset = Vector2.zero;
+
         private Tween _winTween;
 
         public Vector3 IconWorldPosition => ui_image_icon != null ? ui_image_icon.transform.position : transform.position;
@@ -33,15 +39,29 @@ namespace Vertigo.Wheel.Views
                 return;
             }
 
+            bool isBomb = sliceData.Reward.IsBomb;
+
             if (ui_image_icon != null)
             {
                 ui_image_icon.sprite = sliceData.Reward.Icon;
                 ui_image_icon.enabled = sliceData.Reward.Icon != null;
+
+                RectTransform iconRT = ui_image_icon.rectTransform;
+                if (isBomb)
+                {
+                    iconRT.sizeDelta = bombIconSize;
+                    iconRT.anchoredPosition = bombIconOffset;
+                }
+                else
+                {
+                    iconRT.sizeDelta = standardIconSize;
+                    iconRT.anchoredPosition = standardIconOffset;
+                }
             }
 
             if (ui_text_amount_value != null)
             {
-                if (sliceData.Reward.IsBomb)
+                if (isBomb)
                 {
                     ui_text_amount_value.text = string.Empty;
                 }
@@ -82,11 +102,18 @@ namespace Vertigo.Wheel.Views
             Vector2 contentSize,
             Vector2 iconSize,
             Vector2 iconOffset,
+            Vector2 bombSize,
+            Vector2 bombOffset,
             Vector2 textSize,
             Vector2 textOffset,
             float fontSize,
             Vector2 shineSize)
         {
+            standardIconSize = iconSize;
+            standardIconOffset = iconOffset;
+            bombIconSize = bombSize;
+            bombIconOffset = bombOffset;
+
             Transform contentTrans = transform.Find("ui_slice_content");
             if (contentTrans != null && contentTrans.TryGetComponent(out RectTransform contentRT))
             {
@@ -99,8 +126,9 @@ namespace Vertigo.Wheel.Views
             if (ui_image_icon != null && ui_image_icon.TryGetComponent(out RectTransform iconRT))
             {
                 UnityEditor.Undo.RecordObject(iconRT, "Adjust Slice Icon Layout");
-                iconRT.sizeDelta = iconSize;
-                iconRT.anchoredPosition = iconOffset;
+                bool isBomb = ui_image_icon.sprite != null && ui_image_icon.sprite.name.ToLower().Contains("bomb");
+                iconRT.sizeDelta = isBomb ? bombIconSize : standardIconSize;
+                iconRT.anchoredPosition = isBomb ? bombIconOffset : standardIconOffset;
                 UnityEditor.EditorUtility.SetDirty(iconRT);
             }
 

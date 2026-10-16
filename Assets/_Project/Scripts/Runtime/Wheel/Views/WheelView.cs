@@ -27,10 +27,14 @@ namespace Vertigo.Wheel.Views
         [SerializeField, Range(80f, 260f)] private float sliceRadialDistance = 160f;
         [Tooltip("Size of the slice item container")]
         [SerializeField] private Vector2 sliceContentSize = new Vector2(90f, 90f);
-        [Tooltip("Icon dimensions")]
+        [Tooltip("Standard icon dimensions")]
         [SerializeField] private Vector2 iconSize = new Vector2(50f, 50f);
-        [Tooltip("Icon position offset inside the slice content")]
+        [Tooltip("Standard icon position offset inside the slice content")]
         [SerializeField] private Vector2 iconOffset = new Vector2(0f, 12f);
+        [Tooltip("Bomb icon dimensions (larger to fill empty text space)")]
+        [SerializeField] private Vector2 bombIconSize = new Vector2(68f, 68f);
+        [Tooltip("Bomb icon position offset inside the slice content")]
+        [SerializeField] private Vector2 bombIconOffset = Vector2.zero;
         [Tooltip("Amount text dimensions")]
         [SerializeField] private Vector2 textSize = new Vector2(90f, 26f);
         [Tooltip("Amount text position offset inside the slice content")]
@@ -287,6 +291,8 @@ namespace Vertigo.Wheel.Views
                     sliceContentSize,
                     iconSize,
                     iconOffset,
+                    bombIconSize,
+                    bombIconOffset,
                     textSize,
                     textOffset,
                     textFontSize,
