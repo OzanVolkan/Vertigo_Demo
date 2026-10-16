@@ -16,12 +16,15 @@ namespace Vertigo.Rewards.Data
         [Header("Display Options")]
         [SerializeField] private string amountPrefix = "x";
         [SerializeField] private bool useAbbreviatedAmount = true;
+        [Tooltip("If true, card uses prestigious golden frame and flare in summary; otherwise sleek silver frame.")]
+        [SerializeField] private bool isValuable;
 
         public string Id => id;
         public string DisplayName => displayName;
         public Sprite Icon => icon;
         public RewardType Type => type;
         public bool IsBomb => type == RewardType.Bomb;
+        public bool IsValuable => isValuable || type == RewardType.Weapon || (id != null && (id.Contains("Gold") || id.Contains("Super")));
 
         public string FormatAmount(int amount)
         {

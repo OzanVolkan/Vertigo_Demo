@@ -10,6 +10,7 @@ namespace Vertigo.Core.Interfaces
         Sprite Icon { get; }
         RewardType Type { get; }
         bool IsBomb { get; }
+        bool IsValuable { get; }
         string FormatAmount(int amount);
     }
 }

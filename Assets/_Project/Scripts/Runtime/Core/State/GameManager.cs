@@ -31,6 +31,7 @@ namespace Vertigo.Core.State
         [SerializeField] private RewardShowcaseView rewardShowcase;
         [SerializeField] private BombPopupView bombPopupView;
         [SerializeField] private CashOutPopupView cashOutPopupView;
+        [SerializeField] private CashOutRewardSummaryView cashOutSummaryView;
 
         [Header("State")]
         [SerializeField] private GameState currentState = GameState.Initialize;
@@ -59,6 +60,7 @@ namespace Vertigo.Core.State
             if (rewardShowcase == null) rewardShowcase = FindFirstObjectByType<RewardShowcaseView>(FindObjectsInactive.Include);
             if (bombPopupView == null) bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
             if (cashOutPopupView == null) cashOutPopupView = FindFirstObjectByType<CashOutPopupView>(FindObjectsInactive.Include);
+            if (cashOutSummaryView == null) cashOutSummaryView = FindFirstObjectByType<CashOutRewardSummaryView>(FindObjectsInactive.Include);
 
             if (bombPopupView != null && !bombPopupView.gameObject.activeSelf)
             {
@@ -68,6 +70,11 @@ namespace Vertigo.Core.State
             if (cashOutPopupView != null && !cashOutPopupView.gameObject.activeSelf)
             {
                 cashOutPopupView.HideImmediate();
+            }
+
+            if (cashOutSummaryView != null && !cashOutSummaryView.gameObject.activeSelf)
+            {
+                cashOutSummaryView.HideImmediate();
             }
         }
 
@@ -336,7 +343,19 @@ namespace Vertigo.Core.State
 
         private IEnumerator PostCashOutRoutine()
         {
-            yield return new WaitForSeconds(0.25f);
+            if (cashOutSummaryView != null)
+            {
+                yield return new WaitForSeconds(0.05f);
+                while (cashOutSummaryView.IsPresenting)
+                {
+                    yield return null;
+                }
+            }
+            else
+            {
+                yield return new WaitForSeconds(0.25f);
+            }
+
             if (zoneManager != null)
             {
                 zoneManager.ResetToStart();
@@ -365,6 +384,7 @@ namespace Vertigo.Core.State
             if (rewardShowcase == null) rewardShowcase = FindFirstObjectByType<RewardShowcaseView>(FindObjectsInactive.Include);
             if (bombPopupView == null) bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
             if (cashOutPopupView == null) cashOutPopupView = FindFirstObjectByType<CashOutPopupView>(FindObjectsInactive.Include);
+            if (cashOutSummaryView == null) cashOutSummaryView = FindFirstObjectByType<CashOutRewardSummaryView>(FindObjectsInactive.Include);
         }
     }
 }
