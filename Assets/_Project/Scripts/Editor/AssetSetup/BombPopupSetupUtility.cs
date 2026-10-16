@@ -13,9 +13,17 @@ namespace Vertigo.Editor
         private const string TrashIconPrefKey = "Vertigo_BombPopup_GiveUpTrashIcon_V1";
         private const string CircularBombPrefKey = "Vertigo_BombPopup_CircularCenterpiece_V1";
         private const string RedVignettePrefKey = "Vertigo_BombPopup_FourCornerVignette_V1";
+        private const string ThreeButtonsPrefKey = "Vertigo_BombPopup_ThreeButtons_V1";
         private const string TrashIconPath = "Assets/2D/demo_content/ui_icon_trash.png";
         private const string BombCircleBgPath = "Assets/2D/demo_content/ui_bomb_circle_bg.png";
         private const string RedVignettePath = "Assets/2D/demo_content/ui_red_vignette.png";
+        private const string VideoAdIconPath = "Assets/2D/demo_content/ui_icon_video_ad.png";
+
+        [MenuItem("Vertigo/UI/Apply Bomb Popup 3 Buttons (Give Up + Coin Revive + Ad Revive)")]
+        public static void ApplyThreeBombButtons()
+        {
+            ApplyThreeBombButtonsToExistingScene();
+        }
 
         [MenuItem("Vertigo/UI/Apply 4-Corner Red Vignette")]
         public static void ApplyFourCornerRedVignette()
@@ -49,17 +57,20 @@ namespace Vertigo.Editor
             bool needsTrash = !EditorPrefs.GetBool(TrashIconPrefKey, false);
             bool needsCircular = !EditorPrefs.GetBool(CircularBombPrefKey, false);
             bool needsVignette = !EditorPrefs.GetBool(RedVignettePrefKey, false);
+            bool needsThreeButtons = !EditorPrefs.GetBool(ThreeButtonsPrefKey, false);
 
-            if (needsTrash || needsCircular || needsVignette)
+            if (needsTrash || needsCircular || needsVignette || needsThreeButtons)
             {
                 EditorPrefs.SetBool(TrashIconPrefKey, true);
                 EditorPrefs.SetBool(CircularBombPrefKey, true);
                 EditorPrefs.SetBool(RedVignettePrefKey, true);
+                EditorPrefs.SetBool(ThreeButtonsPrefKey, true);
                 EditorApplication.delayCall += () =>
                 {
                     if (needsTrash) ApplyGiveUpTrashIconToExistingScene();
                     if (needsCircular) ApplyCircularBombCenterpieceToExistingScene();
                     if (needsVignette) ApplyFourCornerRedVignetteToExistingScene();
+                    if (needsThreeButtons) ApplyThreeBombButtonsToExistingScene();
                 };
             }
         }
@@ -281,6 +292,204 @@ namespace Vertigo.Editor
         }
 
         /// <summary>
+        /// Surgically updates ONLY 'ui_transform_buttons' inside 'ui_panel_bomb_popup' to the 3-button layout:
+        /// 1. Left: Grey 'GIVE UP' button with trash icon
+        /// 2. Middle: Green 'REVIVE' button with gold coin + cost ('25')
+        /// 3. Right: Blue 'REVIVE' button with video film-strip play icon
+        /// Preserves 'ui_transform_buttons.anchoredPosition' and all other scene objects!
+        /// </summary>
+        public static void ApplyThreeBombButtonsToExistingScene()
+        {
+            GameObject canvasObj = GameObject.Find("ui_canvas_main");
+            if (canvasObj == null) return;
+
+            Transform bombPopupTr = canvasObj.transform.Find("ui_panel_bomb_popup");
+            if (bombPopupTr == null) return;
+
+            Transform buttonsTr = bombPopupTr.Find("ui_transform_buttons");
+            if (buttonsTr == null)
+            {
+                Debug.LogWarning("[BombPopupSetup] 'ui_transform_buttons' not found inside 'ui_panel_bomb_popup'.");
+                return;
+            }
+
+            Sprite buttonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_grey_standard.png");
+            Sprite goldCoinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_gold.png");
+            Sprite trashSprite = EnsureSpriteImported(TrashIconPath);
+            Sprite videoAdSprite = EnsureSpriteImported(VideoAdIconPath);
+
+            ConfigureThreeBombButtons(
+                buttonsTr.gameObject,
+                buttonSprite,
+                trashSprite,
+                goldCoinSprite,
+                videoAdSprite,
+                out Button giveUpBtn,
+                out Button reviveBtn,
+                out Button reviveAdBtn,
+                out TMP_Text reviveCostText);
+
+            BombPopupView popupView = bombPopupTr.GetComponent<BombPopupView>();
+            if (popupView != null)
+            {
+                SerializedObject bpSO = new SerializedObject(popupView);
+                bpSO.FindProperty("ui_button_giveup").objectReferenceValue = giveUpBtn;
+                bpSO.FindProperty("ui_button_revive").objectReferenceValue = reviveBtn;
+                bpSO.FindProperty("ui_button_revive_ad").objectReferenceValue = reviveAdBtn;
+                bpSO.FindProperty("ui_text_revive_cost_value").objectReferenceValue = reviveCostText;
+                bpSO.FindProperty("reviveCost").intValue = 25;
+                bpSO.ApplyModifiedProperties();
+                EditorUtility.SetDirty(popupView);
+            }
+
+            EditorUtility.SetDirty(buttonsTr.gameObject);
+            EditorSceneManager.MarkSceneDirty(canvasObj.scene);
+            EditorSceneManager.SaveScene(canvasObj.scene);
+
+            Debug.Log("[BombPopupSetup] Updated 'ui_transform_buttons' with 3 buttons (Give Up, Coin Revive, Video Ad Revive) while preserving scene layout!");
+        }
+
+        private static void ConfigureThreeBombButtons(
+            GameObject buttonsContainer,
+            Sprite buttonSprite,
+            Sprite trashSprite,
+            Sprite goldCoinSprite,
+            Sprite videoAdSprite,
+            out Button giveUpBtn,
+            out Button reviveBtn,
+            out Button reviveAdBtn,
+            out TMP_Text reviveCostText)
+        {
+            RectTransform buttonsRT = buttonsContainer.GetComponent<RectTransform>();
+            buttonsRT.sizeDelta = new Vector2(700f, 84f);
+
+            // Clear existing children inside ui_transform_buttons so we build the clean 3-button row
+            for (int i = buttonsContainer.transform.childCount - 1; i >= 0; i--)
+            {
+                Object.DestroyImmediate(buttonsContainer.transform.GetChild(i).gameObject);
+            }
+
+            Vector2 btnSize = new Vector2(218f, 68f);
+
+            // =========================================================================
+            // 1. LEFT: GIVE UP Button (Silver/Grey + Trash Icon + "GIVE UP")
+            // =========================================================================
+            GameObject giveUpBtnObj = CreateUIObject("ui_button_giveup", buttonsContainer.transform);
+            RectTransform giveUpRT = giveUpBtnObj.GetComponent<RectTransform>();
+            giveUpRT.anchoredPosition = new Vector2(-238f, 0f);
+            giveUpRT.sizeDelta = btnSize;
+
+            Image giveUpImg = giveUpBtnObj.AddComponent<Image>();
+            giveUpImg.sprite = buttonSprite;
+            giveUpImg.type = Image.Type.Sliced;
+            giveUpImg.color = new Color(0.70f, 0.74f, 0.82f, 1f);
+
+            giveUpBtn = giveUpBtnObj.AddComponent<Button>();
+            giveUpBtn.targetGraphic = giveUpImg;
+
+            TMP_Text giveUpText = CreateTMPText(
+                "ui_text_label",
+                giveUpBtnObj.transform,
+                "GIVE UP",
+                21f,
+                FontStyles.Bold,
+                TextAlignmentOptions.Center);
+            giveUpText.color = Color.white;
+            ConfigureGiveUpButtonContent(giveUpBtnObj, trashSprite);
+
+            // =========================================================================
+            // 2. CENTER: COIN REVIVE Button (Green + Gold Coin "25" + "REVIVE")
+            // =========================================================================
+            GameObject reviveBtnObj = CreateUIObject("ui_button_revive", buttonsContainer.transform);
+            RectTransform reviveRT = reviveBtnObj.GetComponent<RectTransform>();
+            reviveRT.anchoredPosition = new Vector2(0f, 0f);
+            reviveRT.sizeDelta = btnSize;
+
+            Image reviveImg = reviveBtnObj.AddComponent<Image>();
+            reviveImg.sprite = buttonSprite;
+            reviveImg.type = Image.Type.Sliced;
+            reviveImg.color = new Color(0.32f, 0.78f, 0.08f, 1f);
+
+            reviveBtn = reviveBtnObj.AddComponent<Button>();
+            reviveBtn.targetGraphic = reviveImg;
+
+            // Gold Coin Icon inside Revive Button (top row)
+            GameObject coinIconObj = CreateUIObject("ui_image_revive_coin", reviveBtnObj.transform);
+            RectTransform coinRT = coinIconObj.GetComponent<RectTransform>();
+            coinRT.anchoredPosition = new Vector2(-20f, 13f);
+            coinRT.sizeDelta = new Vector2(25f, 25f);
+            Image coinImg = coinIconObj.AddComponent<Image>();
+            coinImg.sprite = goldCoinSprite;
+            coinImg.preserveAspect = true;
+            coinImg.raycastTarget = false;
+            coinImg.maskable = false;
+
+            // Cost Value Text ("25")
+            reviveCostText = CreateTMPText(
+                "ui_text_revive_cost_value",
+                reviveBtnObj.transform,
+                "25",
+                21f,
+                FontStyles.Bold,
+                TextAlignmentOptions.Left);
+            reviveCostText.color = Color.white;
+            reviveCostText.rectTransform.anchoredPosition = new Vector2(22f, 13f);
+            reviveCostText.rectTransform.sizeDelta = new Vector2(64f, 26f);
+
+            // "REVIVE" Label (bottom row)
+            TMP_Text reviveLabelText = CreateTMPText(
+                "ui_text_label",
+                reviveBtnObj.transform,
+                "REVIVE",
+                20f,
+                FontStyles.Bold,
+                TextAlignmentOptions.Center);
+            reviveLabelText.color = Color.white;
+            reviveLabelText.rectTransform.anchoredPosition = new Vector2(0f, -13f);
+            reviveLabelText.rectTransform.sizeDelta = new Vector2(190f, 26f);
+
+            // =========================================================================
+            // 3. RIGHT: VIDEO AD REVIVE Button (Blue + "REVIVE" + Film-Strip Play Icon)
+            // =========================================================================
+            GameObject reviveAdBtnObj = CreateUIObject("ui_button_revive_ad", buttonsContainer.transform);
+            RectTransform reviveAdRT = reviveAdBtnObj.GetComponent<RectTransform>();
+            reviveAdRT.anchoredPosition = new Vector2(238f, 0f);
+            reviveAdRT.sizeDelta = btnSize;
+
+            Image reviveAdImg = reviveAdBtnObj.AddComponent<Image>();
+            reviveAdImg.sprite = buttonSprite;
+            reviveAdImg.type = Image.Type.Sliced;
+            reviveAdImg.color = new Color(0.24f, 0.55f, 0.98f, 1f);
+
+            reviveAdBtn = reviveAdBtnObj.AddComponent<Button>();
+            reviveAdBtn.targetGraphic = reviveAdImg;
+
+            // "REVIVE" Label on the left side of the blue button
+            TMP_Text reviveAdLabelText = CreateTMPText(
+                "ui_text_label",
+                reviveAdBtnObj.transform,
+                "REVIVE",
+                21f,
+                FontStyles.Bold,
+                TextAlignmentOptions.Center);
+            reviveAdLabelText.color = Color.white;
+            reviveAdLabelText.rectTransform.anchoredPosition = new Vector2(-28f, 0f);
+            reviveAdLabelText.rectTransform.sizeDelta = new Vector2(124f, 44f);
+
+            // Video Ad Film-Strip Play Icon on the right side of the blue button
+            GameObject videoIconObj = CreateUIObject("ui_image_video_icon", reviveAdBtnObj.transform);
+            RectTransform videoIconRT = videoIconObj.GetComponent<RectTransform>();
+            videoIconRT.anchoredPosition = new Vector2(54f, 0f);
+            videoIconRT.sizeDelta = new Vector2(48f, 38f);
+            Image videoIconImg = videoIconObj.AddComponent<Image>();
+            videoIconImg.sprite = videoAdSprite;
+            videoIconImg.color = Color.white;
+            videoIconImg.preserveAspect = true;
+            videoIconImg.raycastTarget = false;
+            videoIconImg.maskable = false;
+        }
+
+        /// <summary>
         /// Surgically adds the trash can icon to the existing ui_button_giveup in the scene
         /// WITHOUT touching or resetting any other user UI adjustments.
         /// </summary>
@@ -319,8 +528,8 @@ namespace Vertigo.Editor
             iconRT.anchorMin = new Vector2(0.5f, 0.5f);
             iconRT.anchorMax = new Vector2(0.5f, 0.5f);
             iconRT.pivot = new Vector2(0.5f, 0.5f);
-            iconRT.anchoredPosition = new Vector2(-66f, 1f);
-            iconRT.sizeDelta = new Vector2(38f, 38f);
+            iconRT.anchoredPosition = new Vector2(-58f, 1f);
+            iconRT.sizeDelta = new Vector2(36f, 36f);
 
             Image iconImg = iconObj.GetComponent<Image>();
             if (iconImg == null) iconImg = iconObj.AddComponent<Image>();
@@ -342,7 +551,7 @@ namespace Vertigo.Editor
             {
                 labelRT.anchorMin = Vector2.zero;
                 labelRT.anchorMax = Vector2.one;
-                labelRT.offsetMin = new Vector2(34f, 0f);
+                labelRT.offsetMin = new Vector2(32f, 0f);
                 labelRT.offsetMax = Vector2.zero;
             }
         }
@@ -378,6 +587,7 @@ namespace Vertigo.Editor
             Sprite goldCoinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_gold.png");
             Sprite trashSprite = EnsureSpriteImported(TrashIconPath);
             Sprite circleBgSprite = EnsureSpriteImported(BombCircleBgPath);
+            Sprite videoAdSprite = EnsureSpriteImported(VideoAdIconPath);
 
             // Destroy old bomb popup if present so we build a clean hierarchy
             Transform existingTr = canvasObj.transform.Find("ui_panel_bomb_popup");
@@ -478,7 +688,7 @@ namespace Vertigo.Editor
                 out RectTransform bombIconRT);
 
             // =========================================================================
-            // 5. BOTTOM BUTTONS (GIVE UP & REVIVE)
+            // 5. BOTTOM BUTTONS (GIVE UP, COIN REVIVE & VIDEO AD REVIVE)
             // =========================================================================
             GameObject buttonsContainer = CreateUIObject("ui_transform_buttons", rootObj.transform);
             RectTransform buttonsRT = buttonsContainer.GetComponent<RectTransform>();
@@ -486,76 +696,17 @@ namespace Vertigo.Editor
             buttonsRT.anchorMax = new Vector2(0.5f, 0.5f);
             buttonsRT.pivot = new Vector2(0.5f, 0.5f);
             buttonsRT.anchoredPosition = new Vector2(centerX, -260f);
-            buttonsRT.sizeDelta = new Vector2(520f, 84f);
 
-            // 5a. GIVE UP Button (Left - Metallic Silver/Blue + Trash Icon)
-            GameObject giveUpBtnObj = CreateUIObject("ui_button_giveup", buttonsContainer.transform);
-            RectTransform giveUpRT = giveUpBtnObj.GetComponent<RectTransform>();
-            giveUpRT.anchoredPosition = new Vector2(-132f, 0f);
-            giveUpRT.sizeDelta = new Vector2(236f, 72f);
-            Image giveUpImg = giveUpBtnObj.AddComponent<Image>();
-            giveUpImg.sprite = buttonSprite;
-            giveUpImg.type = Image.Type.Sliced;
-            giveUpImg.color = new Color(0.76f, 0.82f, 0.92f, 1f);
-            Button giveUpBtn = giveUpBtnObj.AddComponent<Button>();
-            giveUpBtn.targetGraphic = giveUpImg;
-
-            TMP_Text giveUpText = CreateTMPText(
-                "ui_text_label",
-                giveUpBtnObj.transform,
-                "GIVE UP",
-                23f,
-                FontStyles.Bold,
-                TextAlignmentOptions.Center);
-            giveUpText.color = Color.white;
-            ConfigureGiveUpButtonContent(giveUpBtnObj, trashSprite);
-
-            // 5b. REVIVE Button (Right - Vivid Emerald Green with Gold Coin + Cost + REVIVE)
-            GameObject reviveBtnObj = CreateUIObject("ui_button_revive", buttonsContainer.transform);
-            RectTransform reviveRT = reviveBtnObj.GetComponent<RectTransform>();
-            reviveRT.anchoredPosition = new Vector2(132f, 0f);
-            reviveRT.sizeDelta = new Vector2(236f, 72f);
-            Image reviveImg = reviveBtnObj.AddComponent<Image>();
-            reviveImg.sprite = buttonSprite;
-            reviveImg.type = Image.Type.Sliced;
-            reviveImg.color = new Color(0.12f, 0.90f, 0.22f, 1f);
-            Button reviveBtn = reviveBtnObj.AddComponent<Button>();
-            reviveBtn.targetGraphic = reviveImg;
-
-            // Gold Coin Icon inside Revive Button (top line)
-            GameObject coinIconObj = CreateUIObject("ui_image_revive_coin", reviveBtnObj.transform);
-            RectTransform coinRT = coinIconObj.GetComponent<RectTransform>();
-            coinRT.anchoredPosition = new Vector2(-28f, 14f);
-            coinRT.sizeDelta = new Vector2(26f, 26f);
-            Image coinImg = coinIconObj.AddComponent<Image>();
-            coinImg.sprite = goldCoinSprite;
-            coinImg.preserveAspect = true;
-            coinImg.raycastTarget = false;
-            coinImg.maskable = false;
-
-            // Cost Value Text ("150")
-            TMP_Text reviveCostText = CreateTMPText(
-                "ui_text_revive_cost_value",
-                reviveBtnObj.transform,
-                "150",
-                22f,
-                FontStyles.Bold,
-                TextAlignmentOptions.Left);
-            reviveCostText.color = Color.white;
-            reviveCostText.rectTransform.anchoredPosition = new Vector2(28f, 14f);
-            reviveCostText.rectTransform.sizeDelta = new Vector2(76f, 28f);
-
-            // "REVIVE" Label (bottom line)
-            TMP_Text reviveLabelText = CreateTMPText(
-                "ui_text_label",
-                reviveBtnObj.transform,
-                "REVIVE",
-                21f,
-                FontStyles.Bold,
-                TextAlignmentOptions.Center);
-            reviveLabelText.color = Color.white;
-            reviveLabelText.rectTransform.anchoredPosition = new Vector2(0f, -14f);
-            reviveLabelText.rectTransform.sizeDelta = new Vector2(200f, 28f);
+            ConfigureThreeBombButtons(
+                buttonsContainer,
+                buttonSprite,
+                trashSprite,
+                goldCoinSprite,
+                videoAdSprite,
+                out Button giveUpBtn,
+                out Button reviveBtn,
+                out Button reviveAdBtn,
+                out TMP_Text reviveCostText);
 
             // =========================================================================
             // 6. WIRE BOMBPOPUPVIEW & GAMEMANAGER
@@ -574,6 +725,8 @@ namespace Vertigo.Editor
             bpSO.FindProperty("ui_text_revive_cost_value").objectReferenceValue = reviveCostText;
             bpSO.FindProperty("ui_button_giveup").objectReferenceValue = giveUpBtn;
             bpSO.FindProperty("ui_button_revive").objectReferenceValue = reviveBtn;
+            bpSO.FindProperty("ui_button_revive_ad").objectReferenceValue = reviveAdBtn;
+            bpSO.FindProperty("reviveCost").intValue = 25;
             bpSO.ApplyModifiedProperties();
 
             GameManager gm = Object.FindFirstObjectByType<GameManager>();

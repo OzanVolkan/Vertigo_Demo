@@ -24,7 +24,7 @@ namespace Vertigo.Wheel.Views
 
         public Vector3 IconWorldPosition => ui_image_icon != null ? ui_image_icon.transform.position : transform.position;
 
-        public void Setup(IWheelSliceData sliceData)
+        public void Setup(IWheelSliceData sliceData, float rewardMultiplier = 1f)
         {
             _winTween?.Kill();
             transform.localScale = Vector3.one;
@@ -67,7 +67,8 @@ namespace Vertigo.Wheel.Views
                 }
                 else
                 {
-                    ui_text_amount_value.text = sliceData.Reward.FormatAmount(sliceData.Amount);
+                    int scaledAmount = Mathf.Max(1, Mathf.RoundToInt(sliceData.Amount * rewardMultiplier));
+                    ui_text_amount_value.text = sliceData.Reward.FormatAmount(scaledAmount);
                 }
             }
         }

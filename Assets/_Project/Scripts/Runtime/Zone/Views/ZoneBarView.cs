@@ -46,6 +46,7 @@ namespace Vertigo.Zone.Views
         [SerializeField] private float slideDuration = 0.35f;
         [SerializeField] private Ease slideEase = Ease.OutCubic;
         [SerializeField] private float punchScaleAmount = 0.08f;
+        [SerializeField] private int maxZone = 60;
 
         private int _currentZoneNumber = 0;
         private Sequence _slideSequence;
@@ -100,15 +101,15 @@ namespace Vertigo.Zone.Views
         public void UpdateZoneBar(ZoneData zoneData)
         {
             if (zoneData == null) return;
-            int newZone = zoneData.ZoneNumber;
+            int newZone = Mathf.Clamp(zoneData.ZoneNumber, 1, maxZone);
 
-            // 1. Update Top-Right Next Badges
-            int nextSafe = ((newZone / 5) + (newZone % 5 == 0 ? 0 : 1)) * 5;
+            // 1. Update Top-Right Next Badges (clamped to maxZone = 60)
+            int nextSafe = Mathf.Min(maxZone, ((newZone / 5) + (newZone % 5 == 0 ? 0 : 1)) * 5);
             if (nextSafe == newZone && newZone % 5 == 0)
             {
                 nextSafe = newZone;
             }
-            int nextSuper = ((newZone / 30) + (newZone % 30 == 0 ? 0 : 1)) * 30;
+            int nextSuper = Mathf.Min(maxZone, ((newZone / 30) + (newZone % 30 == 0 ? 0 : 1)) * 30);
 
             if (ui_text_next_safe_zone_value != null)
                 ui_text_next_safe_zone_value.text = nextSafe.ToString();
@@ -135,14 +136,21 @@ namespace Vertigo.Zone.Views
             AnimateToZone(newZone);
         }
 
+        private int CalculateStartZone(int zone, int totalSlots, int halfSlots)
+        {
+            int maxStartZone = Mathf.Max(1, maxZone - totalSlots + 1);
+            return Mathf.Clamp(zone - halfSlots, 1, maxStartZone);
+        }
+
         public void SnapToZone(int currentZone)
         {
             KillSequence();
+            currentZone = Mathf.Clamp(currentZone, 1, maxZone);
             _currentZoneNumber = currentZone;
 
             int totalSlots = ui_slot_texts != null && ui_slot_texts.Count > 0 ? ui_slot_texts.Count : 13;
             int halfSlots = totalSlots / 2;
-            int startZone = Mathf.Max(1, currentZone - halfSlots);
+            int startZone = CalculateStartZone(currentZone, totalSlots, halfSlots);
 
             RefreshSlotNumbers(startZone);
             RefreshSlotColors(currentZone, startZone);
@@ -159,6 +167,7 @@ namespace Vertigo.Zone.Views
         private void AnimateToZone(int newZone)
         {
             KillSequence();
+            newZone = Mathf.Clamp(newZone, 1, maxZone);
             _slideSequence = DOTween.Sequence();
 
             int totalSlots = ui_slot_texts != null && ui_slot_texts.Count > 0 ? ui_slot_texts.Count : 13;
@@ -185,14 +194,15 @@ namespace Vertigo.Zone.Views
             }
 
             // Advancing forward
-            int prevStartZone = Mathf.Max(1, previousZone - halfSlots);
+            int prevStartZone = CalculateStartZone(previousZone, totalSlots, halfSlots);
+            int nextStartZone = CalculateStartZone(newZone, totalSlots, halfSlots);
             SetSlotPastColor(previousZone, prevStartZone);
 
-            if (newZone <= halfSlots + 1)
+            if (nextStartZone == prevStartZone)
             {
-                // Case A: Early Progression (Zones 1..7)
-                // Badge slides smoothly from current slot to target slot along the strip
-                int targetIndex = newZone - 1;
+                // Case A: Early Progression (Zones 1..7) OR Final Stretch (Zones 55..60)
+                // Strip stays fixed and badge slides smoothly from current slot to target slot!
+                int targetIndex = Mathf.Clamp(newZone - nextStartZone, 0, totalSlots - 1);
                 float targetX = GetSlotLocalX(targetIndex);
 
                 _slideSequence.Append(ui_transform_current_badge.DOAnchorPosX(targetX, slideDuration).SetEase(slideEase));
@@ -200,13 +210,13 @@ namespace Vertigo.Zone.Views
                 {
                     _currentZoneNumber = newZone;
                     UpdateBadgeVisual(newZone);
-                    RefreshSlotColors(newZone, 1);
+                    RefreshSlotColors(newZone, nextStartZone);
                     ui_transform_current_badge.DOPunchScale(Vector3.one * punchScaleAmount, 0.2f, 2, 0.5f);
                 });
             }
             else
             {
-                // Case B: Centered Progression (Zones > 7)
+                // Case B: Centered Progression (Zones 8..54)
                 // Badge remains FIXED at the center!
                 // Only the zone bar (number strip) slides smoothly to the left by 1 slot.
                 float slotStep = GetSlotStepDistance();
@@ -227,9 +237,8 @@ namespace Vertigo.Zone.Views
                     // Reset container offset seamlessly and update slot numbers
                     ui_container_zone_slots.anchoredPosition = Vector2.zero;
                     _currentZoneNumber = newZone;
-                    int startZone = newZone - halfSlots;
-                    RefreshSlotNumbers(startZone);
-                    RefreshSlotColors(newZone, startZone);
+                    RefreshSlotNumbers(nextStartZone);
+                    RefreshSlotColors(newZone, nextStartZone);
                     UpdateBadgeVisual(newZone);
                     ui_transform_current_badge.DOPunchScale(Vector3.one * punchScaleAmount, 0.2f, 2, 0.5f);
                 });

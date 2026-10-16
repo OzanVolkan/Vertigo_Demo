@@ -25,9 +25,10 @@ namespace Vertigo.UI.Panels
         [Header("Buttons")]
         [SerializeField] private Button ui_button_giveup;
         [SerializeField] private Button ui_button_revive;
+        [SerializeField] private Button ui_button_revive_ad;
 
         [Header("Settings")]
-        [SerializeField] private int reviveCost = 150;
+        [SerializeField] private int reviveCost = 25;
 
         private Sequence _showSequence;
         private Tween _glowPulseTween;
@@ -52,6 +53,12 @@ namespace Vertigo.UI.Panels
             {
                 ui_button_revive.onClick.RemoveListener(OnReviveClicked);
                 ui_button_revive.onClick.AddListener(OnReviveClicked);
+            }
+
+            if (ui_button_revive_ad != null)
+            {
+                ui_button_revive_ad.onClick.RemoveListener(OnReviveClicked);
+                ui_button_revive_ad.onClick.AddListener(OnReviveClicked);
             }
 
             if (ui_text_revive_cost_value != null)
@@ -258,6 +265,13 @@ namespace Vertigo.UI.Panels
                 var ButtonsTr = transform.Find("ui_transform_buttons");
                 var tr = ButtonsTr != null ? ButtonsTr.Find("ui_button_revive") : transform.Find("ui_button_revive");
                 if (tr != null) ui_button_revive = tr.GetComponent<Button>();
+            }
+
+            if (ui_button_revive_ad == null)
+            {
+                var ButtonsTr = transform.Find("ui_transform_buttons");
+                var tr = ButtonsTr != null ? ButtonsTr.Find("ui_button_revive_ad") : transform.Find("ui_button_revive_ad");
+                if (tr != null) ui_button_revive_ad = tr.GetComponent<Button>();
             }
         }
     }

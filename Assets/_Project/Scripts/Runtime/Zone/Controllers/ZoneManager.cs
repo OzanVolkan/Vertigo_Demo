@@ -16,6 +16,8 @@ namespace Vertigo.Zone.Controllers
         private ZoneData _currentZoneData;
 
         public int CurrentZoneNumber => currentZoneNumber;
+        public int MaxZone => zoneConfig != null ? zoneConfig.MaxZone : 60;
+        public bool IsFinalZone => currentZoneNumber >= MaxZone;
         public ZoneData CurrentZoneData => _currentZoneData;
         public bool IsSafeZone => _currentZoneData != null && _currentZoneData.ZoneType == ZoneType.Safe;
         public bool IsSuperZone => _currentZoneData != null && _currentZoneData.ZoneType == ZoneType.Super;
@@ -33,19 +35,19 @@ namespace Vertigo.Zone.Controllers
 
         public void Initialize(int startZone = 1)
         {
-            currentZoneNumber = Mathf.Max(1, startZone);
+            currentZoneNumber = Mathf.Clamp(startZone, 1, MaxZone);
             LoadCurrentZone();
         }
 
         public void AdvanceToNextZone()
         {
-            currentZoneNumber++;
+            currentZoneNumber = Mathf.Clamp(currentZoneNumber + 1, 1, MaxZone);
             LoadCurrentZone();
         }
 
         public void JumpToZone(int targetZone)
         {
-            currentZoneNumber = Mathf.Max(1, targetZone);
+            currentZoneNumber = Mathf.Clamp(targetZone, 1, MaxZone);
             LoadCurrentZone();
         }
 

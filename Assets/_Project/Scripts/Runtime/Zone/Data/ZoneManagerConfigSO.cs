@@ -9,6 +9,13 @@ namespace Vertigo.Zone.Data
     [CreateAssetMenu(fileName = "ZoneConfig_", menuName = "Vertigo/Zone/Zone Manager Config")]
     public class ZoneManagerConfigSO : ScriptableObject
     {
+        [Header("Zone Progression Limits")]
+        [Tooltip("Final zone number where the run completes and automatically cashes out")]
+        [SerializeField] private int maxZone = 60;
+
+        [Tooltip("How much the reward multiplier increases per zone (e.g., 0.25 = +25% per zone)")]
+        [SerializeField] private float multiplierStepPerZone = 0.25f;
+
         [Header("Zone Intervals")]
         [Tooltip("Interval for Safe Zones (Silver Spin without bomb)")]
         [SerializeField] private int safeZoneInterval = 5;
@@ -24,6 +31,8 @@ namespace Vertigo.Zone.Data
         [Header("Zone Custom Overrides (Optional)")]
         [SerializeField] private List<ZoneOverrideEntry> zoneOverrides = new List<ZoneOverrideEntry>();
 
+        public int MaxZone => Mathf.Max(1, maxZone);
+        public float MultiplierStepPerZone => multiplierStepPerZone;
         public int SafeZoneInterval => safeZoneInterval;
         public int SuperZoneInterval => superZoneInterval;
         public WheelConfigSO DefaultNormalWheel => defaultNormalWheel;
@@ -75,8 +84,8 @@ namespace Vertigo.Zone.Data
                 _ => defaultNormalWheel
             };
 
-            // Scaled multiplier: gradually increases with zones (e.g. 1.0 + (zoneNumber - 1) * 0.1f)
-            float multiplier = 1f + (zoneNumber - 1) * 0.05f;
+            // Scaled multiplier: increases every zone so slice rewards get better each zone
+            float multiplier = 1f + (zoneNumber - 1) * Mathf.Max(0f, multiplierStepPerZone);
 
             return new ZoneData(zoneNumber, calculatedType, selectedConfig, multiplier);
         }

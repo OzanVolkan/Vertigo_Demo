@@ -273,6 +273,14 @@ namespace Vertigo.Core.State
             // Short breath after collection before zone advances
             yield return new WaitForSeconds(0.25f);
 
+            // Final Zone (Zone 60) completed: automatically cash out all collected rewards!
+            if (zoneManager != null && zoneManager.IsFinalZone)
+            {
+                Debug.Log($"[GameManager] Final Zone ({zoneManager.CurrentZoneNumber}) completed! Automatically cashing out rewards.");
+                GameEvents.FireCashOutRequested();
+                yield break;
+            }
+
             // Advance to next zone
             SetState(GameState.ZoneTransition);
             if (zoneManager != null)
@@ -295,6 +303,12 @@ namespace Vertigo.Core.State
 
         private IEnumerator PostReviveRoutine()
         {
+            if (zoneManager != null && zoneManager.IsFinalZone)
+            {
+                GameEvents.FireCashOutRequested();
+                yield break;
+            }
+
             SetState(GameState.ZoneTransition);
             if (zoneManager != null)
             {

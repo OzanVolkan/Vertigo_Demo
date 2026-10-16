@@ -124,12 +124,12 @@ namespace Vertigo.Wheel.Views
             if (ui_image_wheel_indicator != null && config.IndicatorSprite != null)
                 ui_image_wheel_indicator.sprite = config.IndicatorSprite;
 
-            // Populate 8 slices
+            // Populate 8 slices with zone reward multiplier applied
             for (int i = 0; i < ui_slice_views.Count; i++)
             {
                 if (ui_slice_views[i] != null && i < config.SliceCount)
                 {
-                    ui_slice_views[i].Setup(config.GetSlice(i));
+                    ui_slice_views[i].Setup(config.GetSlice(i), zone.RewardMultiplier);
                 }
             }
         }
