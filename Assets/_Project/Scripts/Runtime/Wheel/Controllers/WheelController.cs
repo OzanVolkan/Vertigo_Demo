@@ -14,6 +14,7 @@ namespace Vertigo.Wheel.Controllers
         [Header("Runtime State")]
         [SerializeField] private WheelConfigSO currentConfig;
         [SerializeField] private bool disableBombChance = false;
+        [SerializeField] private bool forceBombChance = false;
         private bool _isSpinning;
         private int _currentTargetIndex;
         private float _currentWheelAngle;
@@ -24,6 +25,11 @@ namespace Vertigo.Wheel.Controllers
         {
             get => disableBombChance;
             set => disableBombChance = value;
+        }
+        public bool ForceBombChance
+        {
+            get => forceBombChance;
+            set => forceBombChance = value;
         }
 
         private void OnEnable()
@@ -59,8 +65,29 @@ namespace Vertigo.Wheel.Controllers
 
             _isSpinning = true;
 
-            // Roll target slice based on slice weights (respecting disableBombChance test setting)
-            _currentTargetIndex = WheelMathUtility.RollWeightedSliceIndex(currentConfig.ConcreteSlices, disableBombChance);
+            int forcedBombIdx = -1;
+            if (forceBombChance && !disableBombChance)
+            {
+                for (int i = 0; i < currentConfig.ConcreteSlices.Count; i++)
+                {
+                    var s = currentConfig.ConcreteSlices[i];
+                    if (s != null && s.Reward != null && s.Reward.IsBomb)
+                    {
+                        forcedBombIdx = i;
+                        break;
+                    }
+                }
+            }
+
+            if (forcedBombIdx >= 0)
+            {
+                _currentTargetIndex = forcedBombIdx;
+            }
+            else
+            {
+                // Roll target slice based on slice weights (respecting disableBombChance test setting)
+                _currentTargetIndex = WheelMathUtility.RollWeightedSliceIndex(currentConfig.ConcreteSlices, disableBombChance);
+            }
             
             // Calculate target angle (with natural offset) and exact center angle
             float targetAngle = WheelMathUtility.CalculateTargetRotation(

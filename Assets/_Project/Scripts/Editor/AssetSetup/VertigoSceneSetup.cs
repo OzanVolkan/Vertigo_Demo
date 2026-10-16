@@ -608,6 +608,7 @@ namespace Vertigo.Editor
             gmSO.ApplyModifiedProperties();
 
             RewardShowcaseSetupUtility.SetupRewardShowcase();
+            BombPopupSetupUtility.SetupBombPopup();
 
             // Save Scene
             EditorSceneManager.SaveScene(scene, ScenePath);

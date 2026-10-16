@@ -6,6 +6,7 @@ using Vertigo.Core.Events;
 using Vertigo.Rewards.Controllers;
 using Vertigo.Rewards.Data;
 using Vertigo.Rewards.Views;
+using Vertigo.UI.Panels;
 using Vertigo.Wheel.Controllers;
 using Vertigo.Wheel.Data;
 using Vertigo.Wheel.Views;
@@ -28,6 +29,7 @@ namespace Vertigo.Core.State
         [SerializeField] private InventoryView inventoryView;
         [SerializeField] private RewardCollectEffectView rewardCollectEffect;
         [SerializeField] private RewardShowcaseView rewardShowcase;
+        [SerializeField] private BombPopupView bombPopupView;
 
         [Header("State")]
         [SerializeField] private GameState currentState = GameState.Initialize;
@@ -54,6 +56,12 @@ namespace Vertigo.Core.State
             if (inventoryView == null) inventoryView = FindFirstObjectByType<InventoryView>();
             if (rewardCollectEffect == null) rewardCollectEffect = FindFirstObjectByType<RewardCollectEffectView>();
             if (rewardShowcase == null) rewardShowcase = FindFirstObjectByType<RewardShowcaseView>(FindObjectsInactive.Include);
+            if (bombPopupView == null) bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
+
+            if (bombPopupView != null && !bombPopupView.gameObject.activeSelf)
+            {
+                bombPopupView.HideImmediate();
+            }
         }
 
         private void Start()
@@ -128,8 +136,23 @@ namespace Vertigo.Core.State
 
         private IEnumerator TriggerBombRoutine()
         {
-            yield return new WaitForSeconds(0.4f);
+            if (wheelView != null)
+            {
+                wheelView.PlayBombImpactShake();
+            }
+
+            yield return new WaitForSeconds(0.45f);
             SetState(GameState.BombTriggered);
+
+            if (bombPopupView == null)
+            {
+                bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
+            }
+            if (bombPopupView != null && !bombPopupView.gameObject.activeSelf)
+            {
+                bombPopupView.gameObject.SetActive(true);
+            }
+
             GameEvents.FireBombTriggered();
         }
 

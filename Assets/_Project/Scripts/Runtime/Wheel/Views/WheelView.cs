@@ -217,6 +217,15 @@ namespace Vertigo.Wheel.Views
             return ui_transform_wheel_rotator != null ? ui_transform_wheel_rotator.position : transform.position;
         }
 
+        public void PlayBombImpactShake()
+        {
+            if (ui_transform_wheel_rotator != null)
+            {
+                ui_transform_wheel_rotator.DOComplete();
+                ui_transform_wheel_rotator.DOShakeAnchorPos(0.35f, new Vector2(15f, 15f), 28, 90f, false, true);
+            }
+        }
+
         private void TriggerIndicatorTick()
         {
             if (ui_transform_indicator == null) return;

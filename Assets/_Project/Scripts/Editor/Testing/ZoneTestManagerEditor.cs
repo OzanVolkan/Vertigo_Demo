@@ -128,11 +128,30 @@ namespace Vertigo.Editor
             EditorGUILayout.LabelField("TEST FLAGS & CHEATS", EditorStyles.boldLabel);
 
             SerializedProperty disableBombProp = serializedObject.FindProperty("disableBomb");
+            SerializedProperty forceBombProp = serializedObject.FindProperty("forceBomb");
+
+            EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(disableBombProp, new GUIContent("Disable Bomb (0% Bomb Chance)", "When checked, wheel spins will NEVER land on a bomb slice."));
+            if (EditorGUI.EndChangeCheck() && disableBombProp.boolValue)
+            {
+                forceBombProp.boolValue = false;
+            }
 
             if (disableBombProp.boolValue)
             {
                 EditorGUILayout.HelpBox("BOMBA DEVRE DISI (%0 SANS): Cark donuslerinde bomba dilimi elenir ve asla bomba gelmez.", MessageType.Warning);
+            }
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(forceBombProp, new GUIContent("Force Bomb (100% Bomb Chance)", "When checked, normal wheel spins will ALWAYS land on the bomb slice."));
+            if (EditorGUI.EndChangeCheck() && forceBombProp.boolValue)
+            {
+                disableBombProp.boolValue = false;
+            }
+
+            if (forceBombProp.boolValue)
+            {
+                EditorGUILayout.HelpBox("GARANTI BOMBA (%100 SANS): Bomba iceren carklarda donus kesinlikle bomba uzerinde durur.", MessageType.Error);
             }
 
             SerializedProperty clearInvProp = serializedObject.FindProperty("clearInventoryOnJump");

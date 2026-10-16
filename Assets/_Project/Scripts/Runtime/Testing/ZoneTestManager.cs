@@ -21,6 +21,8 @@ namespace Vertigo.Testing
         [Header("Cheat / Test Flags")]
         [Tooltip("If checked, bomb probability is 0% (spins will NEVER land on a bomb)")]
         [SerializeField] private bool disableBomb = false;
+        [Tooltip("If checked, spins on normal wheels will ALWAYS land on the bomb (100% chance)")]
+        [SerializeField] private bool forceBomb = false;
 
         [Header("Options")]
         [Tooltip("If true, resets session inventory items when jumping to a new zone")]
@@ -46,6 +48,18 @@ namespace Vertigo.Testing
             set
             {
                 disableBomb = value;
+                if (disableBomb) forceBomb = false;
+                ApplyBombSetting();
+            }
+        }
+
+        public bool ForceBomb
+        {
+            get => forceBomb;
+            set
+            {
+                forceBomb = value;
+                if (forceBomb) disableBomb = false;
                 ApplyBombSetting();
             }
         }
@@ -102,6 +116,7 @@ namespace Vertigo.Testing
             if (wheelController != null)
             {
                 wheelController.DisableBombChance = disableBomb;
+                wheelController.ForceBombChance = forceBomb;
             }
         }
 

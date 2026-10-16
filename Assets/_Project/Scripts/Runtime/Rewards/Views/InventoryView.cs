@@ -57,7 +57,7 @@ namespace Vertigo.Rewards.Views
 
         private void OnGameStateChanged(GameState state)
         {
-            _isSpinning = (state == GameState.Spinning || state == GameState.Evaluating);
+            _isSpinning = (state != GameState.Idle);
             UpdateCashOutButtonState();
 
             // Disable manual scrolling during spin/award/transition, re-enable when Idle
