@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Reward_Bayonet
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Rewards.Data.RewardDataSO
   id: Reward_Bayonet
-  displayName: MLE Bayonet
+  displayName: MLE BAYONET
   icon: {fileID: 21300000, guid: d9fd8117811f54a49beea36432e27ce6, type: 3}
   type: 2
   amountPrefix: x

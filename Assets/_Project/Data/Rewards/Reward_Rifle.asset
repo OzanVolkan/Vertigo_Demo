@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Reward_Rifle
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Rewards.Data.RewardDataSO
   id: Reward_Rifle
-  displayName: Tier 2 Rifle
+  displayName: TIER 2 RIFLE
   icon: {fileID: 21300000, guid: b74894cc7cbeed446937db0cdf6f1893, type: 3}
   type: 2
   amountPrefix: x

@@ -56,7 +56,7 @@ namespace Vertigo.Rewards.Data
             }
             if (string.IsNullOrEmpty(displayName))
             {
-                displayName = name.Replace("Reward_", "").Replace("_", " ");
+                displayName = name.Replace("Reward_", "").Replace("_", " ").ToUpperInvariant();
             }
         }
     }

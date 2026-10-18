@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Reward_Chest_Bronze
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Rewards.Data.RewardDataSO
   id: Reward_Chest_Bronze
-  displayName: Bronze Chest
+  displayName: BRONZE CHEST
   icon: {fileID: 21300000, guid: 3372fb01a003dd146bcda933b3288d4e, type: 3}
   type: 3
   amountPrefix: x

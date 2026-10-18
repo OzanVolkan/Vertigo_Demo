@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Reward_Gold
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Rewards.Data.RewardDataSO
   id: Reward_Gold
-  displayName: Gold
+  displayName: GOLD
   icon: {fileID: 21300000, guid: 216a47fc8c44e354c838dae2b220f5c0, type: 3}
   type: 1
   amountPrefix: x

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Reward_Points_Pistol
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Rewards.Data.RewardDataSO
   id: Reward_Points_Pistol
-  displayName: Pistol Points
+  displayName: PISTOL POINTS
   icon: {fileID: 21300000, guid: f4252ed4269e7e14e81177aa0614450d, type: 3}
   type: 4
   amountPrefix: x

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Reward_Grenade
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Rewards.Data.RewardDataSO
   id: Reward_Grenade
-  displayName: M26 Grenade
+  displayName: M26 GRENADE
   icon: {fileID: 21300000, guid: b603dd35e9e01d14a868534d98e5ffa2, type: 3}
   type: 5
   amountPrefix: x

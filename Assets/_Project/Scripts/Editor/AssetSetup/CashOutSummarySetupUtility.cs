@@ -535,6 +535,12 @@ namespace Vertigo.Editor
         {
             GameObject obj = CreateUIObject(name, parent);
             TextMeshProUGUI tmp = obj.AddComponent<TextMeshProUGUI>();
+            TMP_FontAsset defaultFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/_Project/Font/Roboto/Roboto-SemiBold SDF.asset");
+            if (defaultFont != null)
+            {
+                tmp.font = defaultFont;
+                tmp.fontSharedMaterial = defaultFont.material;
+            }
             tmp.text = content;
             tmp.fontSize = fontSize;
             tmp.fontStyle = style;

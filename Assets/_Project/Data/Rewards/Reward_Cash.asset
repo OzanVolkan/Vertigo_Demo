@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Reward_Cash
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Rewards.Data.RewardDataSO
   id: Reward_Cash
-  displayName: Cash
+  displayName: CASH
   icon: {fileID: 21300000, guid: 42f297a2ef75c49459392d9e5e14bbb9, type: 3}
   type: 0
   amountPrefix: $

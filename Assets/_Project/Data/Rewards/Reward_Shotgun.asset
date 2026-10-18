@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Reward_Shotgun
   m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Rewards.Data.RewardDataSO
   id: Reward_Shotgun
-  displayName: Tier 1 Shotgun
+  displayName: TIER 1 SHOTGUN
   icon: {fileID: 21300000, guid: 7a1a94e00890fa54da598f7fc95918ee, type: 3}
   type: 2
   amountPrefix: x

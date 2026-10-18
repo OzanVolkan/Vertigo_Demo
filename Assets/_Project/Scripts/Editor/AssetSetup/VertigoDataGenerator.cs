@@ -20,20 +20,20 @@ namespace Vertigo.Editor
             EnsureDirectories();
 
             // 1. Generate Rewards
-            RewardDataSO bombReward = CreateReward("Reward_Bomb", "Bomb", "Assets/2D/demo_content/ui_card_icon_death.png", RewardType.Bomb);
-            RewardDataSO cashReward = CreateReward("Reward_Cash", "Cash", "Assets/2D/demo_content/UI_icon_cash.png", RewardType.Cash, "$", false);
-            RewardDataSO goldReward = CreateReward("Reward_Gold", "Gold", "Assets/2D/demo_content/UI_icon_gold.png", RewardType.Gold, "x", false);
-            RewardDataSO bronzeChest = CreateReward("Reward_Chest_Bronze", "Bronze Chest", "Assets/2D/demo_content/UI_icon_chest_Bronze_nolight.png", RewardType.Chest);
-            RewardDataSO silverChest = CreateReward("Reward_Chest_Silver", "Silver Chest", "Assets/2D/demo_content/UI_icon_chest_silver_nolight.png", RewardType.Chest);
-            RewardDataSO goldChest = CreateReward("Reward_Chest_Gold", "Gold Chest", "Assets/2D/demo_content/UI_icon_chest_gold_nolight.png", RewardType.Chest);
-            RewardDataSO superChest = CreateReward("Reward_Chest_Super", "Super Chest", "Assets/2D/demo_content/UI_icon_chest_super_nolight.png", RewardType.Chest);
-            RewardDataSO shotgun = CreateReward("Reward_Shotgun", "Tier 1 Shotgun", "Assets/2D/demo_content/UI_Icon_Renders_tier1_shotgun.png", RewardType.Weapon);
-            RewardDataSO rifle = CreateReward("Reward_Rifle", "Tier 2 Rifle", "Assets/2D/demo_content/UI_Icon_Renders_tier2_rifle.png", RewardType.Weapon);
-            RewardDataSO bayonet = CreateReward("Reward_Bayonet", "MLE Bayonet", "Assets/2D/demo_content/ui_icon_mle_bayonet_easter_time.png", RewardType.Weapon);
-            RewardDataSO grenade = CreateReward("Reward_Grenade", "M26 Grenade", "Assets/2D/demo_content/ui_icon_render_cons_grenade_m26.png", RewardType.Consumable);
-            RewardDataSO healthshot = CreateReward("Reward_Healthshot", "Neurostim Healthshot", "Assets/2D/demo_content/ui_icon_render_cons_healthshot_2_neurostim.png", RewardType.Consumable);
-            RewardDataSO pistolPoints = CreateReward("Reward_Points_Pistol", "Pistol Points", "Assets/2D/demo_content/UI_Icons_Pistol_Points.png", RewardType.Points);
-            RewardDataSO shotgunPoints = CreateReward("Reward_Points_Shotgun", "Shotgun Points", "Assets/2D/demo_content/UI_Icons_Shotgun_Points.png", RewardType.Points);
+            RewardDataSO bombReward = CreateReward("Reward_Bomb", "BOMB", "Assets/2D/demo_content/ui_card_icon_death.png", RewardType.Bomb);
+            RewardDataSO cashReward = CreateReward("Reward_Cash", "CASH", "Assets/2D/demo_content/UI_icon_cash.png", RewardType.Cash, "$", false);
+            RewardDataSO goldReward = CreateReward("Reward_Gold", "GOLD", "Assets/2D/demo_content/UI_icon_gold.png", RewardType.Gold, "x", false);
+            RewardDataSO bronzeChest = CreateReward("Reward_Chest_Bronze", "BRONZE CHEST", "Assets/2D/demo_content/UI_icon_chest_Bronze_nolight.png", RewardType.Chest);
+            RewardDataSO silverChest = CreateReward("Reward_Chest_Silver", "SILVER CHEST", "Assets/2D/demo_content/UI_icon_chest_silver_nolight.png", RewardType.Chest);
+            RewardDataSO goldChest = CreateReward("Reward_Chest_Gold", "GOLD CHEST", "Assets/2D/demo_content/UI_icon_chest_gold_nolight.png", RewardType.Chest);
+            RewardDataSO superChest = CreateReward("Reward_Chest_Super", "SUPER CHEST", "Assets/2D/demo_content/UI_icon_chest_super_nolight.png", RewardType.Chest);
+            RewardDataSO shotgun = CreateReward("Reward_Shotgun", "TIER 1 SHOTGUN", "Assets/2D/demo_content/UI_Icon_Renders_tier1_shotgun.png", RewardType.Weapon);
+            RewardDataSO rifle = CreateReward("Reward_Rifle", "TIER 2 RIFLE", "Assets/2D/demo_content/UI_Icon_Renders_tier2_rifle.png", RewardType.Weapon);
+            RewardDataSO bayonet = CreateReward("Reward_Bayonet", "MLE BAYONET", "Assets/2D/demo_content/ui_icon_mle_bayonet_easter_time.png", RewardType.Weapon);
+            RewardDataSO grenade = CreateReward("Reward_Grenade", "M26 GRENADE", "Assets/2D/demo_content/ui_icon_render_cons_grenade_m26.png", RewardType.Consumable);
+            RewardDataSO healthshot = CreateReward("Reward_Healthshot", "NEUROSTIM HEALTHSHOT", "Assets/2D/demo_content/ui_icon_render_cons_healthshot_2_neurostim.png", RewardType.Consumable);
+            RewardDataSO pistolPoints = CreateReward("Reward_Points_Pistol", "PISTOL POINTS", "Assets/2D/demo_content/UI_Icons_Pistol_Points.png", RewardType.Points);
+            RewardDataSO shotgunPoints = CreateReward("Reward_Points_Shotgun", "SHOTGUN POINTS", "Assets/2D/demo_content/UI_Icons_Shotgun_Points.png", RewardType.Points);
 
             // 2. Generate Wheels
             Sprite bronzeBase = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_bronze_base.png");
