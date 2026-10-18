@@ -81,6 +81,8 @@ namespace Vertigo.UI.Panels
 
             EnsureInitialized();
 
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.MissionCompleteVictory);
+
             if (ui_panel_popup_root != null)
             {
                 ui_panel_popup_root.SetActive(true);
@@ -111,6 +113,8 @@ namespace Vertigo.UI.Panels
 
         private void OnCollectRewardsClicked()
         {
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
+
             if (ui_canvas_group != null)
             {
                 ui_canvas_group.interactable = false;

@@ -762,6 +762,7 @@ MonoBehaviour:
   zoneManager: {fileID: 45457545}
   wheelController: {fileID: 45457543}
   inventoryManager: {fileID: 45457544}
+  audioManager: {fileID: 177757320}
   wheelView: {fileID: 485599702}
   inventoryView: {fileID: 296562477}
   rewardCollectEffect: {fileID: 2114086939}
@@ -785,7 +786,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 177757321}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &45457548
@@ -2099,6 +2101,74 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 162430473}
   m_CullTransparentMesh: 1
+--- !u!1 &177757319
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 177757321}
+  - component: {fileID: 177757320}
+  m_Layer: 0
+  m_Name: '[AudioManager]'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &177757320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177757319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d06434b17fff0746b067c47b7a2d6cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Audio.Controllers.AudioManager
+  audioConfig: {fileID: 11400000, guid: 41b2e22b1a21eaf42a16ae439fd7cb20, type: 2}
+  masterSfxVolume: 1
+  isMuted: 0
+  poolSize: 10
+  buttonClickClip: {fileID: 8300000, guid: 3f8ebcea02861c34d87c45c2475b30c9, type: 3}
+  wheelSpinStartClip: {fileID: 8300000, guid: bf4a5cf3adca7c3459065d6721243790, type: 3}
+  wheelTickClip: {fileID: 8300000, guid: 792b8237b93477348adb55eaa07b5fa7, type: 3}
+  wheelStopRewardClip: {fileID: 8300000, guid: 2d60c74cafc3cdd48bf36fbdced76bc2, type: 3}
+  wheelStopBombClip: {fileID: 8300000, guid: 77ca171aa3c3e3447bf3fec35fcc4972, type: 3}
+  rewardShowcasePopClip: {fileID: 8300000, guid: 99a4ba92ca184c24494f7b4bc0410181, type: 3}
+  rewardParticleBurstClip: {fileID: 8300000, guid: beeac8e6d04bc244ca0d61e14b0351b1, type: 3}
+  rewardSlotHitClip: {fileID: 8300000, guid: 423cd03907a77794a910fde6e13e8a6b, type: 3}
+  zoneAdvanceClip: {fileID: 8300000, guid: f35364ae8212c5043930a9c251fdc799, type: 3}
+  safeZoneEnterClip: {fileID: 8300000, guid: 932ff6c39b3e06a4e97d77e706fe9e7d, type: 3}
+  superZoneEnterClip: {fileID: 8300000, guid: c78df04ace4884e43856aa71cffcec67, type: 3}
+  bombPopupOpenClip: {fileID: 8300000, guid: 2bfdb1f2c83d2f94e9da32b22d80c921, type: 3}
+  reviveSuccessClip: {fileID: 8300000, guid: 2b2cb94a431323743a7c86ebe9f9f8c9, type: 3}
+  giveUpClip: {fileID: 8300000, guid: 3f5253a9fea1c024591466f3002bfd2b, type: 3}
+  cashOutPopupOpenClip: {fileID: 8300000, guid: a19b541410d802e4a93089f2acb18c5a, type: 3}
+  chestAppearClip: {fileID: 8300000, guid: e72c386c956b23f498b8c326df4d5f9d, type: 3}
+  cardRevealSilverClip: {fileID: 8300000, guid: fe97f5e6d1d296348b79fd5713f066d1, type: 3}
+  cardRevealGoldClip: {fileID: 8300000, guid: 63395e153b4d0e44595254c9e99c0f61, type: 3}
+  cashOutSummaryCompleteClip: {fileID: 8300000, guid: 3377924545bc1c448b77f95f28afa3f9, type: 3}
+  missionCompleteVictoryClip: {fileID: 8300000, guid: bad1a428603d40846aebe5f343ab30ed, type: 3}
+--- !u!4 &177757321
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177757319}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 45457547}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &181531349
 GameObject:
   m_ObjectHideFlags: 0
@@ -6410,6 +6480,7 @@ GameObject:
   - component: {fileID: 738058073}
   - component: {fileID: 738058072}
   - component: {fileID: 738058074}
+  - component: {fileID: 738058075}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -6527,6 +6598,14 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!81 &738058075
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738058071}
+  m_Enabled: 1
 --- !u!1 &746694732
 GameObject:
   m_ObjectHideFlags: 0

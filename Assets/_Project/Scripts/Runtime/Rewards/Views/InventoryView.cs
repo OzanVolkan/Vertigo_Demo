@@ -52,6 +52,7 @@ namespace Vertigo.Rewards.Views
 
         private void OnCashOutClicked()
         {
+            GameEvents.FireSfx(SoundEffectType.ButtonClick);
             GameEvents.FireCashOutPromptRequested();
         }
 

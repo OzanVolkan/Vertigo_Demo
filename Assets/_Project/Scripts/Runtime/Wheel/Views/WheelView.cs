@@ -114,6 +114,7 @@ namespace Vertigo.Wheel.Views
 
         private void OnSpinButtonClicked()
         {
+            GameEvents.FireSfx(SoundEffectType.ButtonClick);
             GameEvents.FireSpinRequested();
         }
 

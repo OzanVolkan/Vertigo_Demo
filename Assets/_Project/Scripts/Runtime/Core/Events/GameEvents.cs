@@ -36,6 +36,9 @@ namespace Vertigo.Core.Events
         public static event Action<IReadOnlyDictionary<string, (IRewardData reward, int amount)>> OnCashOutSuccess;
         public static event Action OnGameRestartRequested;
 
+        // Audio / SFX Events
+        public static event Action<SoundEffectType, float> OnSfxRequested;
+
         // Dispatchers
         public static void FireGameStateChanged(GameState state) => OnGameStateChanged?.Invoke(state);
         public static void FireZoneChanged(ZoneData zone) => OnZoneChanged?.Invoke(zone);
@@ -53,6 +56,7 @@ namespace Vertigo.Core.Events
         public static void FireCashOutRequested() => OnCashOutRequested?.Invoke();
         public static void FireCashOutSuccess(IReadOnlyDictionary<string, (IRewardData reward, int amount)> banked) => OnCashOutSuccess?.Invoke(banked);
         public static void FireGameRestartRequested() => OnGameRestartRequested?.Invoke();
+        public static void FireSfx(SoundEffectType sfxType, float pitchMultiplier = 1f) => OnSfxRequested?.Invoke(sfxType, pitchMultiplier);
 
         public static void ClearAllListeners()
         {
@@ -72,6 +76,7 @@ namespace Vertigo.Core.Events
             OnCashOutRequested = null;
             OnCashOutSuccess = null;
             OnGameRestartRequested = null;
+            OnSfxRequested = null;
         }
     }
 }

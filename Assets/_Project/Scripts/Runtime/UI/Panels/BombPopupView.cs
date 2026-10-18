@@ -295,12 +295,14 @@ namespace Vertigo.UI.Panels
 
         private void OnGiveUpClicked()
         {
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.GiveUp);
             HidePopup();
             GameEvents.FireGameRestartRequested();
         }
 
         private void OnGoldReviveClicked()
         {
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
             int costToSpend = CurrentReviveCost;
             if (!SessionInventoryManager.TrySpendBankedGold(costToSpend))
             {
@@ -316,6 +318,7 @@ namespace Vertigo.UI.Panels
 
         private void OnAdReviveClicked()
         {
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
             HidePopup();
             GameEvents.FireReviveRequested();
         }

@@ -4,6 +4,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using Vertigo.Core.Enums;
+using Vertigo.Core.Events;
 
 namespace Vertigo.Rewards.Views
 {
@@ -94,6 +95,8 @@ namespace Vertigo.Rewards.Views
                 return;
             }
 
+            GameEvents.FireSfx(SoundEffectType.RewardParticleBurst);
+
             Sprite frameSprite = GetFrameSprite(wheelType);
             int count = UnityEngine.Random.Range(minParticles, maxParticles + 1);
             int landedCount = 0;
@@ -145,6 +148,8 @@ namespace Vertigo.Rewards.Views
                 // 4. Hit target
                 seq.AppendCallback(() =>
                 {
+                    GameEvents.FireSfx(SoundEffectType.RewardSlotHit, 1f + (particleIndex * 0.03f));
+
                     if (!hasPopped && targetSlot != null)
                     {
                         hasPopped = true;

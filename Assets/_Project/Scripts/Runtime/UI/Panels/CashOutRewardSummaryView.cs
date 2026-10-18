@@ -262,6 +262,8 @@ namespace Vertigo.UI.Panels
         {
             int remainingCount = _itemsList.Count;
 
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ChestAppear);
+
             // Chest entrance
             if (ui_transform_chest != null)
             {
@@ -294,6 +296,10 @@ namespace Vertigo.UI.Panels
 
                 var item = _itemsList[i];
                 bool isValuable = item.reward != null && item.reward.IsValuable;
+
+                GameEvents.FireSfx(isValuable
+                    ? Vertigo.Core.Enums.SoundEffectType.CardRevealGold
+                    : Vertigo.Core.Enums.SoundEffectType.CardRevealSilver);
 
                 // Setup Active Card from Prefabs
                 CashOutSummaryCardView cardToShow = isValuable ? activeGoldCard : activeSilverCard;
@@ -409,6 +415,8 @@ namespace Vertigo.UI.Panels
 
         private void ShowFinalSummaryGrid()
         {
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.CashOutSummaryComplete);
+
             if (ui_transform_summary_stage != null)
             {
                 ui_transform_summary_stage.gameObject.SetActive(true);
@@ -537,6 +545,8 @@ namespace Vertigo.UI.Panels
             if (_isSkipped) return;
             _isSkipped = true;
 
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
+
             if (_revealCoroutine != null)
             {
                 StopCoroutine(_revealCoroutine);
@@ -548,6 +558,7 @@ namespace Vertigo.UI.Panels
 
         private void OnContinueClicked()
         {
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
             KillAllAnimations();
 
             if (ui_canvas_group != null)

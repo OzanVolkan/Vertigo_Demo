@@ -1,0 +1,136 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc9708878b10171458bf3da026562901, type: 3}
+  m_Name: AudioConfig_Default
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Audio.Data.AudioConfigSO
+  masterSfxVolume: 1
+  entries:
+  - type: 1
+    clip: {fileID: 8300000, guid: 3f8ebcea02861c34d87c45c2475b30c9, type: 3}
+    volume: 0.75
+    pitchRange: {x: 0.97, y: 1.03}
+    minInterval: 0.04
+    highPriority: 0
+  - type: 2
+    clip: {fileID: 8300000, guid: bf4a5cf3adca7c3459065d6721243790, type: 3}
+    volume: 0.85
+    pitchRange: {x: 0.98, y: 1.02}
+    minInterval: 0.1
+    highPriority: 1
+  - type: 3
+    clip: {fileID: 8300000, guid: 792b8237b93477348adb55eaa07b5fa7, type: 3}
+    volume: 0.65
+    pitchRange: {x: 0.95, y: 1.05}
+    minInterval: 0.032
+    highPriority: 0
+  - type: 4
+    clip: {fileID: 8300000, guid: 2d60c74cafc3cdd48bf36fbdced76bc2, type: 3}
+    volume: 0.85
+    pitchRange: {x: 0.98, y: 1.02}
+    minInterval: 0.1
+    highPriority: 1
+  - type: 5
+    clip: {fileID: 8300000, guid: 77ca171aa3c3e3447bf3fec35fcc4972, type: 3}
+    volume: 0.95
+    pitchRange: {x: 0.96, y: 1.02}
+    minInterval: 0.15
+    highPriority: 1
+  - type: 6
+    clip: {fileID: 8300000, guid: 99a4ba92ca184c24494f7b4bc0410181, type: 3}
+    volume: 0.85
+    pitchRange: {x: 0.98, y: 1.03}
+    minInterval: 0.1
+    highPriority: 1
+  - type: 7
+    clip: {fileID: 8300000, guid: beeac8e6d04bc244ca0d61e14b0351b1, type: 3}
+    volume: 0.75
+    pitchRange: {x: 0.96, y: 1.04}
+    minInterval: 0.08
+    highPriority: 0
+  - type: 8
+    clip: {fileID: 8300000, guid: 423cd03907a77794a910fde6e13e8a6b, type: 3}
+    volume: 0.8
+    pitchRange: {x: 0.98, y: 1.06}
+    minInterval: 0.045
+    highPriority: 0
+  - type: 9
+    clip: {fileID: 8300000, guid: f35364ae8212c5043930a9c251fdc799, type: 3}
+    volume: 0.75
+    pitchRange: {x: 0.98, y: 1.02}
+    minInterval: 0.1
+    highPriority: 0
+  - type: 10
+    clip: {fileID: 8300000, guid: 932ff6c39b3e06a4e97d77e706fe9e7d, type: 3}
+    volume: 0.9
+    pitchRange: {x: 0.99, y: 1.01}
+    minInterval: 0.15
+    highPriority: 1
+  - type: 11
+    clip: {fileID: 8300000, guid: c78df04ace4884e43856aa71cffcec67, type: 3}
+    volume: 0.95
+    pitchRange: {x: 0.99, y: 1.01}
+    minInterval: 0.15
+    highPriority: 1
+  - type: 12
+    clip: {fileID: 8300000, guid: 2bfdb1f2c83d2f94e9da32b22d80c921, type: 3}
+    volume: 0.85
+    pitchRange: {x: 0.98, y: 1.02}
+    minInterval: 0.15
+    highPriority: 1
+  - type: 13
+    clip: {fileID: 8300000, guid: 2b2cb94a431323743a7c86ebe9f9f8c9, type: 3}
+    volume: 0.9
+    pitchRange: {x: 0.99, y: 1.02}
+    minInterval: 0.15
+    highPriority: 1
+  - type: 14
+    clip: {fileID: 8300000, guid: 3f5253a9fea1c024591466f3002bfd2b, type: 3}
+    volume: 0.8
+    pitchRange: {x: 0.98, y: 1.02}
+    minInterval: 0.15
+    highPriority: 1
+  - type: 15
+    clip: {fileID: 8300000, guid: a19b541410d802e4a93089f2acb18c5a, type: 3}
+    volume: 0.8
+    pitchRange: {x: 0.98, y: 1.02}
+    minInterval: 0.1
+    highPriority: 0
+  - type: 16
+    clip: {fileID: 8300000, guid: e72c386c956b23f498b8c326df4d5f9d, type: 3}
+    volume: 0.85
+    pitchRange: {x: 0.98, y: 1.02}
+    minInterval: 0.1
+    highPriority: 1
+  - type: 17
+    clip: {fileID: 8300000, guid: fe97f5e6d1d296348b79fd5713f066d1, type: 3}
+    volume: 0.85
+    pitchRange: {x: 0.97, y: 1.03}
+    minInterval: 0.06
+    highPriority: 0
+  - type: 18
+    clip: {fileID: 8300000, guid: 63395e153b4d0e44595254c9e99c0f61, type: 3}
+    volume: 0.95
+    pitchRange: {x: 0.98, y: 1.02}
+    minInterval: 0.06
+    highPriority: 1
+  - type: 19
+    clip: {fileID: 8300000, guid: 3377924545bc1c448b77f95f28afa3f9, type: 3}
+    volume: 0.9
+    pitchRange: {x: 0.99, y: 1.01}
+    minInterval: 0.15
+    highPriority: 1
+  - type: 20
+    clip: {fileID: 8300000, guid: bad1a428603d40846aebe5f343ab30ed, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    minInterval: 0.25
+    highPriority: 1

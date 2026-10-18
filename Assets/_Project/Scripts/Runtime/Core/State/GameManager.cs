@@ -1,6 +1,7 @@
 using System.Collections;
 using DG.Tweening;
 using UnityEngine;
+using Vertigo.Audio.Controllers;
 using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
 using Vertigo.Rewards.Controllers;
@@ -23,6 +24,7 @@ namespace Vertigo.Core.State
         [SerializeField] private ZoneManager zoneManager;
         [SerializeField] private WheelController wheelController;
         [SerializeField] private SessionInventoryManager inventoryManager;
+        [SerializeField] private AudioManager audioManager;
 
         [Header("Views")]
         [SerializeField] private WheelView wheelView;
@@ -45,6 +47,7 @@ namespace Vertigo.Core.State
         public ZoneManager ZoneManager => zoneManager;
         public WheelController WheelController => wheelController;
         public SessionInventoryManager InventoryManager => inventoryManager;
+        public AudioManager AudioManager => audioManager;
 
         private void Awake()
         {
@@ -55,6 +58,13 @@ namespace Vertigo.Core.State
             }
             Instance = this;
 
+            if (audioManager == null) audioManager = FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include);
+            if (audioManager == null)
+            {
+                GameObject audioObj = new GameObject("[AudioManager]");
+                audioObj.transform.SetParent(transform, false);
+                audioManager = audioObj.AddComponent<AudioManager>();
+            }
             if (wheelView == null) wheelView = FindFirstObjectByType<WheelView>();
             if (inventoryView == null) inventoryView = FindFirstObjectByType<InventoryView>();
             if (rewardCollectEffect == null) rewardCollectEffect = FindFirstObjectByType<RewardCollectEffectView>();

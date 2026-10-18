@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Vertigo.Core.Enums;
+using Vertigo.Core.Events;
 
 namespace Vertigo.Rewards.Views
 {
@@ -65,6 +66,8 @@ namespace Vertigo.Rewards.Views
         {
             _showcaseSequence?.Kill();
             _rayRotationTween?.Kill();
+
+            GameEvents.FireSfx(SoundEffectType.RewardShowcasePop);
 
             if (ui_root != null && !ui_root.activeSelf)
             {
