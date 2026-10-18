@@ -89,6 +89,7 @@ namespace Vertigo.Audio.Controllers
         // Pre-allocated O(1) flat lookup tables (Zero GC)
         private readonly SoundEffectEntry[] _sfxTable = new SoundEffectEntry[SfxTypeCount];
         private readonly float[] _lastPlayedTime = new float[SfxTypeCount];
+        private readonly AudioSource[] _lastUsedSourceByType = new AudioSource[SfxTypeCount];
         private readonly bool[] _channelHighPriority = new bool[24];
 
         // Pre-warmed AudioSource pool
@@ -159,6 +160,7 @@ namespace Vertigo.Audio.Controllers
             GameEvents.OnZoneChanged += HandleZoneChanged;
             GameEvents.OnBombTriggered += HandleBombTriggered;
             GameEvents.OnReviveSuccess += HandleReviveSuccess;
+            GameEvents.OnGameRestartRequested += HandleGameRestartRequested;
             GameEvents.OnCashOutPromptRequested += HandleCashOutPromptRequested;
         }
 
@@ -171,6 +173,7 @@ namespace Vertigo.Audio.Controllers
             GameEvents.OnZoneChanged -= HandleZoneChanged;
             GameEvents.OnBombTriggered -= HandleBombTriggered;
             GameEvents.OnReviveSuccess -= HandleReviveSuccess;
+            GameEvents.OnGameRestartRequested -= HandleGameRestartRequested;
             GameEvents.OnCashOutPromptRequested -= HandleCashOutPromptRequested;
         }
 
@@ -375,7 +378,33 @@ namespace Vertigo.Audio.Controllers
             source.pitch = Mathf.Clamp(randomPitch * pitchMultiplier, 0.5f, 2.0f);
             source.volume = finalVolume;
             source.clip = clipToPlay;
+            _lastUsedSourceByType[index] = source;
             source.Play();
+        }
+
+        /// <summary>
+        /// Immediately stops the AudioSource currently playing the given SoundEffectType, if still active.
+        /// </summary>
+        public void StopSfx(SoundEffectType type)
+        {
+            int index = (int)type;
+            if (index <= 0 || index >= SfxTypeCount) return;
+
+            AudioSource src = _lastUsedSourceByType[index];
+            if (src != null && src.isPlaying)
+            {
+                AudioClip expectedClip = GetDirectInspectorClip(type);
+                if (expectedClip == null)
+                {
+                    expectedClip = _sfxTable[index].clip;
+                }
+
+                if (expectedClip == null || src.clip == expectedClip)
+                {
+                    src.Stop();
+                }
+            }
+            _lastUsedSourceByType[index] = null;
         }
 
         private AudioSource AcquirePooledSource(bool isHighPriority)
@@ -458,12 +487,18 @@ namespace Vertigo.Audio.Controllers
 
         private void HandleSfxRequested(SoundEffectType type, float pitchMultiplier)
         {
+            if (type == SoundEffectType.GiveUp)
+            {
+                StopSfx(SoundEffectType.BombPopupOpen);
+                StopSfx(SoundEffectType.WheelStopBomb);
+            }
             PlaySfx(type, pitchMultiplier);
         }
 
         private void HandleSpinStarted(int targetSliceIndex, float targetAngle, float exactCenterAngle, float duration)
         {
             _consecutiveWheelTicks = 0;
+            StopSfx(SoundEffectType.BombPopupOpen);
             PlaySfx(SoundEffectType.WheelSpinStart);
         }
 
@@ -543,7 +578,15 @@ namespace Vertigo.Audio.Controllers
         private void HandleReviveSuccess()
         {
             _suppressNextZoneSfx = true;
+            StopSfx(SoundEffectType.BombPopupOpen);
+            StopSfx(SoundEffectType.WheelStopBomb);
             PlaySfx(SoundEffectType.ReviveSuccess);
+        }
+
+        private void HandleGameRestartRequested()
+        {
+            StopSfx(SoundEffectType.BombPopupOpen);
+            StopSfx(SoundEffectType.WheelStopBomb);
         }
 
         private void HandleCashOutPromptRequested()

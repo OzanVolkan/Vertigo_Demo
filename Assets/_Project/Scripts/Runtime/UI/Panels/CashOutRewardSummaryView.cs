@@ -545,6 +545,8 @@ namespace Vertigo.UI.Panels
             if (_isSkipped) return;
             _isSkipped = true;
 
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
+
             if (_revealCoroutine != null)
             {
                 StopCoroutine(_revealCoroutine);

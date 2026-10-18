@@ -113,6 +113,8 @@ namespace Vertigo.UI.Panels
 
         private void OnCollectRewardsClicked()
         {
+            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
+
             if (ui_canvas_group != null)
             {
                 ui_canvas_group.interactable = false;

@@ -2286,14 +2286,14 @@ MonoBehaviour:
   safeZoneEnterClip: {fileID: 8300000, guid: 2cb5d7e8fbccb462aa2fd95182b0cc26, type: 3}
   superZoneEnterClip: {fileID: 8300000, guid: 4827dd82a6ce74d34b74037ca95666ee, type: 3}
   bombPopupOpenClip: {fileID: 8300000, guid: 0fbdfe219eedc444799de0d87272b0fb, type: 3}
-  reviveSuccessClip: {fileID: 8300000, guid: edbce783f7f7445edb74c947c8638018, type: 3}
+  reviveSuccessClip: {fileID: 8300000, guid: 282544d505c8a466ca0283b1fc917e4a, type: 3}
   giveUpClip: {fileID: 8300000, guid: c1f47c4aad5f14a138bf7c0467396b25, type: 3}
-  cashOutPopupOpenClip: {fileID: 8300000, guid: a19b541410d802e4a93089f2acb18c5a, type: 3}
-  chestAppearClip: {fileID: 8300000, guid: e72c386c956b23f498b8c326df4d5f9d, type: 3}
-  cardRevealSilverClip: {fileID: 8300000, guid: fe97f5e6d1d296348b79fd5713f066d1, type: 3}
-  cardRevealGoldClip: {fileID: 8300000, guid: 63395e153b4d0e44595254c9e99c0f61, type: 3}
-  cashOutSummaryCompleteClip: {fileID: 8300000, guid: 3377924545bc1c448b77f95f28afa3f9, type: 3}
-  missionCompleteVictoryClip: {fileID: 8300000, guid: bad1a428603d40846aebe5f343ab30ed, type: 3}
+  cashOutPopupOpenClip: {fileID: 8300000, guid: 93def42f466a84b819fed249b2f5388d, type: 3}
+  chestAppearClip: {fileID: 8300000, guid: b49002a66e090469eaf946684e9ef9f0, type: 3}
+  cardRevealSilverClip: {fileID: 8300000, guid: 134058c41b0db4ec0a318115a4c6b8fb, type: 3}
+  cardRevealGoldClip: {fileID: 8300000, guid: 4a1670bc367564e4db825093be0b7f9e, type: 3}
+  cashOutSummaryCompleteClip: {fileID: 8300000, guid: 73c06b73f80c4438788f8197fd8ddb6e, type: 3}
+  missionCompleteVictoryClip: {fileID: 8300000, guid: d1853dbf2037145bda2b7cff7f3e49d7, type: 3}
 --- !u!4 &177757321
 Transform:
   m_ObjectHideFlags: 0
