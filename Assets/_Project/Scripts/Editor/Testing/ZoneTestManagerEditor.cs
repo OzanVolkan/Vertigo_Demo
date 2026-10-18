@@ -81,16 +81,30 @@ namespace Vertigo.Editor
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Zone 20", GUILayout.Height(26))) testManager.JumpToZone(20);
             if (GUILayout.Button("Zone 25", GUILayout.Height(26))) testManager.JumpToZone(25);
+            if (GUILayout.Button("Zone 50", GUILayout.Height(26))) testManager.JumpToZone(50);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Zone 55 (Final Safe Zone)", GUILayout.Height(26))) testManager.JumpToZone(55);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(2);
 
-            // Super Zone (Golden Wheel)
+            // Super Zones & Special Testing
             GUI.backgroundColor = new Color(1f, 0.82f, 0.2f, 1f); // Rich gold
-            EditorGUILayout.LabelField("Super Zone (Golden Wheel - Special Rewards):", EditorStyles.miniLabel);
-            if (GUILayout.Button("★ ZONE 30 (SUPER ZONE - GOLDEN WHEEL) ★", GUILayout.Height(32)))
+            EditorGUILayout.LabelField("Super Zones & Finale:", EditorStyles.miniLabel);
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("★ ZONE 30 (SUPER) ★", GUILayout.Height(28))) testManager.JumpToZone(30);
+            if (GUILayout.Button("★ ZONE 60 (FINAL) ★", GUILayout.Height(28))) testManager.JumpToZone(60);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(2);
+            GUI.backgroundColor = new Color(0.85f, 0.85f, 1f, 1f);
+            EditorGUILayout.LabelField("Testing / Progression:", EditorStyles.miniLabel);
+            if (GUILayout.Button("Zone 56 (Post-Safe / Final Stretch)", GUILayout.Height(26)))
             {
-                testManager.JumpToZone(30);
+                testManager.JumpToZone(56);
             }
 
             GUI.backgroundColor = prevBg;

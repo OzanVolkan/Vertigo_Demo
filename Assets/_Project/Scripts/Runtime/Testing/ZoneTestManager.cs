@@ -8,6 +8,7 @@ using Vertigo.Rewards.Views;
 using Vertigo.Wheel.Controllers;
 using Vertigo.Zone.Controllers;
 using Vertigo.Zone.Data;
+using Vertigo.Zone.Views;
 
 namespace Vertigo.Testing
 {
@@ -34,6 +35,7 @@ namespace Vertigo.Testing
         [SerializeField] private WheelController wheelController;
         [SerializeField] private SessionInventoryManager inventoryManager;
         [SerializeField] private InventoryView inventoryView;
+        [SerializeField] private ZoneBarView zoneBarView;
         [SerializeField] private RewardDataSO[] availableRewards;
 
         public int TargetZone
@@ -94,6 +96,7 @@ namespace Vertigo.Testing
             if (wheelController == null) wheelController = FindFirstObjectByType<WheelController>();
             if (inventoryManager == null) inventoryManager = FindFirstObjectByType<SessionInventoryManager>();
             if (inventoryView == null) inventoryView = FindFirstObjectByType<InventoryView>();
+            if (zoneBarView == null) zoneBarView = FindFirstObjectByType<ZoneBarView>();
 
 #if UNITY_EDITOR
             if (availableRewards == null || availableRewards.Length == 0)
@@ -128,7 +131,7 @@ namespace Vertigo.Testing
 
         public void JumpToZone(int zoneNumber)
         {
-            targetZone = Mathf.Max(1, zoneNumber);
+            targetZone = Mathf.Clamp(zoneNumber, 1, 60);
             EnsureDependencies();
 
             if (clearInventoryOnJump && gameManager != null && gameManager.InventoryManager != null)
@@ -147,6 +150,12 @@ namespace Vertigo.Testing
             else
             {
                 Debug.LogWarning("[ZoneTestManager] No ZoneManager or GameManager found in scene!");
+            }
+
+            // Ensure ZoneBar is immediately and cleanly snapped without graphical corruption
+            if (zoneBarView != null)
+            {
+                zoneBarView.SnapToZone(targetZone);
             }
         }
 
@@ -184,6 +193,18 @@ namespace Vertigo.Testing
 
         [ContextMenu("Jump: Zone 30 (Super Zone - Golden)")]
         public void JumpToZone30() => JumpToZone(30);
+
+        [ContextMenu("Jump: Zone 50 (Safe Zone - Silver)")]
+        public void JumpToZone50() => JumpToZone(50);
+
+        [ContextMenu("Jump: Zone 55 (Final Safe Zone)")]
+        public void JumpToZone55() => JumpToZone(55);
+
+        [ContextMenu("Jump: Zone 56 (Post-Safe Zone)")]
+        public void JumpToZone56() => JumpToZone(56);
+
+        [ContextMenu("Jump: Zone 60 (Final Zone - Mission Complete)")]
+        public void JumpToZone60() => JumpToZone(60);
 
         #region Inventory & Scrolling Test API
 

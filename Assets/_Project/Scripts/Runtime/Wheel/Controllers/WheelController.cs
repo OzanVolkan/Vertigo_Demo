@@ -49,6 +49,11 @@ namespace Vertigo.Wheel.Controllers
             currentConfig = newConfig;
         }
 
+        public void ResetSpinState()
+        {
+            _isSpinning = false;
+        }
+
         public void RequestSpin()
         {
             if (_isSpinning)

@@ -809,6 +809,7 @@ MonoBehaviour:
   wheelController: {fileID: 45457543}
   inventoryManager: {fileID: 45457544}
   inventoryView: {fileID: 296562477}
+  zoneBarView: {fileID: 162430475}
   availableRewards:
   - {fileID: 11400000, guid: 93d8b091f532b564fb5d06d4396b56b2, type: 2}
   - {fileID: 11400000, guid: 5d046696d013fa743837e066fc039db9, type: 2}

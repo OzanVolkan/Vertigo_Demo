@@ -355,6 +355,18 @@ namespace Vertigo.Core.State
         public void JumpToZone(int targetZone)
         {
             StopAllCoroutines();
+
+            // Dismiss any active popups and effects cleanly
+            if (bombPopupView != null) bombPopupView.HideImmediate();
+            if (cashOutPopupView != null) cashOutPopupView.HideImmediate();
+            if (cashOutSummaryView != null) cashOutSummaryView.HideImmediate();
+            if (missionCompletePopupView != null) missionCompletePopupView.HideImmediate();
+            if (rewardShowcase != null) rewardShowcase.HideImmediate();
+
+            // Reset wheel if it was spinning
+            if (wheelController != null) wheelController.ResetSpinState();
+            if (wheelView != null) wheelView.ResetWheel();
+
             if (zoneManager != null)
             {
                 zoneManager.JumpToZone(targetZone);

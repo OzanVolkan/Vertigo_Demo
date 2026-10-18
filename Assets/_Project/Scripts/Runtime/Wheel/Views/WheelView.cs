@@ -247,6 +247,17 @@ namespace Vertigo.Wheel.Views
             wheelController?.OnSpinAnimationComplete();
         }
 
+        public void ResetWheel()
+        {
+            _spinSequence?.Kill();
+            _spinTween?.Kill();
+            _indicatorTween?.Kill();
+            if (ui_transform_indicator != null)
+            {
+                ui_transform_indicator.localEulerAngles = Vector3.zero;
+            }
+        }
+
         public Vector3 GetWinningSlicePosition()
         {
             if (_currentTargetIndex >= 0 && _currentTargetIndex < ui_slice_views.Count && ui_slice_views[_currentTargetIndex] != null)

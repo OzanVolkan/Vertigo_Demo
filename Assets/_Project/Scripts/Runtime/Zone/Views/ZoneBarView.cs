@@ -95,6 +95,7 @@ namespace Vertigo.Zone.Views
             }
             if (ui_container_zone_slots != null)
             {
+                ui_container_zone_slots.DOKill();
                 ui_container_zone_slots.anchoredPosition = Vector2.zero;
             }
         }
@@ -135,8 +136,16 @@ namespace Vertigo.Zone.Views
                 return;
             }
 
-            // 4. Animate with smooth DOTween slide!
-            AnimateToZone(newZone);
+            // 4. Animate with smooth DOTween slide only if advancing forward by exactly 1 zone
+            if (newZone == _currentZoneNumber + 1)
+            {
+                AnimateToZone(newZone);
+            }
+            else
+            {
+                // Arbitrary jump or backward navigation: snap immediately and accurately
+                SnapToZone(newZone);
+            }
         }
 
         private void UpdateSafeZoneBadgeVisibility(int zoneNumber)
@@ -182,6 +191,8 @@ namespace Vertigo.Zone.Views
 
             if (ui_transform_current_badge != null)
             {
+                ui_transform_current_badge.DOKill();
+                ui_transform_current_badge.localScale = Vector3.one;
                 int targetIndex = Mathf.Clamp(currentZone - startZone, 0, totalSlots - 1);
                 float targetX = GetSlotLocalX(targetIndex);
                 ui_transform_current_badge.anchoredPosition = new Vector2(targetX, 0);
