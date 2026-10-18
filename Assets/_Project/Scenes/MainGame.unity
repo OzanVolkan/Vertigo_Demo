@@ -1973,6 +1973,7 @@ MonoBehaviour:
   badgeSuperSprite: {fileID: 21300000, guid: f6b8c4a3d7e54ea6c143f44a3ef5d104, type: 3}
   ui_text_next_super_zone_value: {fileID: 1907786677}
   ui_text_next_safe_zone_value: {fileID: 35696478}
+  ui_badge_safe_zone: {fileID: 1684734494}
   normalColor: {r: 0.85, g: 0.85, b: 0.85, a: 1}
   safeColor: {r: 0.3, g: 0.85, b: 0.39, a: 1}
   superColor: {r: 1, g: 0.84, b: 0, a: 1}

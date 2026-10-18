@@ -33,6 +33,7 @@ namespace Vertigo.Zone.Views
         [Header("Top Right Badges")]
         [SerializeField] private TMP_Text ui_text_next_super_zone_value;
         [SerializeField] private TMP_Text ui_text_next_safe_zone_value;
+        [SerializeField] private GameObject ui_badge_safe_zone;
 
         [Header("Colors")]
         [SerializeField] private Color normalColor = new Color(1f, 1f, 1f, 1f); // Crisp white
@@ -117,6 +118,8 @@ namespace Vertigo.Zone.Views
             if (ui_text_next_super_zone_value != null)
                 ui_text_next_super_zone_value.text = nextSuper.ToString();
 
+            UpdateSafeZoneBadgeVisibility(newZone);
+
             // 2. Initial Setup or Edit Mode: Snap immediately without tweening
             if (_currentZoneNumber == 0 || !Application.isPlaying || ui_transform_current_badge == null)
             {
@@ -136,6 +139,25 @@ namespace Vertigo.Zone.Views
             AnimateToZone(newZone);
         }
 
+        private void UpdateSafeZoneBadgeVisibility(int zoneNumber)
+        {
+            if (ui_badge_safe_zone == null && ui_text_next_safe_zone_value != null)
+            {
+                ui_badge_safe_zone = ui_text_next_safe_zone_value.transform.parent.gameObject;
+            }
+
+            if (ui_badge_safe_zone != null)
+            {
+                // Level 55 is the final safe zone; when reaching level 55 (and above), hide the safe zone badge.
+                // When resetting back to level 1 (or any zone < 55), re-open/show the safe zone badge.
+                bool showSafeBadge = zoneNumber < 55;
+                if (ui_badge_safe_zone.activeSelf != showSafeBadge)
+                {
+                    ui_badge_safe_zone.SetActive(showSafeBadge);
+                }
+            }
+        }
+
         private int CalculateStartZone(int zone, int totalSlots, int halfSlots)
         {
             int maxStartZone = Mathf.Max(1, maxZone - totalSlots + 1);
@@ -147,6 +169,8 @@ namespace Vertigo.Zone.Views
             KillSequence();
             currentZone = Mathf.Clamp(currentZone, 1, maxZone);
             _currentZoneNumber = currentZone;
+
+            UpdateSafeZoneBadgeVisibility(currentZone);
 
             int totalSlots = ui_slot_texts != null && ui_slot_texts.Count > 0 ? ui_slot_texts.Count : 13;
             int halfSlots = totalSlots / 2;

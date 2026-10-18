@@ -274,6 +274,7 @@ namespace Vertigo.Editor
             safeVal.rectTransform.anchoredPosition = new Vector2(92, 0);
             safeVal.rectTransform.sizeDelta = new Vector2(55, 52);
             zoneBarSO.FindProperty("ui_text_next_safe_zone_value").objectReferenceValue = safeVal;
+            zoneBarSO.FindProperty("ui_badge_safe_zone").objectReferenceValue = safeBadgeObj;
 
             GameObject safeIconObj = CreateUIObject("ui_image_icon", safeBadgeObj.transform);
             RectTransform safeIconRT = safeIconObj.GetComponent<RectTransform>();
