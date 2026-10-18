@@ -205,7 +205,7 @@ namespace Vertigo.Editor
             }
 
             // =========================================================================
-            // B. TOP RIGHT BADGES (Süper Bölge 30, Güvenli Bölge 15 - Matching Screenshot)
+            // B. TOP RIGHT BADGES (Super Zone 30, Safe Zone 15 - Matching Screenshot)
             // =========================================================================
             GameObject badgesObj = CreateUIObject("ui_panel_top_right_badges", canvasObj.transform);
             RectTransform badgesRT = badgesObj.GetComponent<RectTransform>();
@@ -225,7 +225,7 @@ namespace Vertigo.Editor
             superBg.color = Color.white;
             superBg.raycastTarget = false;
 
-            TMP_Text superLabel = CreateTMPText("ui_text_label", superBadgeObj.transform, "SÜPER\nBÖLGE", BadgeLabelFontSize, FontStyles.Bold, TextAlignmentOptions.MidlineLeft);
+            TMP_Text superLabel = CreateTMPText("ui_text_label", superBadgeObj.transform, "SUPER\nZONE", BadgeLabelFontSize, FontStyles.Bold, TextAlignmentOptions.MidlineLeft);
             superLabel.color = new Color(0.92f, 0.65f, 0.12f, 1f);
             superLabel.lineSpacing = -15f;
             SetAnchors(superLabel.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f));
@@ -261,7 +261,7 @@ namespace Vertigo.Editor
             safeBg.color = Color.white;
             safeBg.raycastTarget = false;
 
-            TMP_Text safeLabel = CreateTMPText("ui_text_label", safeBadgeObj.transform, "GÜVENLİ\nBÖLGE", 17f, FontStyles.Bold, TextAlignmentOptions.MidlineLeft);
+            TMP_Text safeLabel = CreateTMPText("ui_text_label", safeBadgeObj.transform, "SAFE\nZONE", 17f, FontStyles.Bold, TextAlignmentOptions.MidlineLeft);
             safeLabel.color = new Color(0.62f, 0.92f, 0.30f, 1f);
             safeLabel.lineSpacing = -15f;
             SetAnchors(safeLabel.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f));
@@ -288,7 +288,7 @@ namespace Vertigo.Editor
             zoneBarSO.ApplyModifiedProperties();
 
             // =========================================================================
-            // C. LEFT PANEL (ÇIKIŞ Button + Collected Loot List - Matching Screenshot)
+            // C. LEFT PANEL (EXIT Button + Collected Loot List - Matching Screenshot)
             // =========================================================================
             GameObject leftPanelObj = CreateUIObject("ui_panel_left_inventory", canvasObj.transform);
             RectTransform leftRT = leftPanelObj.GetComponent<RectTransform>();
@@ -306,8 +306,8 @@ namespace Vertigo.Editor
             InventoryView inventoryView = leftPanelObj.AddComponent<InventoryView>();
             SerializedObject invSO = new SerializedObject(inventoryView);
 
-            // ÇIKIŞ Button at top of left panel
-            GameObject cashOutBtnObj = CreateButton("ui_button_cashout", leftPanelObj.transform, greyBtnSprite, "ÇIKIŞ", 24);
+            // EXIT Button at top of left panel
+            GameObject cashOutBtnObj = CreateButton("ui_button_cashout", leftPanelObj.transform, greyBtnSprite, "EXIT", 24);
             RectTransform cashOutRT = cashOutBtnObj.GetComponent<RectTransform>();
             SetAnchors(cashOutRT, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
             cashOutRT.anchoredPosition = new Vector2(0, -36);
@@ -320,7 +320,7 @@ namespace Vertigo.Editor
             RectTransform svRT = scrollViewObj.GetComponent<RectTransform>();
             SetAnchors(svRT, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
             svRT.offsetMin = new Vector2(0, 16);
-            svRT.offsetMax = new Vector2(0, -82); // Below ÇIKIŞ button
+            svRT.offsetMax = new Vector2(0, -82); // Below EXIT button
 
             // Background image with raycastTarget = true so the scroll view catches drag and mouse wheel
             Image scrollBg = scrollViewObj.AddComponent<Image>();
@@ -550,7 +550,7 @@ namespace Vertigo.Editor
             bombTitle.color = new Color(1f, 0.25f, 0.25f, 1f);
             bombTitle.rectTransform.anchoredPosition = new Vector2(0, 205);
 
-            TMP_Text bombDesc = CreateTMPText("ui_text_bomb_desc", popupBox.transform, "Tüm topladığın ödüller kaybedildi!\nÖdüllerini kurtarmak için devam et veya pes et.", 18, FontStyles.Normal, TextAlignmentOptions.Center);
+            TMP_Text bombDesc = CreateTMPText("ui_text_bomb_desc", popupBox.transform, "Revive yourself to keep your rewards.", 18, FontStyles.Normal, TextAlignmentOptions.Center);
             bombDesc.rectTransform.anchoredPosition = new Vector2(0, 145);
             bombDesc.rectTransform.sizeDelta = new Vector2(480, 80);
 

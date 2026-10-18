@@ -240,15 +240,15 @@ namespace Vertigo.Editor
             {
                 case ZoneType.Safe:
                     statusColor = new Color(0.25f, 0.85f, 0.25f, 1f);
-                    typeName = "GÜVENLİ BÖLGE (Silver Wheel - Safe)";
+                    typeName = "SAFE ZONE (Silver Wheel - Safe)";
                     break;
                 case ZoneType.Super:
                     statusColor = new Color(1f, 0.82f, 0.15f, 1f);
-                    typeName = "SÜPER BÖLGE (Golden Wheel - Super)";
+                    typeName = "SUPER ZONE (Golden Wheel - Super)";
                     break;
                 default:
                     statusColor = new Color(0.85f, 0.88f, 0.95f, 1f);
-                    typeName = "NORMAL BÖLGE (Bronze Wheel - Normal)";
+                    typeName = "NORMAL ZONE (Bronze Wheel - Normal)";
                     break;
             }
 
@@ -267,12 +267,12 @@ namespace Vertigo.Editor
             subStyle.fontSize = 12;
             subStyle.normal.textColor = Color.white;
 
-            EditorGUILayout.LabelField($"Tip: {typeName}", subStyle);
-            EditorGUILayout.LabelField($"Ödül Çarpanı: {multiplier:F2}x", subStyle);
+            EditorGUILayout.LabelField($"Type: {typeName}", subStyle);
+            EditorGUILayout.LabelField($"Reward Multiplier: {multiplier:F2}x", subStyle);
 
             if (!Application.isPlaying)
             {
-                EditorGUILayout.HelpBox("Play Mode aktif değilken de zone seçebilirsiniz, tam çark akışını test etmek için Play'e basabilirsiniz.", MessageType.Info);
+                EditorGUILayout.HelpBox("You can select a zone while not in Play Mode, or enter Play Mode to test the full wheel flow.", MessageType.Info);
             }
 
             EditorGUILayout.EndVertical();

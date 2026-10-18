@@ -113,7 +113,7 @@ namespace Vertigo.UI.Testing
         private void OnGameStateChanged(GameState state)
         {
             if (ui_text_game_status_value != null)
-                ui_text_game_status_value.text = $"Durum: {state}";
+                ui_text_game_status_value.text = $"Status: {state}";
 
             bool isIdle = state == GameState.Idle;
             if (ui_button_spin != null)
@@ -125,21 +125,21 @@ namespace Vertigo.UI.Testing
             if (zone == null) return;
 
             if (ui_text_zone_value != null)
-                ui_text_zone_value.text = $"BÖLGE {zone.ZoneNumber}";
+                ui_text_zone_value.text = $"ZONE {zone.ZoneNumber}";
 
             if (ui_text_zone_type_value != null)
             {
                 string typeLabel = zone.ZoneType switch
                 {
-                    ZoneType.Safe => "<color=#4CD964>GÜVENLİ BÖLGE (Silver Spin)</color>",
-                    ZoneType.Super => "<color=#FFD700>SÜPER BÖLGE (Golden Spin)</color>",
-                    _ => "<color=#E5E5E5>NORMAL BÖLGE</color>"
+                    ZoneType.Safe => "<color=#4CD964>SAFE ZONE (Silver Spin)</color>",
+                    ZoneType.Super => "<color=#FFD700>SUPER ZONE (Golden Spin)</color>",
+                    _ => "<color=#E5E5E5>NORMAL ZONE</color>"
                 };
                 ui_text_zone_type_value.text = typeLabel;
             }
 
             if (ui_text_multiplier_value != null)
-                ui_text_multiplier_value.text = $"Ödül Çarpanı: x{zone.RewardMultiplier:F2}";
+                ui_text_multiplier_value.text = $"Reward Multiplier: x{zone.RewardMultiplier:F2}";
 
             // Update wheel sprites
             if (zone.WheelConfig != null)
@@ -159,8 +159,8 @@ namespace Vertigo.UI.Testing
             if (ui_text_cashout_status_value != null)
             {
                 ui_text_cashout_status_value.text = canCashOut
-                    ? "<color=#4CD964>Çıkış Yapılabilir</color>"
-                    : "<color=#888888>Sadece Güvenli/Süper Bölgede</color>";
+                    ? "<color=#4CD964>Cash Out Available</color>"
+                    : "<color=#888888>Only in Safe/Super Zone</color>";
             }
         }
 
@@ -192,11 +192,11 @@ namespace Vertigo.UI.Testing
             if (slice?.Reward == null) return;
 
             string sliceInfo = slice.Reward.IsBomb 
-                ? "<color=#FF3B30>BOMBA PATLADI!</color>" 
+                ? "<color=#FF3B30>BOMB EXPLODED!</color>" 
                 : $"<color=#FFCC00>+ {slice.Reward.DisplayName} (x{slice.Amount})</color>";
 
             if (ui_text_game_status_value != null)
-                ui_text_game_status_value.text = $"Sonuç: {sliceInfo}";
+                ui_text_game_status_value.text = $"Result: {sliceInfo}";
         }
 
         private void OnInventoryUpdated(IReadOnlyDictionary<string, (IRewardData reward, int amount)> items)
@@ -205,7 +205,7 @@ namespace Vertigo.UI.Testing
 
             if (items == null || items.Count == 0)
             {
-                ui_text_loot_list_value.text = "<color=#666666>Henüz ödül toplanmadı</color>";
+                ui_text_loot_list_value.text = "<color=#666666>No rewards collected yet</color>";
                 return;
             }
 
@@ -232,7 +232,7 @@ namespace Vertigo.UI.Testing
         private void OnCashOutSuccess(IReadOnlyDictionary<string, (IRewardData reward, int amount)> banked)
         {
             if (ui_text_game_status_value != null)
-                ui_text_game_status_value.text = $"<color=#4CD964>Tebrikler! {banked.Count} çeşit ödül kasaya aktarıldı!</color>";
+                ui_text_game_status_value.text = $"<color=#4CD964>Congratulations! {banked.Count} kinds of rewards banked!</color>";
         }
 
         private void OnValidate()

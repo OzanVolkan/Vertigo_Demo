@@ -4498,7 +4498,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "G\xDCVENL\u0130\nB\xD6LGE"
+  m_text: 'SAFE
+
+    ZONE'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ac54b9301e578064cb675502a0ef7ccc, type: 2}
   m_sharedMaterial: {fileID: -3214022067801962157, guid: ac54b9301e578064cb675502a0ef7ccc, type: 2}
@@ -7609,7 +7611,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\xC7IKI\u015E"
+  m_text: EXIT
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ac54b9301e578064cb675502a0ef7ccc, type: 2}
   m_sharedMaterial: {fileID: -3214022067801962157, guid: ac54b9301e578064cb675502a0ef7ccc, type: 2}
@@ -10338,7 +10340,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "S\xDCPER\nB\xD6LGE"
+  m_text: 'SUPER
+
+    ZONE'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ac54b9301e578064cb675502a0ef7ccc, type: 2}
   m_sharedMaterial: {fileID: -3214022067801962157, guid: ac54b9301e578064cb675502a0ef7ccc, type: 2}
