@@ -60,8 +60,9 @@ namespace Vertigo.Editor
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField("QUICK PRESETS", EditorStyles.boldLabel);
 
-            // Normal Start
-            if (GUILayout.Button("Zone 1 (Normal Start - Bronze Wheel)", GUILayout.Height(26)))
+            // Safe Start
+            GUI.backgroundColor = new Color(0.4f, 0.95f, 0.4f, 1f); // Neon green
+            if (GUILayout.Button("Zone 1 (Safe Start - Silver Wheel)", GUILayout.Height(28)))
             {
                 testManager.JumpToZone(1);
             }
@@ -81,6 +82,12 @@ namespace Vertigo.Editor
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Zone 20", GUILayout.Height(26))) testManager.JumpToZone(20);
             if (GUILayout.Button("Zone 25", GUILayout.Height(26))) testManager.JumpToZone(25);
+            if (GUILayout.Button("Zone 35", GUILayout.Height(26))) testManager.JumpToZone(35);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Zone 40", GUILayout.Height(26))) testManager.JumpToZone(40);
+            if (GUILayout.Button("Zone 45", GUILayout.Height(26))) testManager.JumpToZone(45);
             if (GUILayout.Button("Zone 50", GUILayout.Height(26))) testManager.JumpToZone(50);
             EditorGUILayout.EndHorizontal();
 

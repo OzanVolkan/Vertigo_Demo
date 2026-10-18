@@ -173,7 +173,7 @@ namespace Vertigo.Testing
             JumpToZone(Mathf.Max(1, current - 1));
         }
 
-        [ContextMenu("Jump: Zone 1 (Normal Start)")]
+        [ContextMenu("Jump: Zone 1 (Safe Zone - Silver)")]
         public void JumpToZone1() => JumpToZone(1);
 
         [ContextMenu("Jump: Zone 5 (Safe Zone - Silver)")]
@@ -193,6 +193,15 @@ namespace Vertigo.Testing
 
         [ContextMenu("Jump: Zone 30 (Super Zone - Golden)")]
         public void JumpToZone30() => JumpToZone(30);
+
+        [ContextMenu("Jump: Zone 35 (Safe Zone - Silver)")]
+        public void JumpToZone35() => JumpToZone(35);
+
+        [ContextMenu("Jump: Zone 40 (Safe Zone - Silver)")]
+        public void JumpToZone40() => JumpToZone(40);
+
+        [ContextMenu("Jump: Zone 45 (Safe Zone - Silver)")]
+        public void JumpToZone45() => JumpToZone(45);
 
         [ContextMenu("Jump: Zone 50 (Safe Zone - Silver)")]
         public void JumpToZone50() => JumpToZone(50);

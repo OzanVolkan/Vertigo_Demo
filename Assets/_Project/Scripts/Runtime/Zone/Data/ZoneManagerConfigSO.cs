@@ -17,6 +17,9 @@ namespace Vertigo.Zone.Data
         [SerializeField] private int multiplierStepPerZone = 1;
 
         [Header("Zone Intervals")]
+        [Tooltip("If true, Zone 1 is also a Safe Zone (Silver Spin without bomb)")]
+        [SerializeField] private bool firstZoneIsSafe = true;
+
         [Tooltip("Interval for Safe Zones (Silver Spin without bomb)")]
         [SerializeField] private int safeZoneInterval = 5;
 
@@ -33,6 +36,7 @@ namespace Vertigo.Zone.Data
 
         public int MaxZone => Mathf.Max(1, maxZone);
         public int MultiplierStepPerZone => Mathf.Max(1, multiplierStepPerZone);
+        public bool FirstZoneIsSafe => firstZoneIsSafe;
         public int SafeZoneInterval => safeZoneInterval;
         public int SuperZoneInterval => superZoneInterval;
         public WheelConfigSO DefaultNormalWheel => defaultNormalWheel;
@@ -55,7 +59,7 @@ namespace Vertigo.Zone.Data
             {
                 return ZoneType.Super;
             }
-            if (zoneNumber % safeZoneInterval == 0)
+            if ((firstZoneIsSafe && zoneNumber == 1) || zoneNumber % safeZoneInterval == 0)
             {
                 return ZoneType.Safe;
             }

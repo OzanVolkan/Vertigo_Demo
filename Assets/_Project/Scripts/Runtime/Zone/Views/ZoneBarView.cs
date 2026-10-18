@@ -106,20 +106,7 @@ namespace Vertigo.Zone.Views
             int newZone = Mathf.Clamp(zoneData.ZoneNumber, 1, maxZone);
 
             // 1. Update Top-Right Next Badges (clamped to maxZone = 60)
-            int nextSafe = Mathf.Min(maxZone, ((newZone / 5) + (newZone % 5 == 0 ? 0 : 1)) * 5);
-            if (nextSafe == newZone && newZone % 5 == 0)
-            {
-                nextSafe = newZone;
-            }
-            int nextSuper = Mathf.Min(maxZone, ((newZone / 30) + (newZone % 30 == 0 ? 0 : 1)) * 30);
-
-            if (ui_text_next_safe_zone_value != null)
-                ui_text_next_safe_zone_value.text = nextSafe.ToString();
-
-            if (ui_text_next_super_zone_value != null)
-                ui_text_next_super_zone_value.text = nextSuper.ToString();
-
-            UpdateSafeZoneBadgeVisibility(newZone);
+            UpdateNextBadges(newZone);
 
             // 2. Initial Setup or Edit Mode: Snap immediately without tweening
             if (_currentZoneNumber == 0 || !Application.isPlaying || ui_transform_current_badge == null)
@@ -146,6 +133,27 @@ namespace Vertigo.Zone.Views
                 // Arbitrary jump or backward navigation: snap immediately and accurately
                 SnapToZone(newZone);
             }
+        }
+
+        private void UpdateNextBadges(int zoneNumber)
+        {
+            // Always displays the NEXT upcoming milestone zone:
+            // Entering Zone 1 -> shows 5, entering Zone 5 -> shows 10, Zone 10 -> shows 15, etc.
+            int nextSafe = Mathf.Min(maxZone, ((zoneNumber / 5) + 1) * 5);
+            if (nextSafe % 30 == 0)
+            {
+                // Zone 30 (and 60) is a Super Zone, not a safe zone. The safe zone after 25 is 35!
+                nextSafe = Mathf.Min(maxZone, nextSafe + 5);
+            }
+            int nextSuper = Mathf.Min(maxZone, ((zoneNumber / 30) + 1) * 30);
+
+            if (ui_text_next_safe_zone_value != null)
+                ui_text_next_safe_zone_value.text = nextSafe.ToString();
+
+            if (ui_text_next_super_zone_value != null)
+                ui_text_next_super_zone_value.text = nextSuper.ToString();
+
+            UpdateSafeZoneBadgeVisibility(zoneNumber);
         }
 
         private void UpdateSafeZoneBadgeVisibility(int zoneNumber)
@@ -179,7 +187,7 @@ namespace Vertigo.Zone.Views
             currentZone = Mathf.Clamp(currentZone, 1, maxZone);
             _currentZoneNumber = currentZone;
 
-            UpdateSafeZoneBadgeVisibility(currentZone);
+            UpdateNextBadges(currentZone);
 
             int totalSlots = ui_slot_texts != null && ui_slot_texts.Count > 0 ? ui_slot_texts.Count : 13;
             int halfSlots = totalSlots / 2;
@@ -294,7 +302,7 @@ namespace Vertigo.Zone.Views
                         txt.color = pastSuperColor;
                         txt.fontStyle = FontStyles.Bold;
                     }
-                    else if (zoneNumber % 5 == 0)
+                    else if (IsSafeZone(zoneNumber))
                     {
                         txt.color = pastSafeColor;
                         txt.fontStyle = FontStyles.Bold;
@@ -306,6 +314,13 @@ namespace Vertigo.Zone.Views
                     }
                 }
             }
+        }
+
+        public bool IsSafeZone(int zoneNumber)
+        {
+            if (zoneNumber <= 0 || zoneNumber > maxZone) return false;
+            if (zoneNumber % 30 == 0) return false;
+            return zoneNumber == 1 || zoneNumber % 5 == 0;
         }
 
         public void UpdateBadgeVisual(int zone)
@@ -321,7 +336,7 @@ namespace Vertigo.Zone.Views
             {
                 ui_image_current_badge.sprite = badgeSuperSprite;
             }
-            else if (zone % 5 == 0 && badgeSafeSprite != null)
+            else if (IsSafeZone(zone) && badgeSafeSprite != null)
             {
                 ui_image_current_badge.sprite = badgeSafeSprite;
             }
@@ -357,7 +372,7 @@ namespace Vertigo.Zone.Views
                 if (zoneNum == currentZone)
                 {
                     // Current zone: bold white on safe / super badges, bold black on normal silver badge
-                    if (currentZone % 30 == 0 || currentZone % 5 == 0)
+                    if (currentZone % 30 == 0 || IsSafeZone(currentZone))
                     {
                         slotTxt.color = Color.white;
                     }
@@ -375,7 +390,7 @@ namespace Vertigo.Zone.Views
                         slotTxt.color = pastSuperColor;
                         slotTxt.fontStyle = FontStyles.Bold;
                     }
-                    else if (zoneNum % 5 == 0)
+                    else if (IsSafeZone(zoneNum))
                     {
                         slotTxt.color = pastSafeColor;
                         slotTxt.fontStyle = FontStyles.Bold;
@@ -394,7 +409,7 @@ namespace Vertigo.Zone.Views
                         slotTxt.color = superColor;
                         slotTxt.fontStyle = FontStyles.Bold;
                     }
-                    else if (zoneNum % 5 == 0)
+                    else if (IsSafeZone(zoneNum))
                     {
                         slotTxt.color = safeColor;
                         slotTxt.fontStyle = FontStyles.Bold;
