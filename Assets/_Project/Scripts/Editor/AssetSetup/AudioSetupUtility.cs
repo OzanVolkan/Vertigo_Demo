@@ -32,7 +32,21 @@ namespace Vertigo.Editor.AssetSetup
             AudioManager sceneAudioMgr = UnityEngine.Object.FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include);
             AudioListener sceneListener = UnityEngine.Object.FindFirstObjectByType<AudioListener>(FindObjectsInactive.Include);
 
-            if (existingConfig == null || sceneAudioMgr == null || sceneListener == null)
+            bool needsPrePlacedSources = true;
+            if (sceneAudioMgr != null)
+            {
+                SerializedObject checkSo = new SerializedObject(sceneAudioMgr);
+                SerializedProperty spinSrcProp = checkSo.FindProperty("dedicatedWheelSpinSource");
+                SerializedProperty sfxArrProp = checkSo.FindProperty("sfxSources");
+                if (spinSrcProp != null && spinSrcProp.objectReferenceValue != null &&
+                    sfxArrProp != null && sfxArrProp.arraySize >= 10 &&
+                    sfxArrProp.GetArrayElementAtIndex(0).objectReferenceValue != null)
+                {
+                    needsPrePlacedSources = false;
+                }
+            }
+
+            if (existingConfig == null || sceneAudioMgr == null || sceneListener == null || needsPrePlacedSources)
             {
                 SetupAudioSystemAndPlaceholders();
             }
@@ -83,7 +97,7 @@ namespace Vertigo.Editor.AssetSetup
             SoundEffectEntry[] entries = new SoundEffectEntry[]
             {
                 SoundEffectEntry.CreateDefault(SoundEffectType.ButtonClick, clipButtonClick, 0.75f, 0.97f, 1.03f, 0.04f, false),
-                SoundEffectEntry.CreateDefault(SoundEffectType.WheelSpinStart, clipSpinStart, 0.85f, 0.98f, 1.02f, 0.10f, true),
+                SoundEffectEntry.CreateDefault(SoundEffectType.WheelSpinStart, clipSpinStart, 0.90f, 0.99f, 1.01f, 0.05f, true),
                 SoundEffectEntry.CreateDefault(SoundEffectType.WheelTick, clipWheelTick, 0.65f, 0.95f, 1.05f, 0.032f, false),
                 SoundEffectEntry.CreateDefault(SoundEffectType.WheelStopReward, clipStopReward, 0.85f, 0.98f, 1.02f, 0.10f, true),
                 SoundEffectEntry.CreateDefault(SoundEffectType.WheelStopBomb, clipStopBomb, 0.95f, 0.96f, 1.02f, 0.15f, true),
@@ -121,6 +135,46 @@ namespace Vertigo.Editor.AssetSetup
                 audioManager = audioObj.AddComponent<AudioManager>();
             }
 
+            // 5. Pre-place and configure Dedicated WheelSpin AudioSource & 10 SFX AudioSources directly in Scene
+            Transform spinSrcTr = audioManager.transform.Find("AudioSource_WheelSpin");
+            GameObject spinSrcObj = spinSrcTr != null ? spinSrcTr.gameObject : new GameObject("AudioSource_WheelSpin");
+            if (spinSrcTr == null) spinSrcObj.transform.SetParent(audioManager.transform, false);
+            AudioSource dedicatedSpinSource = spinSrcObj.GetComponent<AudioSource>();
+            if (dedicatedSpinSource == null) dedicatedSpinSource = spinSrcObj.AddComponent<AudioSource>();
+            ConfigurePrePlaced2DSource(dedicatedSpinSource);
+
+            Transform poolRoot = audioManager.transform.Find("AudioSource_Pool");
+            if (poolRoot == null)
+            {
+                GameObject poolObj = new GameObject("AudioSource_Pool");
+                poolObj.transform.SetParent(audioManager.transform, false);
+                poolRoot = poolObj.transform;
+            }
+
+            const int PrePlacedChannelCount = 10;
+            AudioSource[] prePlacedSources = new AudioSource[PrePlacedChannelCount];
+            for (int i = 0; i < PrePlacedChannelCount; i++)
+            {
+                string chName = $"SFX_Channel_{i:D2}";
+                Transform child = i < poolRoot.childCount ? poolRoot.GetChild(i) : poolRoot.Find(chName);
+                GameObject chObj;
+                if (child != null)
+                {
+                    chObj = child.gameObject;
+                    chObj.name = chName;
+                }
+                else
+                {
+                    chObj = new GameObject(chName);
+                    chObj.transform.SetParent(poolRoot, false);
+                }
+
+                AudioSource src = chObj.GetComponent<AudioSource>();
+                if (src == null) src = chObj.AddComponent<AudioSource>();
+                ConfigurePrePlaced2DSource(src);
+                prePlacedSources[i] = src;
+            }
+
             // Ensure Game View Mute Audio is not accidentally enabled
             if (EditorUtility.audioMasterMute)
             {
@@ -144,6 +198,18 @@ namespace Vertigo.Editor.AssetSetup
 
             SerializedObject so = new SerializedObject(audioManager);
             so.FindProperty("audioConfig").objectReferenceValue = config;
+            so.FindProperty("dedicatedWheelSpinSource").objectReferenceValue = dedicatedSpinSource;
+
+            SerializedProperty sfxSourcesProp = so.FindProperty("sfxSources");
+            if (sfxSourcesProp != null)
+            {
+                sfxSourcesProp.arraySize = PrePlacedChannelCount;
+                for (int i = 0; i < PrePlacedChannelCount; i++)
+                {
+                    sfxSourcesProp.GetArrayElementAtIndex(i).objectReferenceValue = prePlacedSources[i];
+                }
+            }
+
             AssignIfNull(so, "buttonClickClip", clipButtonClick);
             AssignIfNull(so, "wheelSpinStartClip", clipSpinStart);
             AssignIfNull(so, "wheelTickClip", clipWheelTick);
@@ -182,7 +248,18 @@ namespace Vertigo.Editor.AssetSetup
                 EditorSceneManager.SaveScene(audioManager.gameObject.scene);
             }
 
-            Debug.Log("[AudioSetupUtility] Audio System & 20 Placeholder Clips configured and wired to AudioManager in scene!");
+            Debug.Log("[AudioSetupUtility] Pre-placed AudioSources & 20 Placeholder Clips configured and saved in scene!");
+        }
+
+        private static void ConfigurePrePlaced2DSource(AudioSource source)
+        {
+            if (source == null) return;
+            source.playOnAwake = false;
+            source.loop = false;
+            source.spatialBlend = 0f;
+            source.dopplerLevel = 0f;
+            source.reverbZoneMix = 0f;
+            EditorUtility.SetDirty(source);
         }
 
         private static void AssignIfNull(SerializedObject so, string propName, AudioClip clip)
@@ -228,11 +305,14 @@ namespace Vertigo.Editor.AssetSetup
             generated |= WriteWavIfMissing("sfx_button_click.wav", 0.055f, (t, d) =>
                 Envelope(t, d, 0.002f, 0.045f) * (Mathf.Sin(2f * Mathf.PI * 1150f * t) * 0.6f + Mathf.Sin(2f * Mathf.PI * 2300f * t) * 0.3f));
 
-            // 2. Wheel Spin Start: rising mechanical sweep
-            generated |= WriteWavIfMissing("sfx_wheel_spin_start.wav", 0.28f, (t, d) =>
+            // 2. Wheel Spin Start: smooth 0.85s rising & gliding mechanical spin launch
+            generated |= WriteWavIfMissing("sfx_wheel_spin_start.wav", 0.85f, (t, d) =>
             {
-                float freq = Mathf.Lerp(260f, 680f, t / d);
-                return Envelope(t, d, 0.01f, 0.22f) * Mathf.Sin(2f * Mathf.PI * freq * t) * 0.65f;
+                float norm = t / d;
+                float freq = norm < 0.35f
+                    ? Mathf.Lerp(220f, 640f, norm / 0.35f)
+                    : Mathf.Lerp(640f, 480f, (norm - 0.35f) / 0.65f);
+                return Envelope(t, d, 0.015f, 0.45f) * (Mathf.Sin(2f * Mathf.PI * freq * t) * 0.55f + Mathf.Sin(4f * Mathf.PI * freq * t) * 0.2f);
             });
 
             // 3. Wheel Tick: ultra-crisp wooden/metallic peg tick

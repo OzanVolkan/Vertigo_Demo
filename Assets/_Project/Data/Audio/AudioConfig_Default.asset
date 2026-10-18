@@ -22,9 +22,9 @@ MonoBehaviour:
     highPriority: 0
   - type: 2
     clip: {fileID: 8300000, guid: bf4a5cf3adca7c3459065d6721243790, type: 3}
-    volume: 0.85
-    pitchRange: {x: 0.98, y: 1.02}
-    minInterval: 0.1
+    volume: 0.9
+    pitchRange: {x: 0.99, y: 1.01}
+    minInterval: 0.05
     highPriority: 1
   - type: 3
     clip: {fileID: 8300000, guid: 792b8237b93477348adb55eaa07b5fa7, type: 3}

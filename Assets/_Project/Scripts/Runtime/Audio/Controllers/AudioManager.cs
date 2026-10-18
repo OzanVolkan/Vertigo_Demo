@@ -22,14 +22,18 @@ namespace Vertigo.Audio.Controllers
 
         private const int SfxTypeCount = 21; // Covers SoundEffectType.None (0) through MissionCompleteVictory (20)
 
-        [Header("General & Pool Settings")]
+        [Header("General & Pre-Placed Scene Channels")]
         [Tooltip("Optional ScriptableObject preset config. Direct Inspector clip fields below take priority when assigned.")]
         [SerializeField] private AudioConfigSO audioConfig;
         [Range(0f, 1f)]
         [SerializeField] private float masterSfxVolume = 1f;
         [SerializeField] private bool isMuted = false;
+        [Tooltip("Dedicated pre-placed AudioSource exclusively for WheelSpinStart so it can never be interrupted by WheelTick or other SFX.")]
+        [SerializeField] private AudioSource dedicatedWheelSpinSource;
+        [Tooltip("Pre-placed 2D AudioSources serialized in the scene (zero runtime GameObject/Component creation overhead).")]
+        [SerializeField] private AudioSource[] sfxSources;
         [Range(4, 24)]
-        [Tooltip("Number of pre-allocated 2D AudioSources in the ring-buffer pool.")]
+        [Tooltip("Fallback pool size if sfxSources is not pre-populated in Edit Mode.")]
         [SerializeField] private int poolSize = 10;
 
         [Header("1. UI Clips (Inspector Assignable)")]
@@ -173,6 +177,45 @@ namespace Vertigo.Audio.Controllers
 
         private void InitializePool()
         {
+            // 1. Ensure Dedicated Wheel Spin AudioSource is ready (uses pre-placed scene reference if present)
+            if (dedicatedWheelSpinSource == null)
+            {
+                Transform spinTr = transform.Find("AudioSource_WheelSpin");
+                if (spinTr != null)
+                {
+                    dedicatedWheelSpinSource = spinTr.GetComponent<AudioSource>();
+                }
+                if (dedicatedWheelSpinSource == null)
+                {
+                    GameObject spinObj = new GameObject("AudioSource_WheelSpin");
+                    spinObj.transform.SetParent(transform, false);
+                    dedicatedWheelSpinSource = spinObj.AddComponent<AudioSource>();
+                }
+            }
+            Configure2DSource(dedicatedWheelSpinSource);
+
+            // 2. Use pre-placed serialized sfxSources if already populated in the scene (Zero Awake creation cost!)
+            if (sfxSources != null && sfxSources.Length > 0)
+            {
+                bool allValid = true;
+                for (int i = 0; i < sfxSources.Length; i++)
+                {
+                    if (sfxSources[i] == null)
+                    {
+                        allValid = false;
+                        break;
+                    }
+                    Configure2DSource(sfxSources[i]);
+                }
+
+                if (allValid)
+                {
+                    _sourcePool = sfxSources;
+                    return;
+                }
+            }
+
+            // Fallback only if scene wasn't pre-populated in Edit Mode
             int count = Mathf.Clamp(poolSize, 4, 24);
             _sourcePool = new AudioSource[count];
 
@@ -187,14 +230,9 @@ namespace Vertigo.Audio.Controllers
             for (int i = 0; i < count; i++)
             {
                 Transform child = i < poolRoot.childCount ? poolRoot.GetChild(i) : null;
-                GameObject srcObj;
-                if (child != null)
+                GameObject srcObj = child != null ? child.gameObject : new GameObject($"SFX_Channel_{i:D2}");
+                if (child == null)
                 {
-                    srcObj = child.gameObject;
-                }
-                else
-                {
-                    srcObj = new GameObject($"PooledAudioSource_{i:D2}");
                     srcObj.transform.SetParent(poolRoot, false);
                 }
 
@@ -204,15 +242,21 @@ namespace Vertigo.Audio.Controllers
                     source = srcObj.AddComponent<AudioSource>();
                 }
 
-                // Strictly 2D UI settings for minimal CPU overhead
-                source.playOnAwake = false;
-                source.loop = false;
-                source.spatialBlend = 0f;
-                source.dopplerLevel = 0f;
-                source.reverbZoneMix = 0f;
-
+                Configure2DSource(source);
                 _sourcePool[i] = source;
             }
+
+            sfxSources = _sourcePool;
+        }
+
+        private static void Configure2DSource(AudioSource source)
+        {
+            if (source == null) return;
+            source.playOnAwake = false;
+            source.loop = false;
+            source.spatialBlend = 0f;
+            source.dopplerLevel = 0f;
+            source.reverbZoneMix = 0f;
         }
 
         /// <summary>
@@ -229,7 +273,7 @@ namespace Vertigo.Audio.Controllers
             // Default tuned parameters for each SoundEffectType (overridden by AudioConfigSO if present, while Inspector clip always takes priority)
             RegisterEntry(SoundEffectType.ButtonClick, buttonClickClip, 0.75f, 0.97f, 1.03f, 0.04f, false);
 
-            RegisterEntry(SoundEffectType.WheelSpinStart, wheelSpinStartClip, 0.85f, 0.98f, 1.02f, 0.10f, true);
+            RegisterEntry(SoundEffectType.WheelSpinStart, wheelSpinStartClip, 0.90f, 0.99f, 1.01f, 0.05f, true);
             RegisterEntry(SoundEffectType.WheelTick, wheelTickClip, 0.65f, 0.95f, 1.05f, 0.032f, false);
             RegisterEntry(SoundEffectType.WheelStopReward, wheelStopRewardClip, 0.85f, 0.98f, 1.02f, 0.10f, true);
             RegisterEntry(SoundEffectType.WheelStopBomb, wheelStopBombClip, 0.95f, 0.96f, 1.02f, 0.15f, true);
@@ -315,7 +359,11 @@ namespace Vertigo.Audio.Controllers
 
             _lastPlayedTime[index] = now;
 
-            AudioSource source = AcquirePooledSource(entry.highPriority);
+            // WheelSpinStart always uses its own dedicated AudioSource so rapid WheelTicks or other SFX never cut it off
+            AudioSource source = (type == SoundEffectType.WheelSpinStart && dedicatedWheelSpinSource != null)
+                ? dedicatedWheelSpinSource
+                : AcquirePooledSource(entry.highPriority);
+
             if (source == null) return;
 
             float configMaster = audioConfig != null ? audioConfig.MasterSfxVolume : 1f;

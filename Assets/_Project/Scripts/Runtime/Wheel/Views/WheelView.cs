@@ -177,7 +177,8 @@ namespace Vertigo.Wheel.Views
         private void OnSpinStarted(int targetIndex, float targetAngle, float exactCenterAngle, float duration)
         {
             _currentTargetIndex = targetIndex;
-            _lastTickSliceIndex = -1;
+            float initialZ = ui_transform_wheel_rotator != null ? ui_transform_wheel_rotator.localEulerAngles.z : 0f;
+            _lastTickSliceIndex = WheelMathUtility.GetSliceIndexAtAngle(initialZ);
 
             _spinSequence?.Kill();
             _spinTween?.Kill();
