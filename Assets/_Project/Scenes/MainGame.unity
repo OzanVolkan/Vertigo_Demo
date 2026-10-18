@@ -2279,15 +2279,15 @@ MonoBehaviour:
   wheelSpinStartClip: {fileID: 8300000, guid: 93886f0730d93455888a089599217469, type: 3}
   wheelTickClip: {fileID: 8300000, guid: 028da1dc76fc74a9881aa389a9f19e60, type: 3}
   wheelStopBombClip: {fileID: 8300000, guid: 8e8468c915f6243b0836a57e32a35a07, type: 3}
-  rewardShowcasePopClip: {fileID: 8300000, guid: 99a4ba92ca184c24494f7b4bc0410181, type: 3}
-  rewardParticleBurstClip: {fileID: 8300000, guid: beeac8e6d04bc244ca0d61e14b0351b1, type: 3}
-  rewardSlotHitClip: {fileID: 8300000, guid: 423cd03907a77794a910fde6e13e8a6b, type: 3}
-  zoneAdvanceClip: {fileID: 8300000, guid: f35364ae8212c5043930a9c251fdc799, type: 3}
-  safeZoneEnterClip: {fileID: 8300000, guid: 932ff6c39b3e06a4e97d77e706fe9e7d, type: 3}
-  superZoneEnterClip: {fileID: 8300000, guid: c78df04ace4884e43856aa71cffcec67, type: 3}
-  bombPopupOpenClip: {fileID: 8300000, guid: 2bfdb1f2c83d2f94e9da32b22d80c921, type: 3}
-  reviveSuccessClip: {fileID: 8300000, guid: 2b2cb94a431323743a7c86ebe9f9f8c9, type: 3}
-  giveUpClip: {fileID: 8300000, guid: 3f5253a9fea1c024591466f3002bfd2b, type: 3}
+  rewardShowcasePopClip: {fileID: 8300000, guid: f877c82aec4ea4c25b8587f070e2211f, type: 3}
+  rewardParticleBurstClip: {fileID: 8300000, guid: d29ff47b33fcc43318ab11ab4f080a1f, type: 3}
+  rewardSlotHitClip: {fileID: 8300000, guid: 5ae86940e1dc84a4ba6a475f30b48236, type: 3}
+  zoneAdvanceClip: {fileID: 8300000, guid: 566e0209e31ec4cb8827e35b769035e1, type: 3}
+  safeZoneEnterClip: {fileID: 8300000, guid: 2cb5d7e8fbccb462aa2fd95182b0cc26, type: 3}
+  superZoneEnterClip: {fileID: 8300000, guid: 4827dd82a6ce74d34b74037ca95666ee, type: 3}
+  bombPopupOpenClip: {fileID: 8300000, guid: 0fbdfe219eedc444799de0d87272b0fb, type: 3}
+  reviveSuccessClip: {fileID: 8300000, guid: edbce783f7f7445edb74c947c8638018, type: 3}
+  giveUpClip: {fileID: 8300000, guid: c1f47c4aad5f14a138bf7c0467396b25, type: 3}
   cashOutPopupOpenClip: {fileID: 8300000, guid: a19b541410d802e4a93089f2acb18c5a, type: 3}
   chestAppearClip: {fileID: 8300000, guid: e72c386c956b23f498b8c326df4d5f9d, type: 3}
   cardRevealSilverClip: {fileID: 8300000, guid: fe97f5e6d1d296348b79fd5713f066d1, type: 3}
