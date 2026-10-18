@@ -32,6 +32,7 @@ namespace Vertigo.Core.State
         [SerializeField] private BombPopupView bombPopupView;
         [SerializeField] private CashOutPopupView cashOutPopupView;
         [SerializeField] private CashOutRewardSummaryView cashOutSummaryView;
+        [SerializeField] private MissionCompletePopupView missionCompletePopupView;
 
         [Header("State")]
         [SerializeField] private GameState currentState = GameState.Initialize;
@@ -61,6 +62,7 @@ namespace Vertigo.Core.State
             if (bombPopupView == null) bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
             if (cashOutPopupView == null) cashOutPopupView = FindFirstObjectByType<CashOutPopupView>(FindObjectsInactive.Include);
             if (cashOutSummaryView == null) cashOutSummaryView = FindFirstObjectByType<CashOutRewardSummaryView>(FindObjectsInactive.Include);
+            if (missionCompletePopupView == null) missionCompletePopupView = FindFirstObjectByType<MissionCompletePopupView>(FindObjectsInactive.Include);
 
             if (bombPopupView != null && !bombPopupView.gameObject.activeSelf)
             {
@@ -75,6 +77,11 @@ namespace Vertigo.Core.State
             if (cashOutSummaryView != null && !cashOutSummaryView.gameObject.activeSelf)
             {
                 cashOutSummaryView.HideImmediate();
+            }
+
+            if (missionCompletePopupView != null && !missionCompletePopupView.gameObject.activeSelf)
+            {
+                missionCompletePopupView.HideImmediate();
             }
         }
 
@@ -280,11 +287,21 @@ namespace Vertigo.Core.State
             // Short breath after collection before zone advances
             yield return new WaitForSeconds(0.25f);
 
-            // Final Zone (Zone 60) completed: automatically cash out all collected rewards!
+            // Final Zone (Zone 60) completed: show mission complete celebration panel first, then cash out!
             if (zoneManager != null && zoneManager.IsFinalZone)
             {
-                Debug.Log($"[GameManager] Final Zone ({zoneManager.CurrentZoneNumber}) completed! Automatically cashing out rewards.");
-                GameEvents.FireCashOutRequested();
+                Debug.Log($"[GameManager] Final Zone ({zoneManager.CurrentZoneNumber}) completed! Showing Mission Complete celebration panel.");
+                if (missionCompletePopupView != null)
+                {
+                    missionCompletePopupView.Show(() =>
+                    {
+                        GameEvents.FireCashOutRequested();
+                    });
+                }
+                else
+                {
+                    GameEvents.FireCashOutRequested();
+                }
                 yield break;
             }
 
@@ -312,7 +329,17 @@ namespace Vertigo.Core.State
         {
             if (zoneManager != null && zoneManager.IsFinalZone)
             {
-                GameEvents.FireCashOutRequested();
+                if (missionCompletePopupView != null)
+                {
+                    missionCompletePopupView.Show(() =>
+                    {
+                        GameEvents.FireCashOutRequested();
+                    });
+                }
+                else
+                {
+                    GameEvents.FireCashOutRequested();
+                }
                 yield break;
             }
 
@@ -366,6 +393,10 @@ namespace Vertigo.Core.State
         private void HandleRestartRequested()
         {
             SetState(GameState.GameOver);
+            if (missionCompletePopupView != null)
+            {
+                missionCompletePopupView.HideImmediate();
+            }
             if (zoneManager != null)
             {
                 zoneManager.ResetToStart();
@@ -385,6 +416,7 @@ namespace Vertigo.Core.State
             if (bombPopupView == null) bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
             if (cashOutPopupView == null) cashOutPopupView = FindFirstObjectByType<CashOutPopupView>(FindObjectsInactive.Include);
             if (cashOutSummaryView == null) cashOutSummaryView = FindFirstObjectByType<CashOutRewardSummaryView>(FindObjectsInactive.Include);
+            if (missionCompletePopupView == null) missionCompletePopupView = FindFirstObjectByType<MissionCompletePopupView>(FindObjectsInactive.Include);
         }
     }
 }
