@@ -68,7 +68,6 @@ namespace Vertigo.Editor.AssetSetup
             AudioClip clipButtonClick = LoadAndConfigureClip("sfx_button_click.wav");
             AudioClip clipSpinStart = LoadAndConfigureClip("sfx_wheel_spin_start.wav");
             AudioClip clipWheelTick = LoadAndConfigureClip("sfx_wheel_tick.wav");
-            AudioClip clipStopReward = LoadAndConfigureClip("sfx_wheel_stop_reward.wav");
             AudioClip clipStopBomb = LoadAndConfigureClip("sfx_wheel_stop_bomb.wav");
             AudioClip clipShowcasePop = LoadAndConfigureClip("sfx_reward_showcase_pop.wav");
             AudioClip clipParticleBurst = LoadAndConfigureClip("sfx_reward_particle_burst.wav");
@@ -99,7 +98,6 @@ namespace Vertigo.Editor.AssetSetup
                 SoundEffectEntry.CreateDefault(SoundEffectType.ButtonClick, clipButtonClick, 0.75f, 0.97f, 1.03f, 0.04f, false),
                 SoundEffectEntry.CreateDefault(SoundEffectType.WheelSpinStart, clipSpinStart, 0.90f, 0.99f, 1.01f, 0.05f, true),
                 SoundEffectEntry.CreateDefault(SoundEffectType.WheelTick, clipWheelTick, 0.65f, 0.95f, 1.05f, 0.032f, false),
-                SoundEffectEntry.CreateDefault(SoundEffectType.WheelStopReward, clipStopReward, 0.85f, 0.98f, 1.02f, 0.10f, true),
                 SoundEffectEntry.CreateDefault(SoundEffectType.WheelStopBomb, clipStopBomb, 0.95f, 0.96f, 1.02f, 0.15f, true),
                 SoundEffectEntry.CreateDefault(SoundEffectType.RewardShowcasePop, clipShowcasePop, 0.85f, 0.98f, 1.03f, 0.10f, true),
                 SoundEffectEntry.CreateDefault(SoundEffectType.RewardParticleBurst, clipParticleBurst, 0.75f, 0.96f, 1.04f, 0.08f, false),
@@ -213,7 +211,6 @@ namespace Vertigo.Editor.AssetSetup
             AssignIfNull(so, "buttonClickClip", clipButtonClick);
             AssignIfNull(so, "wheelSpinStartClip", clipSpinStart);
             AssignIfNull(so, "wheelTickClip", clipWheelTick);
-            AssignIfNull(so, "wheelStopRewardClip", clipStopReward);
             AssignIfNull(so, "wheelStopBombClip", clipStopBomb);
             AssignIfNull(so, "rewardShowcasePopClip", clipShowcasePop);
             AssignIfNull(so, "rewardParticleBurstClip", clipParticleBurst);

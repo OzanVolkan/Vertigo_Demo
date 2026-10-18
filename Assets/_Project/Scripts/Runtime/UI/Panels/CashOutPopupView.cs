@@ -132,7 +132,6 @@ namespace Vertigo.UI.Panels
 
         private void OnCollectRewardsClicked()
         {
-            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
             HidePopup();
             GameEvents.FireCashOutRequested();
         }

@@ -2278,7 +2278,6 @@ MonoBehaviour:
   buttonClickClip: {fileID: 8300000, guid: 60865ed1afbe64b6c8ba93c611861637, type: 3}
   wheelSpinStartClip: {fileID: 8300000, guid: 93886f0730d93455888a089599217469, type: 3}
   wheelTickClip: {fileID: 8300000, guid: 028da1dc76fc74a9881aa389a9f19e60, type: 3}
-  wheelStopRewardClip: {fileID: 8300000, guid: f877c82aec4ea4c25b8587f070e2211f, type: 3}
   wheelStopBombClip: {fileID: 8300000, guid: 8e8468c915f6243b0836a57e32a35a07, type: 3}
   rewardShowcasePopClip: {fileID: 8300000, guid: 99a4ba92ca184c24494f7b4bc0410181, type: 3}
   rewardParticleBurstClip: {fileID: 8300000, guid: beeac8e6d04bc244ca0d61e14b0351b1, type: 3}

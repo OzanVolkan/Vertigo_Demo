@@ -41,17 +41,15 @@ namespace Vertigo.Audio.Controllers
         [SerializeField] private AudioClip buttonClickClip;
 
         [Header("2. Wheel & Spin Clips (Inspector Assignable)")]
-        [Tooltip("Played when the wheel starts spinning")]
+        [Tooltip("Played when the wheel starts spinning (on its own dedicated channel)")]
         [SerializeField] private AudioClip wheelSpinStartClip;
         [Tooltip("Played each time the wheel indicator crosses a slice boundary")]
         [SerializeField] private AudioClip wheelTickClip;
-        [Tooltip("Played when the wheel stops on a reward slice")]
-        [SerializeField] private AudioClip wheelStopRewardClip;
         [Tooltip("Played when the wheel stops on a bomb slice (explosion impact)")]
         [SerializeField] private AudioClip wheelStopBombClip;
 
         [Header("3. Reward & Inventory Clips (Inspector Assignable)")]
-        [Tooltip("Played when the won reward pops up in the center showcase")]
+        [Tooltip("Played when the wheel lands on a reward and the reward showcase pops up")]
         [SerializeField] private AudioClip rewardShowcasePopClip;
         [Tooltip("Played when flying reward particles burst outward")]
         [SerializeField] private AudioClip rewardParticleBurstClip;
@@ -98,6 +96,7 @@ namespace Vertigo.Audio.Controllers
         private int _poolCursor;
         private int _lastKnownZoneNumber = -1;
         private int _consecutiveWheelTicks;
+        private bool _suppressNextZoneSfx;
 
         public bool IsMuted
         {
@@ -275,7 +274,6 @@ namespace Vertigo.Audio.Controllers
 
             RegisterEntry(SoundEffectType.WheelSpinStart, wheelSpinStartClip, 0.90f, 0.99f, 1.01f, 0.05f, true);
             RegisterEntry(SoundEffectType.WheelTick, wheelTickClip, 0.65f, 0.95f, 1.05f, 0.032f, false);
-            RegisterEntry(SoundEffectType.WheelStopReward, wheelStopRewardClip, 0.85f, 0.98f, 1.02f, 0.10f, true);
             RegisterEntry(SoundEffectType.WheelStopBomb, wheelStopBombClip, 0.95f, 0.96f, 1.02f, 0.15f, true);
 
             RegisterEntry(SoundEffectType.RewardShowcasePop, rewardShowcasePopClip, 0.85f, 0.98f, 1.03f, 0.10f, true);
@@ -434,7 +432,6 @@ namespace Vertigo.Audio.Controllers
                 case SoundEffectType.ButtonClick: return buttonClickClip;
                 case SoundEffectType.WheelSpinStart: return wheelSpinStartClip;
                 case SoundEffectType.WheelTick: return wheelTickClip;
-                case SoundEffectType.WheelStopReward: return wheelStopRewardClip;
                 case SoundEffectType.WheelStopBomb: return wheelStopBombClip;
                 case SoundEffectType.RewardShowcasePop: return rewardShowcasePopClip;
                 case SoundEffectType.RewardParticleBurst: return rewardParticleBurstClip;
@@ -480,15 +477,19 @@ namespace Vertigo.Audio.Controllers
 
         private void HandleSpinCompleted(WheelSliceData slice)
         {
+            // If a long continuous spin clip is still playing on the dedicated channel when the wheel stops, stop it cleanly
+            if (dedicatedWheelSpinSource != null && dedicatedWheelSpinSource.isPlaying)
+            {
+                dedicatedWheelSpinSource.Stop();
+            }
+
             if (slice == null || slice.Reward == null) return;
 
+            // Note: When landing on a reward, RewardShowcaseView immediately opens on the same frame and plays RewardShowcasePop.
+            // We only play WheelStopBomb here when landing on a bomb so two reward chimes never overlap on the same frame.
             if (slice.Reward.IsBomb)
             {
                 PlaySfx(SoundEffectType.WheelStopBomb);
-            }
-            else
-            {
-                PlaySfx(SoundEffectType.WheelStopReward);
             }
         }
 
@@ -507,10 +508,18 @@ namespace Vertigo.Audio.Controllers
             if (zone.ZoneNumber == 1 && _lastKnownZoneNumber > 1)
             {
                 _lastKnownZoneNumber = zone.ZoneNumber;
+                _suppressNextZoneSfx = false;
                 return;
             }
 
             _lastKnownZoneNumber = zone.ZoneNumber;
+
+            // If ZoneChanged fired on the exact same frame as ReviveSuccess, don't overlap ZoneAdvance on top of ReviveSuccess
+            if (_suppressNextZoneSfx)
+            {
+                _suppressNextZoneSfx = false;
+                return;
+            }
 
             switch (zone.ZoneType)
             {
@@ -533,6 +542,7 @@ namespace Vertigo.Audio.Controllers
 
         private void HandleReviveSuccess()
         {
+            _suppressNextZoneSfx = true;
             PlaySfx(SoundEffectType.ReviveSuccess);
         }
 
@@ -560,7 +570,6 @@ namespace Vertigo.Audio.Controllers
             if (buttonClickClip == null) buttonClickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_button_click.wav");
             if (wheelSpinStartClip == null) wheelSpinStartClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_wheel_spin_start.wav");
             if (wheelTickClip == null) wheelTickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_wheel_tick.wav");
-            if (wheelStopRewardClip == null) wheelStopRewardClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_wheel_stop_reward.wav");
             if (wheelStopBombClip == null) wheelStopBombClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_wheel_stop_bomb.wav");
             if (rewardShowcasePopClip == null) rewardShowcasePopClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_reward_showcase_pop.wav");
             if (rewardParticleBurstClip == null) rewardParticleBurstClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_reward_particle_burst.wav");
