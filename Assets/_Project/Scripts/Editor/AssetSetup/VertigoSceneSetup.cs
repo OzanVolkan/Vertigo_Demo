@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEditor;
@@ -79,29 +79,29 @@ namespace Vertigo.Editor
             gmSO.ApplyModifiedProperties();
 
             // Load Sprites
-            Sprite neutralFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_frame_12px_neutral.png");
-            Sprite zoneMapFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_zonebar_frame.png");
-            Sprite zoneBg = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_bg.png");
-            Sprite zoneCurrentBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone.png");
-            Sprite zoneSafeBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone_safe.png");
-            Sprite zoneSuperBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone_super.png");
-            Sprite superBadgeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_frame_super.png");
-            Sprite safeBadgeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_frame_safe.png");
-            Sprite superSwordIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_icon_badge_sword.png");
-            Sprite safeDeltaIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_icon_badge_delta.png");
-            Sprite zoneGreenBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_super.png");
-            Sprite zoneWhiteBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_panel_zone_white.png");
-            Sprite greyBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_grey_standard.png");
-            Sprite orangeBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_orange_standard.png");
-            Sprite spinBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_generic_button.png");
-            Sprite bronzeBase = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_bronze_base.png");
-            Sprite bronzeIndicator = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_bronze_indicator.png");
-            Sprite bombIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_icon_death.png");
-            Sprite bayonetIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_icon_mle_bayonet_easter_time.png");
-            Sprite starFlash = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/star_flash_alpha.png");
-            Sprite bronzeFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_particle_frame_bronze.png");
-            Sprite silverFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_particle_frame_silver.png");
-            Sprite goldFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_particle_frame_gold.png");
+            Sprite neutralFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_card_frame_12px_neutral.png");
+            Sprite zoneMapFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_zonebar_frame.png");
+            Sprite zoneBg = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_card_panel_zone_bg.png");
+            Sprite zoneCurrentBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_badge_current_zone.png");
+            Sprite zoneSafeBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_badge_current_zone_safe.png");
+            Sprite zoneSuperBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_badge_current_zone_super.png");
+            Sprite superBadgeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_badge_frame_super.png");
+            Sprite safeBadgeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_badge_frame_safe.png");
+            Sprite superSwordIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_icon_badge_sword.png");
+            Sprite safeDeltaIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_icon_badge_delta.png");
+            Sprite zoneGreenBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_card_panel_zone_super.png");
+            Sprite zoneWhiteBadge = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_card_panel_zone_white.png");
+            Sprite greyBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_button_grey_standard.png");
+            Sprite orangeBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_button_orange_standard.png");
+            Sprite spinBtnSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_spin_generic_button.png");
+            Sprite bronzeBase = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_spin_bronze_base.png");
+            Sprite bronzeIndicator = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_spin_bronze_indicator.png");
+            Sprite bombIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_card_icon_death.png");
+            Sprite bayonetIcon = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_icon_mle_bayonet_easter_time.png");
+            Sprite starFlash = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/star_flash_alpha.png");
+            Sprite bronzeFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_particle_frame_bronze.png");
+            Sprite silverFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_particle_frame_silver.png");
+            Sprite goldFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_particle_frame_gold.png");
 
             // 4. Main Canvas Setup (Scale With Screen Size, Match = 0, Responsive 20:9, 16:9, 4:3)
             GameObject canvasObj = new GameObject("ui_canvas_main");

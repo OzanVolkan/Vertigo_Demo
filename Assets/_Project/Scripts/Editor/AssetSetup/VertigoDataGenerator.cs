@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
 using Vertigo.Core.Enums;
@@ -20,28 +20,28 @@ namespace Vertigo.Editor
             EnsureDirectories();
 
             // 1. Generate Rewards
-            RewardDataSO bombReward = CreateReward("Reward_Bomb", "BOMB", "Assets/2D/demo_content/ui_card_icon_death.png", RewardType.Bomb);
-            RewardDataSO cashReward = CreateReward("Reward_Cash", "CASH", "Assets/2D/demo_content/UI_icon_cash.png", RewardType.Cash, "$", false);
-            RewardDataSO goldReward = CreateReward("Reward_Gold", "GOLD", "Assets/2D/demo_content/UI_icon_gold.png", RewardType.Gold, "x", false);
-            RewardDataSO bronzeChest = CreateReward("Reward_Chest_Bronze", "BRONZE CHEST", "Assets/2D/demo_content/UI_icon_chest_Bronze_nolight.png", RewardType.Chest);
-            RewardDataSO silverChest = CreateReward("Reward_Chest_Silver", "SILVER CHEST", "Assets/2D/demo_content/UI_icon_chest_silver_nolight.png", RewardType.Chest);
-            RewardDataSO goldChest = CreateReward("Reward_Chest_Gold", "GOLD CHEST", "Assets/2D/demo_content/UI_icon_chest_gold_nolight.png", RewardType.Chest);
-            RewardDataSO superChest = CreateReward("Reward_Chest_Super", "SUPER CHEST", "Assets/2D/demo_content/UI_icon_chest_super_nolight.png", RewardType.Chest);
-            RewardDataSO shotgun = CreateReward("Reward_Shotgun", "TIER 1 SHOTGUN", "Assets/2D/demo_content/UI_Icon_Renders_tier1_shotgun.png", RewardType.Weapon);
-            RewardDataSO rifle = CreateReward("Reward_Rifle", "TIER 2 RIFLE", "Assets/2D/demo_content/UI_Icon_Renders_tier2_rifle.png", RewardType.Weapon);
-            RewardDataSO bayonet = CreateReward("Reward_Bayonet", "MLE BAYONET", "Assets/2D/demo_content/ui_icon_mle_bayonet_easter_time.png", RewardType.Weapon);
-            RewardDataSO grenade = CreateReward("Reward_Grenade", "M26 GRENADE", "Assets/2D/demo_content/ui_icon_render_cons_grenade_m26.png", RewardType.Consumable);
-            RewardDataSO healthshot = CreateReward("Reward_Healthshot", "NEUROSTIM HEALTHSHOT", "Assets/2D/demo_content/ui_icon_render_cons_healthshot_2_neurostim.png", RewardType.Consumable);
-            RewardDataSO pistolPoints = CreateReward("Reward_Points_Pistol", "PISTOL POINTS", "Assets/2D/demo_content/UI_Icons_Pistol_Points.png", RewardType.Points);
-            RewardDataSO shotgunPoints = CreateReward("Reward_Points_Shotgun", "SHOTGUN POINTS", "Assets/2D/demo_content/UI_Icons_Shotgun_Points.png", RewardType.Points);
+            RewardDataSO bombReward = CreateReward("Reward_Bomb", "BOMB", "Assets/_Project/2D/demo_content/ui_card_icon_death.png", RewardType.Bomb);
+            RewardDataSO cashReward = CreateReward("Reward_Cash", "CASH", "Assets/_Project/2D/demo_content/UI_icon_cash.png", RewardType.Cash, "$", false);
+            RewardDataSO goldReward = CreateReward("Reward_Gold", "GOLD", "Assets/_Project/2D/demo_content/UI_icon_gold.png", RewardType.Gold, "x", false);
+            RewardDataSO bronzeChest = CreateReward("Reward_Chest_Bronze", "BRONZE CHEST", "Assets/_Project/2D/demo_content/UI_icon_chest_Bronze_nolight.png", RewardType.Chest);
+            RewardDataSO silverChest = CreateReward("Reward_Chest_Silver", "SILVER CHEST", "Assets/_Project/2D/demo_content/UI_icon_chest_silver_nolight.png", RewardType.Chest);
+            RewardDataSO goldChest = CreateReward("Reward_Chest_Gold", "GOLD CHEST", "Assets/_Project/2D/demo_content/UI_icon_chest_gold_nolight.png", RewardType.Chest);
+            RewardDataSO superChest = CreateReward("Reward_Chest_Super", "SUPER CHEST", "Assets/_Project/2D/demo_content/UI_icon_chest_super_nolight.png", RewardType.Chest);
+            RewardDataSO shotgun = CreateReward("Reward_Shotgun", "TIER 1 SHOTGUN", "Assets/_Project/2D/demo_content/UI_Icon_Renders_tier1_shotgun.png", RewardType.Weapon);
+            RewardDataSO rifle = CreateReward("Reward_Rifle", "TIER 2 RIFLE", "Assets/_Project/2D/demo_content/UI_Icon_Renders_tier2_rifle.png", RewardType.Weapon);
+            RewardDataSO bayonet = CreateReward("Reward_Bayonet", "MLE BAYONET", "Assets/_Project/2D/demo_content/ui_icon_mle_bayonet_easter_time.png", RewardType.Weapon);
+            RewardDataSO grenade = CreateReward("Reward_Grenade", "M26 GRENADE", "Assets/_Project/2D/demo_content/ui_icon_render_cons_grenade_m26.png", RewardType.Consumable);
+            RewardDataSO healthshot = CreateReward("Reward_Healthshot", "NEUROSTIM HEALTHSHOT", "Assets/_Project/2D/demo_content/ui_icon_render_cons_healthshot_2_neurostim.png", RewardType.Consumable);
+            RewardDataSO pistolPoints = CreateReward("Reward_Points_Pistol", "PISTOL POINTS", "Assets/_Project/2D/demo_content/UI_Icons_Pistol_Points.png", RewardType.Points);
+            RewardDataSO shotgunPoints = CreateReward("Reward_Points_Shotgun", "SHOTGUN POINTS", "Assets/_Project/2D/demo_content/UI_Icons_Shotgun_Points.png", RewardType.Points);
 
             // 2. Generate Wheels
-            Sprite bronzeBase = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_bronze_base.png");
-            Sprite bronzeIndicator = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_bronze_indicator.png");
-            Sprite silverBase = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_silver_base.png");
-            Sprite silverIndicator = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_silver_indicator.png");
-            Sprite goldBase = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_golden_base.png");
-            Sprite goldIndicator = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_spin_golden_indicator.png");
+            Sprite bronzeBase = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_spin_bronze_base.png");
+            Sprite bronzeIndicator = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_spin_bronze_indicator.png");
+            Sprite silverBase = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_spin_silver_base.png");
+            Sprite silverIndicator = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_spin_silver_indicator.png");
+            Sprite goldBase = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_spin_golden_base.png");
+            Sprite goldIndicator = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_spin_golden_indicator.png");
 
             // Bronze Wheel (Normal Zone: 1 Bomb + 7 Rewards)
             WheelConfigSO bronzeWheel = CreateWheel("WheelConfig_Bronze_Normal", WheelType.BronzeNormal, bronzeBase, bronzeIndicator, new[]

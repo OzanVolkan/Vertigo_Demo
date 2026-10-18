@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEditor;
@@ -45,10 +45,10 @@ namespace Vertigo.Editor
             Undo.RegisterFullObjectHierarchyUndo(topBarObj, "Polish Zone Bar (Sliding Badge)");
 
             // 1. Load Sprites
-            Sprite frameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_zonebar_frame.png");
-            Sprite badgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone.png");
-            Sprite safeBadgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone_safe.png");
-            Sprite superBadgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_badge_current_zone_super.png");
+            Sprite frameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_zonebar_frame.png");
+            Sprite badgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_badge_current_zone.png");
+            Sprite safeBadgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_badge_current_zone_safe.png");
+            Sprite superBadgeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_badge_current_zone_super.png");
 
             // 2. Ensure Badge Prefab exists
             GameObject badgePrefab = EnsureBadgePrefab(badgeSprite);

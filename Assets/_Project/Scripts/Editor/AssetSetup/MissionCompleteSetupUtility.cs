@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -41,8 +41,8 @@ namespace Vertigo.Editor
                 return;
             }
 
-            Sprite orangeButtonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_orange_standard.png");
-            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_glow_circle.png");
+            Sprite orangeButtonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_button_orange_standard.png");
+            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_glow_circle.png");
             TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(SemiBoldFontPath);
 
             Transform existingTr = canvasObj.transform.Find("ui_panel_mission_complete");

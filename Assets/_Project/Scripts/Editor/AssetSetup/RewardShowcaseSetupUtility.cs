@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -92,7 +92,7 @@ namespace Vertigo.Editor
             Vector2 wheelCenterPos = new Vector2(75f, -20f);
 
             // Sunburst Rays
-            Sprite sunburstSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_sunburst_rays.png");
+            Sprite sunburstSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/star_flash_alpha.png");
             Transform raysTr = rootObj.transform.Find("ui_transform_sunburst");
             GameObject raysObj;
             if (raysTr == null)
@@ -117,7 +117,7 @@ namespace Vertigo.Editor
             raysImg.raycastTarget = false;
 
             // Glow Circle
-            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_glow_circle.png");
+            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_glow_circle.png");
             Transform glowTr = rootObj.transform.Find("ui_image_glow");
             GameObject glowObj;
             if (glowTr == null)

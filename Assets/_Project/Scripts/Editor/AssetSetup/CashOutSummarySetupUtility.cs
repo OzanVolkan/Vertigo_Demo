@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -12,15 +12,15 @@ namespace Vertigo.Editor
     {
         private const string PrefKey = "Vertigo_CashOutSummarySetup_V8";
 
-        private const string ChestSpritePath = "Assets/2D/demo_content/UI_icon_chest_gold_nolight.png";
-        private const string BadgeCardStackSpritePath = "Assets/2D/demo_content/ui_badge_card_stack.png";
-        private const string SilverCardSpritePath = "Assets/2D/demo_content/ui_card_frame_silver.png";
-        private const string GoldCardSpritePath = "Assets/2D/demo_content/ui_card_frame_gold.png";
-        private const string OrangeBtnSpritePath = "Assets/2D/demo_content/UI_button_orange_standard.png";
-        private const string GreyBtnSpritePath = "Assets/2D/demo_content/UI_button_grey_standard.png";
-        private const string CardFrameSpritePath = "Assets/2D/demo_content/ui_card_frame_12px_neutral.png";
-        private const string GlowCircleSpritePath = "Assets/2D/demo_content/ui_glow_circle.png";
-        private const string StarGlowSpritePath = "Assets/2D/demo_content/star_glow_alpha.png";
+        private const string ChestSpritePath = "Assets/_Project/2D/demo_content/UI_icon_chest_gold_nolight.png";
+        private const string BadgeCardStackSpritePath = "Assets/_Project/2D/Custom_UI/ui_badge_card_stack.png";
+        private const string SilverCardSpritePath = "Assets/_Project/2D/Custom_UI/ui_card_frame_silver.png";
+        private const string GoldCardSpritePath = "Assets/_Project/2D/Custom_UI/ui_card_frame_gold.png";
+        private const string OrangeBtnSpritePath = "Assets/_Project/2D/demo_content/UI_button_orange_standard.png";
+        private const string GreyBtnSpritePath = "Assets/_Project/2D/demo_content/UI_button_grey_standard.png";
+        private const string CardFrameSpritePath = "Assets/_Project/2D/demo_content/ui_card_frame_12px_neutral.png";
+        private const string GlowCircleSpritePath = "Assets/_Project/2D/Custom_UI/ui_glow_circle.png";
+        private const string StarGlowSpritePath = "Assets/_Project/2D/demo_content/star_glow_alpha.png";
 
         private const string SilverCardPrefabPath = "Assets/_Project/Prefabs/UI/Cards/Card_Reward_Silver.prefab";
         private const string GoldCardPrefabPath = "Assets/_Project/Prefabs/UI/Cards/Card_Reward_Gold.prefab";

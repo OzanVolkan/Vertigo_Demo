@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.U2D;
@@ -8,7 +8,8 @@ namespace Vertigo.Editor
 {
     public static class VertigoAssetSetupUtility
     {
-        private const string DemoContentPath = "Assets/2D/demo_content";
+        private const string DemoContentPath = "Assets/_Project/2D/demo_content";
+        private const string CustomUIPath = "Assets/_Project/2D/Custom_UI";
         private const string AtlasPath = "Assets/_Project/Art/Atlases/VertigoDemoAtlas.spriteatlasv2";
         private const int AtlasPadding = 8;          // Extra padding prevents neighbour bleeding at lower mip levels
         private const int MaxAtlasSpriteSize = 1024; // Larger textures (full-screen VFX) stay out of the atlas
@@ -55,7 +56,10 @@ namespace Vertigo.Editor
                 return;
             }
 
-            string[] assetGuids = AssetDatabase.FindAssets("t:Texture", new[] { DemoContentPath });
+            string[] searchFolders = Directory.Exists(CustomUIPath)
+                ? new[] { DemoContentPath, CustomUIPath }
+                : new[] { DemoContentPath };
+            string[] assetGuids = AssetDatabase.FindAssets("t:Texture", searchFolders);
             int modifiedCount = 0;
 
             foreach (string guid in assetGuids)
@@ -188,7 +192,10 @@ namespace Vertigo.Editor
         private static Object[] CollectPackableSprites()
         {
             var packables = new List<Object>();
-            string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { DemoContentPath });
+            string[] searchFolders = Directory.Exists(CustomUIPath)
+                ? new[] { DemoContentPath, CustomUIPath }
+                : new[] { DemoContentPath };
+            string[] guids = AssetDatabase.FindAssets("t:Texture2D", searchFolders);
 
             foreach (string guid in guids)
             {

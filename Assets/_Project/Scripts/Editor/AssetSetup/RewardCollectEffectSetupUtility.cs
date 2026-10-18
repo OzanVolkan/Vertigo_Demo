@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using Vertigo.Core.State;
@@ -68,9 +68,9 @@ namespace Vertigo.Editor
                 effectView = containerObj.AddComponent<RewardCollectEffectView>();
             }
 
-            Sprite bronzeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_particle_frame_bronze.png");
-            Sprite silverFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_particle_frame_silver.png");
-            Sprite goldFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_particle_frame_gold.png");
+            Sprite bronzeFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_particle_frame_bronze.png");
+            Sprite silverFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_particle_frame_silver.png");
+            Sprite goldFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_particle_frame_gold.png");
 
             SerializedObject so = new SerializedObject(effectView);
             so.FindProperty("bronzeFrameSprite").objectReferenceValue = bronzeFrame;

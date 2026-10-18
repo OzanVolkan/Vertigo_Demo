@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -40,9 +40,9 @@ namespace Vertigo.Editor
                 return;
             }
 
-            Sprite greyButtonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_grey_standard.png");
-            Sprite orangeButtonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_orange_standard.png");
-            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_glow_circle.png");
+            Sprite greyButtonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_button_grey_standard.png");
+            Sprite orangeButtonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_button_orange_standard.png");
+            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_glow_circle.png");
 
             Transform existingTr = canvasObj.transform.Find("ui_panel_cashout_popup");
             if (existingTr != null)

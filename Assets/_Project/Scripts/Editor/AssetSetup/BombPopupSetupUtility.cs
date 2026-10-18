@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -15,10 +15,10 @@ namespace Vertigo.Editor
         private const string RedVignettePrefKey = "Vertigo_BombPopup_FourCornerVignette_V1";
         private const string ThreeButtonsPrefKey = "Vertigo_BombPopup_ThreeButtons_V1";
         private const string WalletCurrencyBarPrefKey = "Vertigo_BombPopup_WalletCurrencyBar_V2";
-        private const string TrashIconPath = "Assets/2D/demo_content/ui_icon_trash.png";
-        private const string BombCircleBgPath = "Assets/2D/demo_content/ui_bomb_circle_bg.png";
-        private const string RedVignettePath = "Assets/2D/demo_content/ui_red_vignette.png";
-        private const string VideoAdIconPath = "Assets/2D/demo_content/ui_icon_video_ad.png";
+        private const string TrashIconPath = "Assets/_Project/2D/Custom_UI/ui_icon_trash.png";
+        private const string BombCircleBgPath = "Assets/_Project/2D/Custom_UI/ui_bomb_circle_bg.png";
+        private const string RedVignettePath = "Assets/_Project/2D/Custom_UI/ui_red_vignette.png";
+        private const string VideoAdIconPath = "Assets/_Project/2D/Custom_UI/ui_icon_video_ad.png";
 
         [MenuItem("Vertigo/UI/Apply Bomb Popup Top-Right Wallet Bar")]
         public static void ApplyWalletCurrencyBar()
@@ -106,8 +106,8 @@ namespace Vertigo.Editor
             Transform bombPopupTr = canvasObj.transform.Find("ui_panel_bomb_popup");
             if (bombPopupTr == null) return;
 
-            Sprite cashSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_cash.png");
-            Sprite goldSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_gold.png");
+            Sprite cashSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_icon_cash.png");
+            Sprite goldSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_icon_gold.png");
 
             Transform currencyTr = bombPopupTr.Find("ui_transform_currency_bar");
             GameObject currencyObj = currencyTr != null ? currencyTr.gameObject : CreateUIObject("ui_transform_currency_bar", bombPopupTr);
@@ -302,9 +302,9 @@ namespace Vertigo.Editor
                 return;
             }
 
-            Sprite bombIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_icon_death.png");
-            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_glow_circle.png");
-            Sprite raysSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_sunburst_rays.png");
+            Sprite bombIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_card_icon_death.png");
+            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_glow_circle.png");
+            Sprite raysSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/star_flash_alpha.png");
             Sprite circleBgSprite = EnsureSpriteImported(BombCircleBgPath);
 
             ConfigureCircularBombCenterpiece(
@@ -457,8 +457,8 @@ namespace Vertigo.Editor
                 return;
             }
 
-            Sprite buttonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_grey_standard.png");
-            Sprite goldCoinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_gold.png");
+            Sprite buttonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_button_grey_standard.png");
+            Sprite goldCoinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_icon_gold.png");
             Sprite trashSprite = EnsureSpriteImported(TrashIconPath);
             Sprite videoAdSprite = EnsureSpriteImported(VideoAdIconPath);
 
@@ -723,12 +723,12 @@ namespace Vertigo.Editor
             }
 
             // Load Sprites
-            Sprite bombIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_card_icon_death.png");
-            Sprite bannerFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_zonebar_frame.png");
-            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_glow_circle.png");
-            Sprite raysSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/ui_sunburst_rays.png");
-            Sprite buttonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_button_grey_standard.png");
-            Sprite goldCoinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_gold.png");
+            Sprite bombIconSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/ui_card_icon_death.png");
+            Sprite bannerFrameSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_zonebar_frame.png");
+            Sprite glowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/Custom_UI/ui_glow_circle.png");
+            Sprite raysSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/star_flash_alpha.png");
+            Sprite buttonSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_button_grey_standard.png");
+            Sprite goldCoinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_icon_gold.png");
             Sprite trashSprite = EnsureSpriteImported(TrashIconPath);
             Sprite circleBgSprite = EnsureSpriteImported(BombCircleBgPath);
             Sprite videoAdSprite = EnsureSpriteImported(VideoAdIconPath);
@@ -853,7 +853,7 @@ namespace Vertigo.Editor
                 out TMP_Text reviveCostText);
 
             // 5b. Top-Right Wallet Currency Bar
-            Sprite cashSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/2D/demo_content/UI_icon_cash.png");
+            Sprite cashSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/2D/demo_content/UI_icon_cash.png");
             GameObject currencyObj = CreateUIObject("ui_transform_currency_bar", rootObj.transform);
             ConfigureWalletCurrencyBar(
                 currencyObj,
