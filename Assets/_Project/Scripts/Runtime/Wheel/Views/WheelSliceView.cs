@@ -3,7 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Vertigo.Core.Interfaces;
-using Vertigo.Wheel.Data;
 
 namespace Vertigo.Wheel.Views
 {
@@ -32,44 +31,25 @@ namespace Vertigo.Wheel.Views
             if (ui_image_shine != null)
                 ui_image_shine.gameObject.SetActive(false);
 
-            if (sliceData?.Reward == null)
+            var reward = sliceData?.Reward;
+            if (reward == null)
             {
                 if (ui_image_icon != null) ui_image_icon.enabled = false;
                 if (ui_text_amount_value != null) ui_text_amount_value.text = string.Empty;
                 return;
             }
 
-            bool isBomb = sliceData.Reward.IsBomb;
-
             if (ui_image_icon != null)
             {
-                ui_image_icon.sprite = sliceData.Reward.Icon;
-                ui_image_icon.enabled = sliceData.Reward.Icon != null;
-
-                RectTransform iconRT = ui_image_icon.rectTransform;
-                if (isBomb)
-                {
-                    iconRT.sizeDelta = bombIconSize;
-                    iconRT.anchoredPosition = bombIconOffset;
-                }
-                else
-                {
-                    iconRT.sizeDelta = standardIconSize;
-                    iconRT.anchoredPosition = standardIconOffset;
-                }
+                ui_image_icon.sprite = reward.Icon;
+                ui_image_icon.enabled = reward.Icon != null;
+                ApplyIconTransform(ui_image_icon.rectTransform, reward.IsBomb);
             }
 
             if (ui_text_amount_value != null)
             {
-                if (isBomb)
-                {
-                    ui_text_amount_value.text = string.Empty;
-                }
-                else
-                {
-                    int scaledAmount = Mathf.Max(1, Mathf.RoundToInt(sliceData.Amount * rewardMultiplier));
-                    ui_text_amount_value.text = sliceData.Reward.FormatAmount(scaledAmount);
-                }
+                int scaledAmount = Mathf.Max(1, Mathf.RoundToInt(sliceData.Amount * rewardMultiplier));
+                ui_text_amount_value.text = reward.IsBomb ? string.Empty : reward.FormatAmount(scaledAmount);
             }
         }
 
@@ -80,11 +60,12 @@ namespace Vertigo.Wheel.Views
             if (ui_image_shine != null)
             {
                 ui_image_shine.gameObject.SetActive(true);
-                ui_image_shine.color = new Color(1, 1, 1, 0);
+                ui_image_shine.color = new Color(1f, 1f, 1f, 0f);
                 ui_image_shine.DOFade(0.8f, 0.2f).SetLoops(2, LoopType.Yoyo);
             }
 
-            _winTween = transform.DOPunchScale(Vector3.one * 0.25f, 0.5f, 3, 0.6f)
+            _winTween = transform
+                .DOPunchScale(Vector3.one * 0.25f, 0.5f, 3, 0.6f)
                 .OnComplete(() =>
                 {
                     if (ui_image_shine != null)
@@ -92,10 +73,13 @@ namespace Vertigo.Wheel.Views
                 });
         }
 
-        private void OnDestroy()
+        private void ApplyIconTransform(RectTransform iconRT, bool isBomb)
         {
-            _winTween?.Kill();
+            iconRT.sizeDelta = isBomb ? bombIconSize : standardIconSize;
+            iconRT.anchoredPosition = isBomb ? bombIconOffset : standardIconOffset;
         }
+
+        private void OnDestroy() => _winTween?.Kill();
 
 #if UNITY_EDITOR
         public void ApplyLayout(
@@ -115,32 +99,23 @@ namespace Vertigo.Wheel.Views
             bombIconSize = bombSize;
             bombIconOffset = bombOffset;
 
-            Transform contentTrans = transform.Find("ui_slice_content");
+            var contentTrans = transform.Find("ui_slice_content");
             if (contentTrans != null && contentTrans.TryGetComponent(out RectTransform contentRT))
-            {
-                UnityEditor.Undo.RecordObject(contentRT, "Adjust Slice Content Layout");
-                contentRT.anchoredPosition = new Vector2(0f, radialDistance);
-                contentRT.sizeDelta = contentSize;
-                UnityEditor.EditorUtility.SetDirty(contentRT);
-            }
+                SetRectLayout(contentRT, contentSize, new Vector2(0f, radialDistance));
 
             if (ui_image_icon != null && ui_image_icon.TryGetComponent(out RectTransform iconRT))
             {
                 UnityEditor.Undo.RecordObject(iconRT, "Adjust Slice Icon Layout");
-                bool isBomb = ui_image_icon.sprite != null && ui_image_icon.sprite.name.ToLower().Contains("bomb");
-                iconRT.sizeDelta = isBomb ? bombIconSize : standardIconSize;
-                iconRT.anchoredPosition = isBomb ? bombIconOffset : standardIconOffset;
+                bool isBomb = ui_image_icon.sprite != null && ui_image_icon.sprite.name.ToLowerInvariant().Contains("bomb");
+                ApplyIconTransform(iconRT, isBomb);
                 UnityEditor.EditorUtility.SetDirty(iconRT);
             }
 
             if (ui_text_amount_value != null && ui_text_amount_value.TryGetComponent(out RectTransform textRT))
             {
-                UnityEditor.Undo.RecordObject(textRT, "Adjust Slice Text Layout");
+                SetRectLayout(textRT, textSize, textOffset);
                 UnityEditor.Undo.RecordObject(ui_text_amount_value, "Adjust Slice Text Font");
-                textRT.sizeDelta = textSize;
-                textRT.anchoredPosition = textOffset;
                 ui_text_amount_value.fontSize = fontSize;
-                UnityEditor.EditorUtility.SetDirty(textRT);
                 UnityEditor.EditorUtility.SetDirty(ui_text_amount_value);
             }
 
@@ -152,6 +127,14 @@ namespace Vertigo.Wheel.Views
             }
 
             UnityEditor.EditorUtility.SetDirty(this);
+        }
+
+        private static void SetRectLayout(RectTransform rt, Vector2 size, Vector2 position)
+        {
+            UnityEditor.Undo.RecordObject(rt, "Adjust Slice Layout");
+            rt.sizeDelta = size;
+            rt.anchoredPosition = position;
+            UnityEditor.EditorUtility.SetDirty(rt);
         }
 #endif
     }

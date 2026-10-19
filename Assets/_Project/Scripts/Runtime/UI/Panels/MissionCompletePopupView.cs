@@ -3,6 +3,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
 
 namespace Vertigo.UI.Panels
@@ -33,8 +34,6 @@ namespace Vertigo.UI.Panels
         private Sequence _animSequence;
         private bool _isShowing;
 
-        public bool IsShowing => _isShowing;
-
         private void Awake()
         {
             EnsureInitialized();
@@ -46,11 +45,8 @@ namespace Vertigo.UI.Panels
 
         private void EnsureInitialized()
         {
-            if (ui_panel_popup_root == null)
-                ui_panel_popup_root = gameObject;
-
-            if (ui_canvas_group == null)
-                ui_canvas_group = ui_panel_popup_root.GetComponent<CanvasGroup>();
+            if (ui_panel_popup_root == null) ui_panel_popup_root = gameObject;
+            if (ui_canvas_group == null) ui_canvas_group = ui_panel_popup_root.GetComponent<CanvasGroup>();
 
             if (ui_button_collect_rewards != null)
             {
@@ -59,10 +55,7 @@ namespace Vertigo.UI.Panels
             }
         }
 
-        private void OnEnable()
-        {
-            GameEvents.OnGameRestartRequested += HideImmediate;
-        }
+        private void OnEnable() => GameEvents.OnGameRestartRequested += HideImmediate;
 
         private void OnDisable()
         {
@@ -70,32 +63,22 @@ namespace Vertigo.UI.Panels
             _animSequence?.Kill();
         }
 
-        /// <summary>
-        /// Displays the mission complete celebration screen.
-        /// </summary>
-        /// <param name="onCollect">Callback fired when the player clicks COLLECT REWARDS</param>
         public void Show(Action onCollect = null)
         {
             _isShowing = true;
             _onCollectCallback = onCollect;
 
             EnsureInitialized();
+            GameEvents.FireSfx(SoundEffectType.MissionCompleteVictory);
 
-            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.MissionCompleteVictory);
-
-            if (ui_panel_popup_root != null)
-            {
-                ui_panel_popup_root.SetActive(true);
-            }
+            if (ui_panel_popup_root != null) ui_panel_popup_root.SetActive(true);
 
             _animSequence?.Kill();
             _animSequence = DOTween.Sequence();
 
+            SetCanvasGroupState(0f, true);
             if (ui_canvas_group != null)
             {
-                ui_canvas_group.alpha = 0f;
-                ui_canvas_group.blocksRaycasts = true;
-                ui_canvas_group.interactable = true;
                 _animSequence.Append(ui_canvas_group.DOFade(1f, fadeInDuration).SetEase(Ease.OutQuad));
             }
 
@@ -113,7 +96,7 @@ namespace Vertigo.UI.Panels
 
         private void OnCollectRewardsClicked()
         {
-            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
+            GameEvents.FireSfx(SoundEffectType.ButtonClick);
 
             if (ui_canvas_group != null)
             {
@@ -125,14 +108,10 @@ namespace Vertigo.UI.Panels
             _animSequence = DOTween.Sequence();
 
             if (ui_canvas_group != null)
-            {
                 _animSequence.Append(ui_canvas_group.DOFade(0f, fadeOutDuration).SetEase(Ease.InQuad));
-            }
 
             if (ui_transform_dialog != null)
-            {
                 _animSequence.Join(ui_transform_dialog.DOScale(0.95f, fadeOutDuration).SetEase(Ease.InQuad));
-            }
 
             _animSequence.AppendCallback(() =>
             {
@@ -147,16 +126,16 @@ namespace Vertigo.UI.Panels
         {
             _isShowing = false;
             _animSequence?.Kill();
-            if (ui_canvas_group != null)
-            {
-                ui_canvas_group.alpha = 0f;
-                ui_canvas_group.blocksRaycasts = false;
-                ui_canvas_group.interactable = false;
-            }
-            if (ui_panel_popup_root != null)
-            {
-                ui_panel_popup_root.SetActive(false);
-            }
+            SetCanvasGroupState(0f, false);
+            if (ui_panel_popup_root != null) ui_panel_popup_root.SetActive(false);
+        }
+
+        private void SetCanvasGroupState(float alpha, bool interactable)
+        {
+            if (ui_canvas_group == null) return;
+            ui_canvas_group.alpha = alpha;
+            ui_canvas_group.blocksRaycasts = interactable;
+            ui_canvas_group.interactable = interactable;
         }
     }
 }

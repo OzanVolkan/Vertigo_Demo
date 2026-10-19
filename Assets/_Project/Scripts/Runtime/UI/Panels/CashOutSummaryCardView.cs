@@ -11,6 +11,8 @@ namespace Vertigo.UI.Panels
     /// </summary>
     public class CashOutSummaryCardView : MonoBehaviour
     {
+        private static readonly Color ValuableTextColor = new Color(1f, 0.88f, 0.35f, 1f);
+
         [Header("Card UI Elements")]
         [SerializeField] private TMP_Text ui_text_name;
         [SerializeField] private Image ui_image_icon;
@@ -23,10 +25,7 @@ namespace Vertigo.UI.Panels
         [SerializeField] private Sprite silverCardSprite;
         [SerializeField] private Sprite goldCardSprite;
 
-        private void Awake()
-        {
-            EnsureMaskable();
-        }
+        private void Awake() => EnsureMaskable();
 
         private void EnsureMaskable()
         {
@@ -36,54 +35,43 @@ namespace Vertigo.UI.Panels
             if (ui_image_bg != null) ui_image_bg.maskable = true;
         }
 
-        public void Setup(IRewardData reward, int amount)
-        {
+        public void Setup(IRewardData reward, int amount) =>
             Setup(reward, amount, silverCardSprite, goldCardSprite);
-        }
 
         public void Setup(IRewardData reward, int amount, Sprite defaultSilver, Sprite defaultGold)
         {
             EnsureMaskable();
             bool isValuable = reward != null && reward.IsValuable;
-            Sprite sSprite = silverCardSprite != null ? silverCardSprite : defaultSilver;
-            Sprite gSprite = goldCardSprite != null ? goldCardSprite : defaultGold;
 
-            // Background image (if assigned and not already set in prefab)
             if (ui_image_bg != null)
             {
                 if (ui_image_bg.sprite == null)
                 {
+                    Sprite sSprite = silverCardSprite != null ? silverCardSprite : defaultSilver;
+                    Sprite gSprite = goldCardSprite != null ? goldCardSprite : defaultGold;
                     ui_image_bg.sprite = isValuable ? gSprite : sSprite;
                 }
                 ui_image_bg.color = Color.white;
                 ui_image_bg.preserveAspect = true;
             }
 
-            // Name text
-            if (ui_text_name != null)
-            {
-                ui_text_name.text = reward != null ? reward.DisplayName.ToUpper() : "";
-                if (overrideTextColorFromReward)
-                {
-                    ui_text_name.color = isValuable ? new Color(1f, 0.88f, 0.35f, 1f) : Color.white;
-                }
-            }
-
-            // Central Icon
             if (ui_image_icon != null)
             {
                 ui_image_icon.sprite = reward?.Icon;
                 ui_image_icon.enabled = reward?.Icon != null;
             }
 
-            // Amount text
-            if (ui_text_amount != null)
+            ApplyText(ui_text_name, reward != null ? reward.DisplayName.ToUpper() : string.Empty, isValuable);
+            ApplyText(ui_text_amount, reward != null ? reward.FormatAmount(amount) : $"x{amount:N0}", isValuable);
+        }
+
+        private void ApplyText(TMP_Text label, string text, bool isValuable)
+        {
+            if (label == null) return;
+            label.text = text;
+            if (overrideTextColorFromReward)
             {
-                ui_text_amount.text = reward != null ? reward.FormatAmount(amount) : $"x{amount:N0}";
-                if (overrideTextColorFromReward)
-                {
-                    ui_text_amount.color = isValuable ? new Color(1f, 0.88f, 0.35f, 1f) : Color.white;
-                }
+                label.color = isValuable ? ValuableTextColor : Color.white;
             }
         }
     }

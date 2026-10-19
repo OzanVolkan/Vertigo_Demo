@@ -930,7 +930,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec6a51d4823ffa1439b25593a14ad113, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Testing.ZoneTestManager
+  m_EditorClassIdentifier: Assembly-CSharp::Vertigo.Testing.TestManager
   targetZone: 1
   disableBomb: 0
   forceBomb: 0

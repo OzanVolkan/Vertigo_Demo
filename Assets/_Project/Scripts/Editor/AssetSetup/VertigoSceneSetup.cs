@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEditor;
@@ -61,7 +61,7 @@ namespace Vertigo.Editor
             ZoneManager zoneManager = coreObj.AddComponent<ZoneManager>();
             WheelController wheelController = coreObj.AddComponent<WheelController>();
             SessionInventoryManager inventoryManager = coreObj.AddComponent<SessionInventoryManager>();
-            ZoneTestManager testManager = coreObj.AddComponent<ZoneTestManager>();
+            TestManager testManager = coreObj.AddComponent<TestManager>();
 
             // Load Zone Config
             ZoneManagerConfigSO zoneConfig = AssetDatabase.LoadAssetAtPath<ZoneManagerConfigSO>("Assets/_Project/Data/Zones/ZoneConfig_Default.asset");

@@ -2,7 +2,9 @@ using System.Globalization;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
+using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
 using Vertigo.Rewards.Controllers;
 
@@ -40,7 +42,7 @@ namespace Vertigo.UI.Panels
         [Tooltip("How much the Gold revive cost increases after each Gold revive in the same run")]
         [SerializeField] private int reviveCostStep = 25;
 
-        private int _goldReviveCountThisRun = 0;
+        private int _goldReviveCountThisRun;
         private Sequence _showSequence;
         private Tween _glowPulseTween;
         private Tween _raysRotateTween;
@@ -52,29 +54,12 @@ namespace Vertigo.UI.Panels
         {
             _goldReviveCountThisRun = 0;
 
-            if (ui_panel_popup_root == null)
-                ui_panel_popup_root = gameObject;
+            if (ui_panel_popup_root == null) ui_panel_popup_root = gameObject;
+            if (ui_canvas_group == null) ui_canvas_group = ui_panel_popup_root.GetComponent<CanvasGroup>();
 
-            if (ui_canvas_group == null)
-                ui_canvas_group = ui_panel_popup_root.GetComponent<CanvasGroup>();
-
-            if (ui_button_giveup != null)
-            {
-                ui_button_giveup.onClick.RemoveListener(OnGiveUpClicked);
-                ui_button_giveup.onClick.AddListener(OnGiveUpClicked);
-            }
-
-            if (ui_button_revive != null)
-            {
-                ui_button_revive.onClick.RemoveListener(OnGoldReviveClicked);
-                ui_button_revive.onClick.AddListener(OnGoldReviveClicked);
-            }
-
-            if (ui_button_revive_ad != null)
-            {
-                ui_button_revive_ad.onClick.RemoveListener(OnAdReviveClicked);
-                ui_button_revive_ad.onClick.AddListener(OnAdReviveClicked);
-            }
+            BindButton(ui_button_giveup, OnGiveUpClicked);
+            BindButton(ui_button_revive, OnGoldReviveClicked);
+            BindButton(ui_button_revive_ad, OnAdReviveClicked);
 
             if (ui_text_revive_cost_value != null)
             {
@@ -101,15 +86,12 @@ namespace Vertigo.UI.Panels
             KillTweens();
         }
 
+        private void OnDestroy() => KillTweens();
+
         private void OnRunReset()
         {
             _goldReviveCountThisRun = 0;
             HidePopup();
-        }
-
-        private void OnDestroy()
-        {
-            KillTweens();
         }
 
         private void KillTweens()
@@ -127,30 +109,20 @@ namespace Vertigo.UI.Panels
             int currentCost = CurrentReviveCost;
 
             if (ui_text_bank_cash_value != null)
-            {
                 ui_text_bank_cash_value.text = bankedCash.ToString("N0", CultureInfo.InvariantCulture);
-            }
 
             if (ui_text_bank_gold_value != null)
-            {
                 ui_text_bank_gold_value.text = bankedGold.ToString("N0", CultureInfo.InvariantCulture);
-            }
 
             if (ui_text_revive_cost_value != null)
-            {
                 ui_text_revive_cost_value.text = currentCost.ToString(CultureInfo.InvariantCulture);
-            }
 
             bool canAffordGoldRevive = bankedGold >= currentCost;
             if (ui_button_revive != null)
             {
                 ui_button_revive.interactable = canAffordGoldRevive;
-
-                CanvasGroup reviveBtnCg = ui_button_revive.GetComponent<CanvasGroup>();
-                if (reviveBtnCg == null)
-                {
-                    reviveBtnCg = ui_button_revive.gameObject.AddComponent<CanvasGroup>();
-                }
+                CanvasGroup reviveBtnCg = ui_button_revive.GetComponent<CanvasGroup>()
+                    ?? ui_button_revive.gameObject.AddComponent<CanvasGroup>();
                 reviveBtnCg.alpha = canAffordGoldRevive ? 1f : 0.45f;
             }
 
@@ -170,31 +142,16 @@ namespace Vertigo.UI.Panels
             }
 
             RefreshWalletAndReviveState();
+            SetCanvasGroupState(0f, true);
 
-            if (ui_canvas_group != null)
-            {
-                ui_canvas_group.alpha = 0f;
-                ui_canvas_group.blocksRaycasts = true;
-                ui_canvas_group.interactable = true;
-            }
-
-            if (ui_transform_header != null)
-            {
-                ui_transform_header.localScale = Vector3.one * 0.75f;
-            }
-
+            if (ui_transform_header != null) ui_transform_header.localScale = Vector3.one * 0.75f;
             if (ui_transform_box != null)
             {
                 ui_transform_box.localScale = Vector3.one * 0.35f;
                 ui_transform_box.localEulerAngles = Vector3.zero;
             }
+            if (ui_transform_buttons != null) ui_transform_buttons.localScale = Vector3.zero;
 
-            if (ui_transform_buttons != null)
-            {
-                ui_transform_buttons.localScale = Vector3.zero;
-            }
-
-            // Start slow danger ray rotation immediately
             if (ui_transform_danger_rays != null)
             {
                 ui_transform_danger_rays.localEulerAngles = Vector3.zero;
@@ -206,36 +163,21 @@ namespace Vertigo.UI.Panels
 
             _showSequence = DOTween.Sequence();
 
-            // 1. Fade in dark red overlay
             if (ui_canvas_group != null)
-            {
                 _showSequence.Append(ui_canvas_group.DOFade(1f, 0.25f).SetEase(Ease.OutQuad));
-            }
 
-            // 2. Pop in Header ("OH NO, A BOMB EXPLODED RIGHT IN YOUR HANDS!")
             if (ui_transform_header != null)
-            {
                 _showSequence.Join(ui_transform_header.DOScale(1f, 0.35f).SetEase(Ease.OutBack));
-            }
 
-            // 3. Dramatic Circular Medallion Pop + Bomb Icon Impact Shake
             if (ui_transform_box != null)
-            {
                 _showSequence.Join(ui_transform_box.DOScale(1f, 0.42f).SetEase(Ease.OutBack, 1.45f));
-            }
 
             if (ui_transform_bomb_icon != null)
-            {
                 _showSequence.Join(ui_transform_bomb_icon.DOShakeAnchorPos(0.45f, new Vector2(15f, 12f), 24, 90f, false, true).SetDelay(0.10f));
-            }
 
-            // 4. Pop in Give Up & Revive Buttons
             if (ui_transform_buttons != null)
-            {
                 _showSequence.Insert(0.18f, ui_transform_buttons.DOScale(1f, 0.32f).SetEase(Ease.OutBack));
-            }
 
-            // 5. Continuous menacing red glow pulse & subtle icon heartbeat
             _showSequence.OnComplete(StartIdleLoops);
         }
 
@@ -279,33 +221,40 @@ namespace Vertigo.UI.Panels
         public void HideImmediate()
         {
             KillTweens();
-
             if (ui_panel_popup_root != null && !ui_panel_popup_root.activeSelf)
             {
                 ui_panel_popup_root.SetActive(true);
             }
+            SetCanvasGroupState(0f, false);
+        }
 
-            if (ui_canvas_group != null)
-            {
-                ui_canvas_group.alpha = 0f;
-                ui_canvas_group.blocksRaycasts = false;
-                ui_canvas_group.interactable = false;
-            }
+        private void SetCanvasGroupState(float alpha, bool interactable)
+        {
+            if (ui_canvas_group == null) return;
+            ui_canvas_group.alpha = alpha;
+            ui_canvas_group.blocksRaycasts = interactable;
+            ui_canvas_group.interactable = interactable;
+        }
+
+        private static void BindButton(Button button, UnityAction action)
+        {
+            if (button == null) return;
+            button.onClick.RemoveListener(action);
+            button.onClick.AddListener(action);
         }
 
         private void OnGiveUpClicked()
         {
-            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.GiveUp);
+            GameEvents.FireSfx(SoundEffectType.GiveUp);
             HidePopup();
             GameEvents.FireGameRestartRequested();
         }
 
         private void OnGoldReviveClicked()
         {
-            int costToSpend = CurrentReviveCost;
-            if (!SessionInventoryManager.TrySpendBankedGold(costToSpend))
+            if (!SessionInventoryManager.TrySpendBankedGold(CurrentReviveCost))
             {
-                GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
+                GameEvents.FireSfx(SoundEffectType.ButtonClick);
                 RefreshWalletAndReviveState();
                 return;
             }
@@ -324,52 +273,39 @@ namespace Vertigo.UI.Panels
 
         private void OnValidate()
         {
-            if (ui_panel_popup_root == null)
-                ui_panel_popup_root = gameObject;
-
-            if (ui_canvas_group == null)
-                ui_canvas_group = GetComponent<CanvasGroup>();
+            if (ui_panel_popup_root == null) ui_panel_popup_root = gameObject;
+            if (ui_canvas_group == null) ui_canvas_group = GetComponent<CanvasGroup>();
 
             if (ui_transform_currency_bar == null)
             {
-                var tr = transform.Find("ui_transform_currency_bar");
+                Transform tr = transform.Find("ui_transform_currency_bar");
                 if (tr != null) ui_transform_currency_bar = tr.GetComponent<RectTransform>();
             }
 
             if (ui_transform_currency_bar != null)
             {
                 if (ui_text_bank_cash_value == null)
-                {
-                    var cashTr = ui_transform_currency_bar.Find("ui_text_bank_cash_value");
-                    if (cashTr != null) ui_text_bank_cash_value = cashTr.GetComponent<TMP_Text>();
-                }
+                    ui_text_bank_cash_value = FindChildComponent<TMP_Text>(ui_transform_currency_bar, "ui_text_bank_cash_value");
                 if (ui_text_bank_gold_value == null)
-                {
-                    var goldTr = ui_transform_currency_bar.Find("ui_text_bank_gold_value");
-                    if (goldTr != null) ui_text_bank_gold_value = goldTr.GetComponent<TMP_Text>();
-                }
+                    ui_text_bank_gold_value = FindChildComponent<TMP_Text>(ui_transform_currency_bar, "ui_text_bank_gold_value");
             }
 
-            if (ui_button_giveup == null)
-            {
-                var ButtonsTr = transform.Find("ui_transform_buttons");
-                var tr = ButtonsTr != null ? ButtonsTr.Find("ui_button_giveup") : transform.Find("ui_button_giveup");
-                if (tr != null) ui_button_giveup = tr.GetComponent<Button>();
-            }
+            Transform buttonsRoot = transform.Find("ui_transform_buttons");
+            if (ui_button_giveup == null) ui_button_giveup = FindButton(buttonsRoot, "ui_button_giveup");
+            if (ui_button_revive == null) ui_button_revive = FindButton(buttonsRoot, "ui_button_revive");
+            if (ui_button_revive_ad == null) ui_button_revive_ad = FindButton(buttonsRoot, "ui_button_revive_ad");
+        }
 
-            if (ui_button_revive == null)
-            {
-                var ButtonsTr = transform.Find("ui_transform_buttons");
-                var tr = ButtonsTr != null ? ButtonsTr.Find("ui_button_revive") : transform.Find("ui_button_revive");
-                if (tr != null) ui_button_revive = tr.GetComponent<Button>();
-            }
+        private Button FindButton(Transform buttonsRoot, string buttonName)
+        {
+            Transform tr = (buttonsRoot != null ? buttonsRoot.Find(buttonName) : null) ?? transform.Find(buttonName);
+            return tr != null ? tr.GetComponent<Button>() : null;
+        }
 
-            if (ui_button_revive_ad == null)
-            {
-                var ButtonsTr = transform.Find("ui_transform_buttons");
-                var tr = ButtonsTr != null ? ButtonsTr.Find("ui_button_revive_ad") : transform.Find("ui_button_revive_ad");
-                if (tr != null) ui_button_revive_ad = tr.GetComponent<Button>();
-            }
+        private static T FindChildComponent<T>(Transform parent, string childName) where T : Component
+        {
+            Transform tr = parent != null ? parent.Find(childName) : null;
+            return tr != null ? tr.GetComponent<T>() : null;
         }
     }
 }

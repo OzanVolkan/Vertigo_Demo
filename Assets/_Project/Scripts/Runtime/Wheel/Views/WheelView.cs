@@ -7,13 +7,14 @@ using UnityEngine.UI;
 using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
 using Vertigo.Wheel.Controllers;
-using Vertigo.Wheel.Data;
 using Vertigo.Zone.Data;
 
 namespace Vertigo.Wheel.Views
 {
     public class WheelView : MonoBehaviour
     {
+        private static readonly Vector2 IndicatorHingePivot = new Vector2(0.5f, 0.88f);
+
         [Header("Wheel Transforms")]
         [SerializeField] private RectTransform ui_transform_wheel_rotator;
         [SerializeField] private Image ui_image_wheel_base;
@@ -74,7 +75,6 @@ namespace Vertigo.Wheel.Views
         [Header("Dependencies")]
         [SerializeField] private WheelController wheelController;
 
-        private Sequence _spinSequence;
         private Tween _spinTween;
         private Tween _indicatorTween;
         private int _lastTickSliceIndex = -1;
@@ -83,16 +83,9 @@ namespace Vertigo.Wheel.Views
         private void Awake()
         {
             if (ui_button_spin != null)
-            {
-                ui_button_spin.onClick.AddListener(OnSpinButtonClicked);
-            }
+                ui_button_spin.onClick.AddListener(GameEvents.FireSpinRequested);
 
-            // Enforce indicator top hinge pivot (0.5, 0.88) so it flutters from the top pin
-            if (ui_transform_indicator != null)
-            {
-                ui_transform_indicator.pivot = new Vector2(0.5f, 0.88f);
-                ui_transform_indicator.localEulerAngles = Vector3.zero;
-            }
+            ResetIndicator();
         }
 
         private void OnEnable()
@@ -107,47 +100,30 @@ namespace Vertigo.Wheel.Views
             GameEvents.OnZoneChanged -= OnZoneChanged;
             GameEvents.OnSpinStarted -= OnSpinStarted;
             GameEvents.OnGameStateChanged -= OnGameStateChanged;
-            _spinSequence?.Kill();
-            _spinTween?.Kill();
-            _indicatorTween?.Kill();
-        }
-
-        private void OnSpinButtonClicked()
-        {
-            GameEvents.FireSpinRequested();
+            KillTweens();
         }
 
         private void OnGameStateChanged(GameState state)
         {
             if (ui_button_spin != null)
-            {
-                ui_button_spin.interactable = (state == GameState.Idle);
-            }
+                ui_button_spin.interactable = state == GameState.Idle;
         }
 
         private void OnZoneChanged(ZoneData zone)
         {
-            if (zone?.WheelConfig == null) return;
-            var config = zone.ConcreteWheelConfig;
+            var config = zone?.ConcreteWheelConfig;
+            if (config == null) return;
 
-            // Update Base and Indicator sprites
             if (ui_image_wheel_base != null && config.WheelBaseSprite != null)
                 ui_image_wheel_base.sprite = config.WheelBaseSprite;
 
             if (ui_image_wheel_indicator != null && config.IndicatorSprite != null)
                 ui_image_wheel_indicator.sprite = config.IndicatorSprite;
 
-            // Update Top Title (BRONZE SPIN / SILVER SPIN / GOLD SPIN) & Bottom Multiplier Subtitle
             UpdateWheelLabels(config.WheelType, zone.RewardMultiplier);
 
-            // Populate 8 slices with zone reward multiplier applied
-            for (int i = 0; i < ui_slice_views.Count; i++)
-            {
-                if (ui_slice_views[i] != null && i < config.SliceCount)
-                {
-                    ui_slice_views[i].Setup(config.GetSlice(i), zone.RewardMultiplier);
-                }
-            }
+            for (int i = 0; i < ui_slice_views.Count && i < config.SliceCount; i++)
+                ui_slice_views[i]?.Setup(config.GetSlice(i), zone.RewardMultiplier);
         }
 
         public void UpdateWheelLabels(WheelType wheelType, float rewardMultiplier)
@@ -179,102 +155,73 @@ namespace Vertigo.Wheel.Views
             float initialZ = ui_transform_wheel_rotator != null ? ui_transform_wheel_rotator.localEulerAngles.z : 0f;
             _lastTickSliceIndex = WheelMathUtility.GetSliceIndexAtAngle(initialZ);
 
-            _spinSequence?.Kill();
-            _spinTween?.Kill();
-            _indicatorTween?.Kill();
+            ResetWheel();
 
-            if (ui_transform_indicator != null)
+            _spinTween = ui_transform_wheel_rotator
+                .DOLocalRotate(new Vector3(0f, 0f, targetAngle), duration, RotateMode.FastBeyond360)
+                .SetEase(Ease.OutCubic)
+                .OnUpdate(CheckSliceTick)
+                .OnComplete(() => DOVirtual.DelayedCall(centerDelay, () => CenterOnTargetSlice(targetAngle, exactCenterAngle)));
+        }
+
+        private void CheckSliceTick()
+        {
+            int currentSlice = WheelMathUtility.GetSliceIndexAtAngle(ui_transform_wheel_rotator.localEulerAngles.z);
+            if (currentSlice == _lastTickSliceIndex) return;
+
+            _lastTickSliceIndex = currentSlice;
+            TriggerIndicatorTick();
+            GameEvents.FireSliceTick();
+        }
+
+        private void CenterOnTargetSlice(float targetAngle, float exactCenterAngle)
+        {
+            float correctionDelta = exactCenterAngle - targetAngle;
+            if (Mathf.Abs(correctionDelta) <= 0.1f)
             {
-                ui_transform_indicator.pivot = new Vector2(0.5f, 0.88f);
-                ui_transform_indicator.localEulerAngles = Vector3.zero;
+                CompleteSpin();
+                return;
             }
 
-            // 1. Main Spin to landing angle (with natural offset like in Image 1)
-            _spinTween = ui_transform_wheel_rotator.DOLocalRotate(new Vector3(0, 0, targetAngle), duration, RotateMode.FastBeyond360)
-                .SetEase(Ease.OutCubic)
-                .OnUpdate(() =>
-                {
-                    // Detect slice passing to trigger indicator tick
-                    float currentZ = ui_transform_wheel_rotator.localEulerAngles.z;
-                    int currentSlice = WheelMathUtility.GetSliceIndexAtAngle(currentZ);
-                    if (currentSlice != _lastTickSliceIndex)
-                    {
-                        _lastTickSliceIndex = currentSlice;
-                        TriggerIndicatorTick();
-                        GameEvents.FireSliceTick();
-                    }
-                })
-                .OnComplete(() =>
-                {
-                    // 2. Pause naturally on the offset position (suspense moment)
-                    DOVirtual.DelayedCall(centerDelay, () =>
-                    {
-                        // 3. Smooth micro-rotation to center the slice under the indicator (Image 2)
-                        // The exact corrective rotation from targetAngle to exactCenterAngle is (exactCenterAngle - targetAngle)
-                        // which is at most ±12°, mathematically guaranteed to stay strictly within the landed slot.
-                        float correctionDelta = exactCenterAngle - targetAngle;
+            Vector3 targetEuler = ui_transform_wheel_rotator.localEulerAngles;
+            targetEuler.z += correctionDelta;
 
-                        if (Mathf.Abs(correctionDelta) > 0.1f)
-                        {
-                            Vector3 targetEuler = ui_transform_wheel_rotator.localEulerAngles;
-                            targetEuler.z += correctionDelta;
-
-                            // Smooth micro-rotation to center (strictly shortest path, never spins a full turn)
-                            _spinTween = ui_transform_wheel_rotator.DOLocalRotate(targetEuler, centerDuration, RotateMode.Fast)
-                                .SetEase(centerEase)
-                                .OnComplete(CompleteSpin);
-                        }
-                        else
-                        {
-                            CompleteSpin();
-                        }
-                    });
-                });
+            _spinTween = ui_transform_wheel_rotator
+                .DOLocalRotate(targetEuler, centerDuration, RotateMode.Fast)
+                .SetEase(centerEase)
+                .OnComplete(CompleteSpin);
         }
 
         private void CompleteSpin()
         {
-            _indicatorTween?.Kill();
-            if (ui_transform_indicator != null)
-                ui_transform_indicator.localEulerAngles = Vector3.zero;
+            ResetIndicator();
 
-            // Play win celebration on the centered slice (Image 2)
             if (_currentTargetIndex >= 0 && _currentTargetIndex < ui_slice_views.Count)
-            {
                 ui_slice_views[_currentTargetIndex]?.PlayWinAnimation();
-            }
 
-            // Notify controller
             wheelController?.OnSpinAnimationComplete();
         }
 
         public void ResetWheel()
         {
-            _spinSequence?.Kill();
-            _spinTween?.Kill();
-            _indicatorTween?.Kill();
-            if (ui_transform_indicator != null)
-            {
-                ui_transform_indicator.localEulerAngles = Vector3.zero;
-            }
+            KillTweens();
+            ResetIndicator();
         }
 
         public Vector3 GetWinningSlicePosition()
         {
             if (_currentTargetIndex >= 0 && _currentTargetIndex < ui_slice_views.Count && ui_slice_views[_currentTargetIndex] != null)
-            {
                 return ui_slice_views[_currentTargetIndex].IconWorldPosition;
-            }
+
             return ui_transform_wheel_rotator != null ? ui_transform_wheel_rotator.position : transform.position;
         }
 
         public void PlayBombImpactShake()
         {
-            if (ui_transform_wheel_rotator != null)
-            {
-                ui_transform_wheel_rotator.DOComplete();
-                ui_transform_wheel_rotator.DOShakeAnchorPos(0.35f, new Vector2(15f, 15f), 28, 90f, false, true);
-            }
+            if (ui_transform_wheel_rotator == null) return;
+
+            ui_transform_wheel_rotator.DOComplete();
+            ui_transform_wheel_rotator.DOShakeAnchorPos(0.35f, new Vector2(15f, 15f), 28, 90f, false, true);
         }
 
         private void TriggerIndicatorTick()
@@ -282,64 +229,61 @@ namespace Vertigo.Wheel.Views
             if (ui_transform_indicator == null) return;
 
             _indicatorTween?.Kill();
-            // Peg deflects the needle tip around the top hinge; snap back to 0 with spring overshoot
-            ui_transform_indicator.localEulerAngles = new Vector3(0, 0, indicatorKickAngle);
-            _indicatorTween = ui_transform_indicator.DOLocalRotate(Vector3.zero, indicatorSnapDuration)
+            ui_transform_indicator.localEulerAngles = new Vector3(0f, 0f, indicatorKickAngle);
+            _indicatorTween = ui_transform_indicator
+                .DOLocalRotate(Vector3.zero, indicatorSnapDuration)
                 .SetEase(Ease.OutBack, 2.5f);
+        }
+
+        private void KillTweens()
+        {
+            _spinTween?.Kill();
+            _indicatorTween?.Kill();
+        }
+
+        private void ResetIndicator()
+        {
+            _indicatorTween?.Kill();
+            if (ui_transform_indicator == null) return;
+
+            ui_transform_indicator.pivot = IndicatorHingePivot;
+            ui_transform_indicator.localEulerAngles = Vector3.zero;
         }
 
         private void OnValidate()
         {
-            if (ui_button_spin == null)
-            {
-                var tr = transform.Find("ui_button_spin");
-                if (tr != null) ui_button_spin = tr.GetComponent<Button>();
-            }
+            if (ui_button_spin == null) ui_button_spin = FindChildComponent<Button>("ui_button_spin");
+            if (ui_text_wheel_title_value == null) ui_text_wheel_title_value = FindChildComponent<TMP_Text>("ui_text_wheel_title_value");
+            if (ui_text_wheel_subtitle_value == null) ui_text_wheel_subtitle_value = FindChildComponent<TMP_Text>("ui_text_wheel_subtitle_value");
+            if (wheelController == null) wheelController = FindFirstObjectByType<WheelController>();
 
-            if (ui_text_wheel_title_value == null)
-            {
-                var tr = transform.Find("ui_text_wheel_title_value");
-                if (tr != null) ui_text_wheel_title_value = tr.GetComponent<TMP_Text>();
-            }
-
-            if (ui_text_wheel_subtitle_value == null)
-            {
-                var tr = transform.Find("ui_text_wheel_subtitle_value");
-                if (tr != null) ui_text_wheel_subtitle_value = tr.GetComponent<TMP_Text>();
-            }
-
-            if (wheelController == null)
-            {
-                wheelController = FindFirstObjectByType<WheelController>();
-            }
-
-            if (ui_slice_views == null || ui_slice_views.Count == 0)
-            {
-                ui_slice_views = new List<WheelSliceView>(GetComponentsInChildren<WheelSliceView>(true));
-            }
+            EnsureSliceViews();
 
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
                 UnityEditor.EditorApplication.delayCall += () =>
                 {
-                    if (this != null)
-                    {
-                        ApplySliceLayout();
-                    }
+                    if (this != null) ApplySliceLayout();
                 };
             }
 #endif
+        }
+
+        private T FindChildComponent<T>(string childName) where T : Component =>
+            transform.Find(childName)?.GetComponent<T>();
+
+        private void EnsureSliceViews()
+        {
+            if (ui_slice_views == null || ui_slice_views.Count == 0)
+                ui_slice_views = new List<WheelSliceView>(GetComponentsInChildren<WheelSliceView>(true));
         }
 
 #if UNITY_EDITOR
         [ContextMenu("Apply Slice Layout")]
         public void ApplySliceLayout()
         {
-            if (ui_slice_views == null || ui_slice_views.Count == 0)
-            {
-                ui_slice_views = new List<WheelSliceView>(GetComponentsInChildren<WheelSliceView>(true));
-            }
+            EnsureSliceViews();
 
             int count = ui_slice_views.Count;
             if (count == 0) return;
@@ -351,10 +295,9 @@ namespace Vertigo.Wheel.Views
 
                 UnityEditor.Undo.RecordObject(slice.gameObject, "Apply Slice Layout");
 
-                RectTransform sliceRT = slice.GetComponent<RectTransform>();
-                if (sliceRT != null)
+                if (slice.TryGetComponent(out RectTransform sliceRT))
                 {
-                    sliceRT.localRotation = Quaternion.Euler(0, 0, -i * (360f / count));
+                    sliceRT.localRotation = Quaternion.Euler(0f, 0f, -i * (360f / count));
                     sliceRT.anchoredPosition = Vector2.zero;
                 }
 

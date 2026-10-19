@@ -70,6 +70,20 @@ namespace Vertigo.Rewards.Controllers
 
         public static int GetBankedGold() => GetBankedAmount(GoldRewardId);
 
+        public static void AddBankedGold(int amount)
+        {
+            if (amount <= 0) return;
+            PlayerPrefs.SetInt($"{BankKeyPrefix}{GoldRewardId}", GetBankedGold() + amount);
+            PlayerPrefs.Save();
+        }
+
+        public static void ResetBankedWallet()
+        {
+            PlayerPrefs.DeleteKey($"{BankKeyPrefix}{CashRewardId}");
+            PlayerPrefs.DeleteKey($"{BankKeyPrefix}{GoldRewardId}");
+            PlayerPrefs.Save();
+        }
+
         public static bool TrySpendBankedGold(int cost)
         {
             if (cost <= 0) return true;

@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
+using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
 using Vertigo.Core.Interfaces;
 
@@ -70,23 +72,11 @@ namespace Vertigo.UI.Panels
 
         private void Awake()
         {
-            if (ui_panel_summary_root == null)
-                ui_panel_summary_root = gameObject;
+            if (ui_panel_summary_root == null) ui_panel_summary_root = gameObject;
+            if (ui_canvas_group == null) ui_canvas_group = ui_panel_summary_root.GetComponent<CanvasGroup>();
 
-            if (ui_canvas_group == null)
-                ui_canvas_group = ui_panel_summary_root.GetComponent<CanvasGroup>();
-
-            if (ui_button_skip != null)
-            {
-                ui_button_skip.onClick.RemoveListener(OnSkipClicked);
-                ui_button_skip.onClick.AddListener(OnSkipClicked);
-            }
-
-            if (ui_button_continue != null)
-            {
-                ui_button_continue.onClick.RemoveListener(OnContinueClicked);
-                ui_button_continue.onClick.AddListener(OnContinueClicked);
-            }
+            BindButton(ui_button_skip, OnSkipClicked);
+            BindButton(ui_button_continue, OnContinueClicked);
 
             if (cardTemplate != null && cardTemplate.gameObject.scene.IsValid())
             {
@@ -95,60 +85,6 @@ namespace Vertigo.UI.Panels
 
             EnsureActiveCards();
             HideImmediate();
-        }
-
-        private void EnsureActiveCards()
-        {
-            if (ui_transform_active_card == null) return;
-
-            // Hide old legacy static card parts if they exist in scene
-            if (ui_image_active_card_bg != null) ui_image_active_card_bg.gameObject.SetActive(false);
-            if (ui_text_active_name != null) ui_text_active_name.gameObject.SetActive(false);
-            if (ui_image_active_icon != null) ui_image_active_icon.gameObject.SetActive(false);
-            if (ui_text_active_amount != null) ui_text_active_amount.gameObject.SetActive(false);
-
-            if (activeSilverCard == null)
-            {
-                Transform silverTr = ui_transform_active_card.Find("ActiveCard_Silver");
-                if (silverTr != null)
-                {
-                    activeSilverCard = silverTr.GetComponent<CashOutSummaryCardView>();
-                }
-                else if (silverCardPrefab != null)
-                {
-                    activeSilverCard = Instantiate(silverCardPrefab, ui_transform_active_card);
-                    activeSilverCard.name = "ActiveCard_Silver";
-                    ResetCardTransform(activeSilverCard.GetComponent<RectTransform>());
-                }
-            }
-
-            if (activeGoldCard == null)
-            {
-                Transform goldTr = ui_transform_active_card.Find("ActiveCard_Gold");
-                if (goldTr != null)
-                {
-                    activeGoldCard = goldTr.GetComponent<CashOutSummaryCardView>();
-                }
-                else if (goldCardPrefab != null)
-                {
-                    activeGoldCard = Instantiate(goldCardPrefab, ui_transform_active_card);
-                    activeGoldCard.name = "ActiveCard_Gold";
-                    ResetCardTransform(activeGoldCard.GetComponent<RectTransform>());
-                }
-            }
-
-            if (activeSilverCard != null) activeSilverCard.gameObject.SetActive(false);
-            if (activeGoldCard != null) activeGoldCard.gameObject.SetActive(false);
-        }
-
-        private void ResetCardTransform(RectTransform rt)
-        {
-            if (rt == null) return;
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = Vector2.zero;
-            rt.localScale = Vector3.one;
         }
 
         private void OnEnable()
@@ -164,6 +100,44 @@ namespace Vertigo.UI.Panels
             KillAllAnimations();
         }
 
+        private void EnsureActiveCards()
+        {
+            if (ui_transform_active_card == null) return;
+
+            if (ui_image_active_card_bg != null) ui_image_active_card_bg.gameObject.SetActive(false);
+            if (ui_text_active_name != null) ui_text_active_name.gameObject.SetActive(false);
+            if (ui_image_active_icon != null) ui_image_active_icon.gameObject.SetActive(false);
+            if (ui_text_active_amount != null) ui_text_active_amount.gameObject.SetActive(false);
+
+            EnsureCardInstance(ref activeSilverCard, silverCardPrefab, "ActiveCard_Silver");
+            EnsureCardInstance(ref activeGoldCard, goldCardPrefab, "ActiveCard_Gold");
+
+            if (activeSilverCard != null) activeSilverCard.gameObject.SetActive(false);
+            if (activeGoldCard != null) activeGoldCard.gameObject.SetActive(false);
+        }
+
+        private void EnsureCardInstance(ref CashOutSummaryCardView cardField, CashOutSummaryCardView prefab, string childName)
+        {
+            if (cardField != null) return;
+
+            Transform existing = ui_transform_active_card.Find(childName);
+            if (existing != null)
+            {
+                cardField = existing.GetComponent<CashOutSummaryCardView>();
+            }
+            else if (prefab != null)
+            {
+                cardField = Instantiate(prefab, ui_transform_active_card);
+                cardField.name = childName;
+                if (cardField.TryGetComponent<RectTransform>(out var rt))
+                {
+                    rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+                    rt.anchoredPosition = Vector2.zero;
+                    rt.localScale = Vector3.one;
+                }
+            }
+        }
+
         public void HideImmediate()
         {
             KillAllAnimations();
@@ -171,21 +145,29 @@ namespace Vertigo.UI.Panels
 
             if (activeSilverCard != null) activeSilverCard.gameObject.SetActive(false);
             if (activeGoldCard != null) activeGoldCard.gameObject.SetActive(false);
-
             if (ui_panel_summary_root != null && !ui_panel_summary_root.activeSelf)
             {
                 ui_panel_summary_root.SetActive(true);
             }
 
-            if (ui_canvas_group != null)
-            {
-                ui_canvas_group.alpha = 0f;
-                ui_canvas_group.blocksRaycasts = false;
-                ui_canvas_group.interactable = false;
-            }
-
+            SetCanvasGroupState(0f, false);
             if (ui_transform_reveal_stage != null) ui_transform_reveal_stage.gameObject.SetActive(false);
             if (ui_transform_summary_stage != null) ui_transform_summary_stage.gameObject.SetActive(false);
+        }
+
+        private void SetCanvasGroupState(float alpha, bool interactable)
+        {
+            if (ui_canvas_group == null) return;
+            ui_canvas_group.alpha = alpha;
+            ui_canvas_group.blocksRaycasts = interactable;
+            ui_canvas_group.interactable = interactable;
+        }
+
+        private static void BindButton(Button button, UnityAction action)
+        {
+            if (button == null) return;
+            button.onClick.RemoveListener(action);
+            button.onClick.AddListener(action);
         }
 
         private void KillAllAnimations()
@@ -203,11 +185,9 @@ namespace Vertigo.UI.Panels
         {
             if (bankedItems == null || bankedItems.Count == 0)
             {
-                Debug.Log("[CashOutSummary] No rewards to display. Skipping summary screen.");
                 IsPresenting = false;
                 return;
             }
-
             StartPresentation(bankedItems);
         }
 
@@ -216,11 +196,11 @@ namespace Vertigo.UI.Panels
             KillAllAnimations();
             _itemsList.Clear();
 
-            foreach (var kvp in items)
+            foreach (var (_, (reward, amount)) in items)
             {
-                if (kvp.Value.amount > 0 && kvp.Value.reward != null)
+                if (amount > 0 && reward != null)
                 {
-                    _itemsList.Add((kvp.Value.reward, kvp.Value.amount));
+                    _itemsList.Add((reward, amount));
                 }
             }
 
@@ -233,11 +213,8 @@ namespace Vertigo.UI.Panels
             IsPresenting = true;
             _isSkipped = false;
 
-            // Prepare UI stages
             if (ui_panel_summary_root != null && !ui_panel_summary_root.activeSelf)
-            {
                 ui_panel_summary_root.SetActive(true);
-            }
 
             if (ui_transform_reveal_stage != null) ui_transform_reveal_stage.gameObject.SetActive(true);
             if (ui_transform_summary_stage != null) ui_transform_summary_stage.gameObject.SetActive(false);
@@ -245,13 +222,10 @@ namespace Vertigo.UI.Panels
             if (ui_text_header != null) ui_text_header.gameObject.SetActive(false);
             if (ui_button_continue != null) ui_button_continue.gameObject.SetActive(false);
 
+            SetCanvasGroupState(0f, true);
             if (ui_canvas_group != null)
             {
-                ui_canvas_group.alpha = 0f;
-                ui_canvas_group.blocksRaycasts = true;
-                ui_canvas_group.interactable = true;
-                _panelFadeSequence = DOTween.Sequence()
-                    .Append(ui_canvas_group.DOFade(1f, 0.3f));
+                _panelFadeSequence = DOTween.Sequence().Append(ui_canvas_group.DOFade(1f, 0.3f));
             }
 
             EnsureActiveCards();
@@ -261,10 +235,8 @@ namespace Vertigo.UI.Panels
         private IEnumerator RevealRoutine()
         {
             int remainingCount = _itemsList.Count;
+            GameEvents.FireSfx(SoundEffectType.ChestAppear);
 
-            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ChestAppear);
-
-            // Chest entrance
             if (ui_transform_chest != null)
             {
                 ui_transform_chest.localScale = Vector3.zero;
@@ -277,77 +249,25 @@ namespace Vertigo.UI.Panels
                 ui_badge_remaining.DOScale(1f, 0.35f).SetEase(Ease.OutBack).SetDelay(0.1f);
             }
 
-            if (ui_text_remaining_count != null)
-            {
-                ui_text_remaining_count.text = remainingCount.ToString();
-            }
-
-            if (ui_transform_active_card != null)
-            {
-                ui_transform_active_card.gameObject.SetActive(false);
-            }
+            if (ui_text_remaining_count != null) ui_text_remaining_count.text = remainingCount.ToString();
+            if (ui_transform_active_card != null) ui_transform_active_card.gameObject.SetActive(false);
 
             yield return new WaitForSeconds(0.4f);
 
-            // Sequential reveal loop
             for (int i = 0; i < _itemsList.Count; i++)
             {
                 if (_isSkipped) break;
 
-                var item = _itemsList[i];
-                bool isValuable = item.reward != null && item.reward.IsValuable;
+                var (reward, amount) = _itemsList[i];
+                bool isValuable = reward != null && reward.IsValuable;
 
-                GameEvents.FireSfx(isValuable
-                    ? Vertigo.Core.Enums.SoundEffectType.CardRevealGold
-                    : Vertigo.Core.Enums.SoundEffectType.CardRevealSilver);
+                GameEvents.FireSfx(isValuable ? SoundEffectType.CardRevealGold : SoundEffectType.CardRevealSilver);
+                SetupActiveRevealCard(reward, amount, isValuable);
 
-                // Setup Active Card from Prefabs
-                CashOutSummaryCardView cardToShow = isValuable ? activeGoldCard : activeSilverCard;
-                CashOutSummaryCardView cardToHide = isValuable ? activeSilverCard : activeGoldCard;
-
-                if (cardToHide != null) cardToHide.gameObject.SetActive(false);
-                if (cardToShow != null)
-                {
-                    cardToShow.gameObject.SetActive(true);
-                    cardToShow.Setup(item.reward, item.amount);
-                }
-                else
-                {
-                    // Fallback to legacy static fields if prefabs not instantiated
-                    if (ui_image_active_card_bg != null)
-                    {
-                        ui_image_active_card_bg.gameObject.SetActive(true);
-                        ui_image_active_card_bg.sprite = isValuable ? goldCardSprite : silverCardSprite;
-                    }
-                    if (ui_text_active_name != null)
-                    {
-                        ui_text_active_name.gameObject.SetActive(true);
-                        ui_text_active_name.text = item.reward.DisplayName.ToUpper();
-                    }
-                    if (ui_image_active_icon != null)
-                    {
-                        ui_image_active_icon.gameObject.SetActive(true);
-                        ui_image_active_icon.sprite = item.reward.Icon;
-                    }
-                    if (ui_text_active_amount != null)
-                    {
-                        ui_text_active_amount.gameObject.SetActive(true);
-                        ui_text_active_amount.text = item.reward.FormatAmount(item.amount);
-                    }
-                }
-
-                // Decrement chest remaining badge
                 remainingCount--;
-                if (ui_text_remaining_count != null)
-                {
-                    ui_text_remaining_count.text = remainingCount.ToString();
-                }
-                if (ui_badge_remaining != null)
-                {
-                    ui_badge_remaining.DOPunchScale(Vector3.one * 0.35f, 0.22f, 7, 1f);
-                }
+                if (ui_text_remaining_count != null) ui_text_remaining_count.text = remainingCount.ToString();
+                if (ui_badge_remaining != null) ui_badge_remaining.DOPunchScale(Vector3.one * 0.35f, 0.22f, 7, 1f);
 
-                // Animate card popping out of chest and flipping forward
                 if (ui_transform_active_card != null)
                 {
                     ui_transform_active_card.gameObject.SetActive(true);
@@ -355,10 +275,7 @@ namespace Vertigo.UI.Panels
                     ui_transform_active_card.localScale = Vector3.zero;
                     ui_transform_active_card.localEulerAngles = new Vector3(0f, 90f, 0f);
 
-                    if (ui_active_card_canvas_group != null)
-                    {
-                        ui_active_card_canvas_group.alpha = 1f;
-                    }
+                    if (ui_active_card_canvas_group != null) ui_active_card_canvas_group.alpha = 1f;
 
                     _activeCardSequence?.Kill();
                     _activeCardSequence = DOTween.Sequence()
@@ -370,7 +287,6 @@ namespace Vertigo.UI.Panels
                     yield return _activeCardSequence.WaitForCompletion();
                 }
 
-                // Display pause (user can observe card)
                 float elapsed = 0f;
                 while (elapsed < cardDisplayDuration && !_isSkipped)
                 {
@@ -380,49 +296,44 @@ namespace Vertigo.UI.Panels
 
                 if (_isSkipped) break;
 
-                // Exit card before next one
                 if (i < _itemsList.Count - 1 && ui_transform_active_card != null)
                 {
                     Tween exitTween = ui_transform_active_card.DOScale(0.2f, 0.18f).SetEase(Ease.InBack);
-                    if (ui_active_card_canvas_group != null)
-                    {
-                        ui_active_card_canvas_group.DOFade(0f, 0.18f);
-                    }
+                    if (ui_active_card_canvas_group != null) ui_active_card_canvas_group.DOFade(0f, 0.18f);
                     yield return exitTween.WaitForCompletion();
                 }
             }
 
-            // Finished all reveals naturally
             TransitionToSummaryGrid();
+        }
+
+        private void SetupActiveRevealCard(IRewardData reward, int amount, bool isValuable)
+        {
+            CashOutSummaryCardView cardToShow = isValuable ? activeGoldCard : activeSilverCard;
+            CashOutSummaryCardView cardToHide = isValuable ? activeSilverCard : activeGoldCard;
+
+            if (cardToHide != null) cardToHide.gameObject.SetActive(false);
+            if (cardToShow != null)
+            {
+                cardToShow.gameObject.SetActive(true);
+                cardToShow.Setup(reward, amount);
+            }
         }
 
         private void TransitionToSummaryGrid()
         {
             _activeCardSequence?.Kill();
-
-            if (ui_transform_reveal_stage != null)
-            {
-                ui_transform_reveal_stage.gameObject.SetActive(false);
-            }
-
-            if (ui_button_skip != null)
-            {
-                ui_button_skip.gameObject.SetActive(false);
-            }
-
+            if (ui_transform_reveal_stage != null) ui_transform_reveal_stage.gameObject.SetActive(false);
+            if (ui_button_skip != null) ui_button_skip.gameObject.SetActive(false);
             ShowFinalSummaryGrid();
         }
 
         private void ShowFinalSummaryGrid()
         {
-            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.CashOutSummaryComplete);
+            GameEvents.FireSfx(SoundEffectType.CashOutSummaryComplete);
 
-            if (ui_transform_summary_stage != null)
-            {
-                ui_transform_summary_stage.gameObject.SetActive(true);
-            }
+            if (ui_transform_summary_stage != null) ui_transform_summary_stage.gameObject.SetActive(true);
 
-            // Top Header: "YOU GOT:"
             if (ui_text_header != null)
             {
                 ui_text_header.gameObject.SetActive(true);
@@ -430,10 +341,8 @@ namespace Vertigo.UI.Panels
                 ui_text_header.transform.DOScale(1f, 0.35f).SetEase(Ease.OutBack);
             }
 
-            // Populate cards
             PopulateSummaryCards();
 
-            // Continue Button at bottom
             if (ui_button_continue != null)
             {
                 ui_button_continue.gameObject.SetActive(true);
@@ -444,95 +353,46 @@ namespace Vertigo.UI.Panels
 
         private void PopulateSummaryCards()
         {
-            // Clean up previously spawned cards
-            for (int i = 0; i < _spawnedCardViews.Count; i++)
+            foreach (var card in _spawnedCardViews)
             {
-                if (_spawnedCardViews[i] != null)
-                {
-                    Destroy(_spawnedCardViews[i].gameObject);
-                }
+                if (card != null) Destroy(card.gameObject);
             }
             _spawnedCardViews.Clear();
 
             if (ui_container_cards == null) return;
 
-            // Ensure ScrollRect can receive drags and scroll events
-            if (ui_scroll_rect != null)
-            {
-                ui_scroll_rect.horizontal = true;
-                ui_scroll_rect.vertical = false;
-                ui_scroll_rect.scrollSensitivity = 25f;
+            ConfigureSummaryScrollRect();
 
-                if (ui_scroll_rect.viewport != null)
-                {
-                    Image vpImg = ui_scroll_rect.viewport.GetComponent<Image>();
-                    if (vpImg == null)
-                    {
-                        vpImg = ui_scroll_rect.viewport.gameObject.AddComponent<Image>();
-                        vpImg.color = Color.clear;
-                    }
-                    vpImg.raycastTarget = true;
-                }
-            }
-
-            // Ensure content container anchors are properly left-aligned for horizontal scrolling
             if (ui_container_cards is RectTransform contentRT)
             {
-                contentRT.anchorMin = new Vector2(0f, 0.5f);
-                contentRT.anchorMax = new Vector2(0f, 0.5f);
-                contentRT.pivot = new Vector2(0f, 0.5f);
-                contentRT.anchoredPosition = Vector2.zero;
+                SetHorizontalAlignment(contentRT, 0f);
             }
 
-            // Instantiate cards from distinct Silver and Gold prefabs
             for (int i = 0; i < _itemsList.Count; i++)
             {
-                var item = _itemsList[i];
-                bool isValuable = item.reward != null && item.reward.IsValuable;
-
-                CashOutSummaryCardView prefabToUse = isValuable
-                    ? (goldCardPrefab != null ? goldCardPrefab : (silverCardPrefab != null ? silverCardPrefab : cardTemplate))
-                    : (silverCardPrefab != null ? silverCardPrefab : (goldCardPrefab != null ? goldCardPrefab : cardTemplate));
-
+                var (reward, amount) = _itemsList[i];
+                CashOutSummaryCardView prefabToUse = GetCardPrefab(reward != null && reward.IsValuable);
                 if (prefabToUse == null) continue;
 
                 CashOutSummaryCardView cardView = Instantiate(prefabToUse, ui_container_cards);
                 cardView.gameObject.SetActive(true);
-                cardView.Setup(item.reward, item.amount);
+                cardView.Setup(reward, amount);
                 _spawnedCardViews.Add(cardView);
 
-                // Punchy staggered scale-in animation
                 cardView.transform.localScale = Vector3.zero;
-                float delay = 0.05f * i;
-                cardView.transform.DOScale(1f, 0.35f).SetEase(Ease.OutBack).SetDelay(delay);
+                cardView.transform.DOScale(1f, 0.35f).SetEase(Ease.OutBack).SetDelay(0.05f * i);
             }
 
-            // Force layout rebuild so ScrollRect immediately computes the exact content width
             if (ui_container_cards is RectTransform cRT)
             {
                 LayoutRebuilder.ForceRebuildLayoutImmediate(cRT);
-
                 float viewportWidth = ui_scroll_rect != null && ui_scroll_rect.viewport != null
                     ? ui_scroll_rect.viewport.rect.width
                     : 1720f;
 
-                if (cRT.rect.width < viewportWidth)
-                {
-                    cRT.anchorMin = new Vector2(0.5f, 0.5f);
-                    cRT.anchorMax = new Vector2(0.5f, 0.5f);
-                    cRT.pivot = new Vector2(0.5f, 0.5f);
-                    cRT.anchoredPosition = Vector2.zero;
-                }
-                else
-                {
-                    cRT.anchorMin = new Vector2(0f, 0.5f);
-                    cRT.anchorMax = new Vector2(0f, 0.5f);
-                    cRT.pivot = new Vector2(0f, 0.5f);
-                    cRT.anchoredPosition = Vector2.zero;
-                }
+                SetHorizontalAlignment(cRT, cRT.rect.width < viewportWidth ? 0.5f : 0f);
             }
 
-            // Reset scroll position to beginning
             if (ui_scroll_rect != null)
             {
                 Canvas.ForceUpdateCanvases();
@@ -540,12 +400,49 @@ namespace Vertigo.UI.Panels
             }
         }
 
+        private void ConfigureSummaryScrollRect()
+        {
+            if (ui_scroll_rect == null) return;
+
+            ui_scroll_rect.horizontal = true;
+            ui_scroll_rect.vertical = false;
+            ui_scroll_rect.scrollSensitivity = 25f;
+
+            if (ui_scroll_rect.viewport != null)
+            {
+                Image vpImg = ui_scroll_rect.viewport.GetComponent<Image>();
+                if (vpImg == null)
+                {
+                    vpImg = ui_scroll_rect.viewport.gameObject.AddComponent<Image>();
+                    vpImg.color = Color.clear;
+                }
+                vpImg.raycastTarget = true;
+            }
+        }
+
+        private static void SetHorizontalAlignment(RectTransform rt, float xAnchor)
+        {
+            Vector2 anchor = new Vector2(xAnchor, 0.5f);
+            rt.anchorMin = anchor;
+            rt.anchorMax = anchor;
+            rt.pivot = anchor;
+            rt.anchoredPosition = Vector2.zero;
+        }
+
+        private CashOutSummaryCardView GetCardPrefab(bool isValuable)
+        {
+            if (isValuable)
+                return goldCardPrefab != null ? goldCardPrefab : (silverCardPrefab != null ? silverCardPrefab : cardTemplate);
+
+            return silverCardPrefab != null ? silverCardPrefab : (goldCardPrefab != null ? goldCardPrefab : cardTemplate);
+        }
+
         private void OnSkipClicked()
         {
             if (_isSkipped) return;
             _isSkipped = true;
 
-            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
+            GameEvents.FireSfx(SoundEffectType.ButtonClick);
 
             if (_revealCoroutine != null)
             {
@@ -558,24 +455,25 @@ namespace Vertigo.UI.Panels
 
         private void OnContinueClicked()
         {
-            GameEvents.FireSfx(Vertigo.Core.Enums.SoundEffectType.ButtonClick);
+            GameEvents.FireSfx(SoundEffectType.ButtonClick);
             KillAllAnimations();
 
             if (ui_canvas_group != null)
             {
                 ui_canvas_group.blocksRaycasts = false;
                 ui_canvas_group.interactable = false;
-                ui_canvas_group.DOFade(0f, 0.28f).OnComplete(() =>
-                {
-                    HideImmediate();
-                    OnSummaryCompleted?.Invoke();
-                });
+                ui_canvas_group.DOFade(0f, 0.28f).OnComplete(CompleteSummary);
             }
             else
             {
-                HideImmediate();
-                OnSummaryCompleted?.Invoke();
+                CompleteSummary();
             }
+        }
+
+        private void CompleteSummary()
+        {
+            HideImmediate();
+            OnSummaryCompleted?.Invoke();
         }
 
 #if UNITY_EDITOR
@@ -600,14 +498,7 @@ namespace Vertigo.UI.Panels
             if (standards.Count > 1) dummyItems[standards[1].Id] = (standards[1], 340);
             if (valuables.Count > 1) dummyItems[valuables[1].Id] = (valuables[1], 35);
 
-            if (dummyItems.Count > 0)
-            {
-                StartPresentation(dummyItems);
-            }
-            else
-            {
-                Debug.LogWarning("[CashOutSummary] No RewardDataSO assets found to test with.");
-            }
+            if (dummyItems.Count > 0) StartPresentation(dummyItems);
         }
 #endif
     }
