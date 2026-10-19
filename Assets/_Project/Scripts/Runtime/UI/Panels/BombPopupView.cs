@@ -55,7 +55,6 @@ namespace Vertigo.UI.Panels
             _goldReviveCountThisRun = 0;
 
             if (ui_panel_popup_root == null) ui_panel_popup_root = gameObject;
-            if (ui_canvas_group == null) ui_canvas_group = ui_panel_popup_root.GetComponent<CanvasGroup>();
 
             BindButton(ui_button_giveup, OnGiveUpClicked);
             BindButton(ui_button_revive, OnGoldReviveClicked);
@@ -119,17 +118,10 @@ namespace Vertigo.UI.Panels
 
             bool canAffordGoldRevive = bankedGold >= currentCost;
             if (ui_button_revive != null)
-            {
                 ui_button_revive.interactable = canAffordGoldRevive;
-                CanvasGroup reviveBtnCg = ui_button_revive.GetComponent<CanvasGroup>()
-                    ?? ui_button_revive.gameObject.AddComponent<CanvasGroup>();
-                reviveBtnCg.alpha = canAffordGoldRevive ? 1f : 0.45f;
-            }
 
             if (ui_button_revive_ad != null)
-            {
                 ui_button_revive_ad.interactable = true;
-            }
         }
 
         public void ShowPopup()

@@ -25,7 +25,6 @@ namespace Vertigo.UI.Panels
         private void Awake()
         {
             if (ui_panel_popup_root == null) ui_panel_popup_root = gameObject;
-            if (ui_canvas_group == null) ui_canvas_group = ui_panel_popup_root.GetComponent<CanvasGroup>();
 
             BindButton(ui_button_collect_rewards, OnCollectRewardsClicked);
             BindButton(ui_button_go_back, OnGoBackClicked);

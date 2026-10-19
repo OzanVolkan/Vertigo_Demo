@@ -100,27 +100,30 @@ namespace Vertigo.Wheel.Views
             bombIconOffset = bombOffset;
 
             var contentTrans = transform.Find("ui_slice_content");
-            if (contentTrans != null && contentTrans.TryGetComponent(out RectTransform contentRT))
+            if (contentTrans is RectTransform contentRT)
                 SetRectLayout(contentRT, contentSize, new Vector2(0f, radialDistance));
 
-            if (ui_image_icon != null && ui_image_icon.TryGetComponent(out RectTransform iconRT))
+            if (ui_image_icon != null)
             {
+                RectTransform iconRT = ui_image_icon.rectTransform;
                 UnityEditor.Undo.RecordObject(iconRT, "Adjust Slice Icon Layout");
                 bool isBomb = ui_image_icon.sprite != null && ui_image_icon.sprite.name.ToLowerInvariant().Contains("bomb");
                 ApplyIconTransform(iconRT, isBomb);
                 UnityEditor.EditorUtility.SetDirty(iconRT);
             }
 
-            if (ui_text_amount_value != null && ui_text_amount_value.TryGetComponent(out RectTransform textRT))
+            if (ui_text_amount_value != null)
             {
+                RectTransform textRT = ui_text_amount_value.rectTransform;
                 SetRectLayout(textRT, textSize, textOffset);
                 UnityEditor.Undo.RecordObject(ui_text_amount_value, "Adjust Slice Text Font");
                 ui_text_amount_value.fontSize = fontSize;
                 UnityEditor.EditorUtility.SetDirty(ui_text_amount_value);
             }
 
-            if (ui_image_shine != null && ui_image_shine.TryGetComponent(out RectTransform shineRT))
+            if (ui_image_shine != null)
             {
+                RectTransform shineRT = ui_image_shine.rectTransform;
                 UnityEditor.Undo.RecordObject(shineRT, "Adjust Slice Shine Layout");
                 shineRT.sizeDelta = shineSize;
                 UnityEditor.EditorUtility.SetDirty(shineRT);

@@ -295,11 +295,9 @@ namespace Vertigo.Wheel.Views
 
                 UnityEditor.Undo.RecordObject(slice.gameObject, "Apply Slice Layout");
 
-                if (slice.TryGetComponent(out RectTransform sliceRT))
-                {
-                    sliceRT.localRotation = Quaternion.Euler(0f, 0f, -i * (360f / count));
-                    sliceRT.anchoredPosition = Vector2.zero;
-                }
+                RectTransform sliceRT = (RectTransform)slice.transform;
+                sliceRT.localRotation = Quaternion.Euler(0f, 0f, -i * (360f / count));
+                sliceRT.anchoredPosition = Vector2.zero;
 
                 slice.ApplyLayout(
                     sliceRadialDistance,

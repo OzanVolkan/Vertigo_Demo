@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
+using Vertigo.Core.Save;
 using Vertigo.Rewards.Controllers;
 using Vertigo.Testing;
 
@@ -74,7 +75,7 @@ namespace Vertigo.Editor
             }
 
             GUI.backgroundColor = new Color(1f, 0.45f, 0.45f, 1f);
-            if (GUILayout.Button("Reset Wallet (0)", GUILayout.Height(28)))
+            if (GUILayout.Button("Reset Wallet (100)", GUILayout.Height(28)))
             {
                 testManager.ResetWallet();
             }
@@ -303,6 +304,27 @@ namespace Vertigo.Editor
 
         [MenuItem("Vertigo/Testing/Add Test Manager To Scene")]
         public static void AddTestManagerToScene() => EnsureInScene();
+
+        [MenuItem("Vertigo/Save System/Reset Save Data (Default 100 Gold)")]
+        public static void MenuResetSaveData()
+        {
+            SessionInventoryManager.ResetBankedWallet();
+            Debug.Log($"[SaveService] Save data reset. Gold: {SessionInventoryManager.GetBankedGold():N0}");
+        }
+
+        [MenuItem("Vertigo/Save System/Open Save Folder")]
+        public static void MenuOpenSaveFolder()
+        {
+            string path = SaveService.FilePath;
+            if (System.IO.File.Exists(path))
+            {
+                EditorUtility.RevealInFinder(path);
+            }
+            else
+            {
+                EditorUtility.RevealInFinder(Application.persistentDataPath);
+            }
+        }
 
         private static void EnsureInScene()
         {

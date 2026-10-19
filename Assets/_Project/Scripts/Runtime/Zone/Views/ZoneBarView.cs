@@ -59,9 +59,13 @@ namespace Vertigo.Zone.Views
         private int TotalSlots => ui_slot_texts is { Count: > 0 } ? ui_slot_texts.Count : 13;
         private int HalfSlots => TotalSlots / 2;
 
+        private HorizontalLayoutGroup _hlg;
+
         private void Awake()
         {
-            _rootRectTransform = GetComponent<RectTransform>();
+            _rootRectTransform = (RectTransform)transform;
+            if (ui_container_zone_slots != null)
+                _hlg = ui_container_zone_slots.GetComponent<HorizontalLayoutGroup>();
         }
 
         private IEnumerator Start()
@@ -232,9 +236,6 @@ namespace Vertigo.Zone.Views
 
         public void UpdateBadgeVisual(int zone)
         {
-            if (ui_image_current_badge == null && ui_transform_current_badge != null)
-                ui_image_current_badge = ui_transform_current_badge.GetComponent<Image>();
-
             if (ui_image_current_badge == null) return;
 
             Sprite targetSprite = IsSuperZone(zone) ? badgeSuperSprite
@@ -293,10 +294,9 @@ namespace Vertigo.Zone.Views
             }
 
             containerW = ui_container_zone_slots.rect.width > 0f ? ui_container_zone_slots.rect.width : 725f;
-            var hlg = ui_container_zone_slots.GetComponent<HorizontalLayoutGroup>();
-            padLeft = hlg != null ? hlg.padding.left : 0f;
-            float padRight = hlg != null ? hlg.padding.right : 0f;
-            spacing = hlg != null ? hlg.spacing : 4.5f;
+            padLeft = _hlg != null ? _hlg.padding.left : 0f;
+            float padRight = _hlg != null ? _hlg.padding.right : 0f;
+            spacing = _hlg != null ? _hlg.spacing : 4.5f;
 
             int count = TotalSlots;
             float availW = containerW - (padLeft + padRight);
@@ -318,7 +318,7 @@ namespace Vertigo.Zone.Views
             }
 
             if (_rootRectTransform == null)
-                _rootRectTransform = GetComponent<RectTransform>();
+                _rootRectTransform = (RectTransform)transform;
 
             RectTransform slotRT = ui_slot_texts[index].rectTransform.parent as RectTransform ?? ui_slot_texts[index].rectTransform;
             return _rootRectTransform.InverseTransformPoint(slotRT.position).x;

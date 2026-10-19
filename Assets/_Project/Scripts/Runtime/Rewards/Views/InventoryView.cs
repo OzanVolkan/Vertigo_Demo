@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
 using Vertigo.Core.Interfaces;
+using Vertigo.Zone.Data;
 
 namespace Vertigo.Rewards.Views
 {
@@ -23,39 +24,52 @@ namespace Vertigo.Rewards.Views
         private readonly Dictionary<string, InventoryRewardSlotView> _spawnedSlots = new();
         private readonly Vector3[] _slotCorners = new Vector3[4];
 
+        private bool _canCashOut;
+        private bool _isIdle;
+
         private RectTransform ViewportRT => ui_scroll_rect.viewport != null
             ? ui_scroll_rect.viewport
-            : ui_scroll_rect.GetComponent<RectTransform>();
+            : (RectTransform)ui_scroll_rect.transform;
 
         private void Awake()
         {
             if (ui_button_cashout != null)
-            {
                 ui_button_cashout.onClick.AddListener(GameEvents.FireCashOutPromptRequested);
-            }
+
             SetManualScrollEnabled(true);
+            UpdateCashOutButton();
         }
 
         private void OnEnable()
         {
             GameEvents.OnInventoryUpdated += OnInventoryUpdated;
             GameEvents.OnGameStateChanged += OnGameStateChanged;
+            GameEvents.OnZoneChanged += OnZoneChanged;
         }
 
         private void OnDisable()
         {
             GameEvents.OnInventoryUpdated -= OnInventoryUpdated;
             GameEvents.OnGameStateChanged -= OnGameStateChanged;
+            GameEvents.OnZoneChanged -= OnZoneChanged;
+        }
+
+        private void OnZoneChanged(ZoneData zone)
+        {
+            _canCashOut = zone != null && zone.CanCashOut;
+            UpdateCashOutButton();
         }
 
         private void OnGameStateChanged(GameState state)
         {
-            bool isIdle = state == GameState.Idle;
+            SetManualScrollEnabled(_isIdle = state == GameState.Idle);
+            UpdateCashOutButton();
+        }
+
+        private void UpdateCashOutButton()
+        {
             if (ui_button_cashout != null)
-            {
-                ui_button_cashout.interactable = isIdle;
-            }
-            SetManualScrollEnabled(isIdle);
+                ui_button_cashout.interactable = _isIdle && _canCashOut;
         }
 
         public void SetManualScrollEnabled(bool isEnabled)
@@ -64,9 +78,7 @@ namespace Vertigo.Rewards.Views
 
             ui_scroll_rect.vertical = isEnabled;
             if (!isEnabled)
-            {
                 ui_scroll_rect.StopMovement();
-            }
         }
 
         public InventoryRewardSlotView GetOrCreateSlot(IRewardData reward, int initialAmount)
@@ -98,7 +110,7 @@ namespace Vertigo.Rewards.Views
             RectTransform viewportRT = ViewportRT;
             if (viewportRT == null) return false;
 
-            slotView.GetComponent<RectTransform>().GetWorldCorners(_slotCorners);
+            ((RectTransform)slotView.transform).GetWorldCorners(_slotCorners);
 
             float slotMinY = float.MaxValue;
             float slotMaxY = float.MinValue;
@@ -176,9 +188,7 @@ namespace Vertigo.Rewards.Views
             {
                 var slotView = GetOrCreateSlot(reward, amount);
                 if (slotView != null)
-                {
                     slotView.Setup(reward.Icon, amount);
-                }
             }
         }
 
@@ -206,9 +216,7 @@ namespace Vertigo.Rewards.Views
             }
 
             if (ui_scroll_rect == null)
-            {
                 ui_scroll_rect = GetComponentInChildren<ScrollRect>(true);
-            }
         }
     }
 }

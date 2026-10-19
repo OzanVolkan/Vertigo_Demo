@@ -2,14 +2,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using Vertigo.Core.Events;
 using Vertigo.Core.Interfaces;
+using Vertigo.Core.Save;
 
 namespace Vertigo.Rewards.Controllers
 {
     public class SessionInventoryManager : MonoBehaviour, ISessionInventory
     {
-        public const string CashRewardId = "Reward_Cash";
-        public const string GoldRewardId = "Reward_Gold";
-        private const string BankKeyPrefix = "PlayerBank_";
+        public const string CashRewardId = SaveService.CashId;
+        public const string GoldRewardId = SaveService.GoldId;
 
         private readonly Dictionary<string, (IRewardData reward, int amount)> _sessionItems = new();
 
@@ -50,48 +50,21 @@ namespace Vertigo.Rewards.Controllers
 
         public void BankRewards()
         {
-            foreach (var kvp in _sessionItems)
-            {
-                string key = $"{BankKeyPrefix}{kvp.Key}";
-                PlayerPrefs.SetInt(key, PlayerPrefs.GetInt(key, 0) + kvp.Value.amount);
-            }
-            PlayerPrefs.Save();
-
+            SaveService.BankRewards(_sessionItems);
             GameEvents.FireCashOutSuccess(new Dictionary<string, (IRewardData, int)>(_sessionItems));
             ClearSession();
         }
 
-        public static int GetBankedAmount(string rewardId) =>
-            string.IsNullOrEmpty(rewardId) ? 0 : PlayerPrefs.GetInt($"{BankKeyPrefix}{rewardId}", 0);
+        public static int GetBankedAmount(string rewardId) => SaveService.GetAmount(rewardId);
 
-        public static int GetBankedCash() => GetBankedAmount(CashRewardId);
+        public static int GetBankedCash() => SaveService.GetAmount(CashRewardId);
 
-        public static int GetBankedGold() => GetBankedAmount(GoldRewardId);
+        public static int GetBankedGold() => SaveService.GetAmount(GoldRewardId);
 
-        public static void AddBankedGold(int amount)
-        {
-            if (amount <= 0) return;
-            PlayerPrefs.SetInt($"{BankKeyPrefix}{GoldRewardId}", GetBankedGold() + amount);
-            PlayerPrefs.Save();
-        }
+        public static void AddBankedGold(int amount) => SaveService.AddAmount(GoldRewardId, amount);
 
-        public static void ResetBankedWallet()
-        {
-            PlayerPrefs.DeleteKey($"{BankKeyPrefix}{CashRewardId}");
-            PlayerPrefs.DeleteKey($"{BankKeyPrefix}{GoldRewardId}");
-            PlayerPrefs.Save();
-        }
+        public static void ResetBankedWallet() => SaveService.Reset();
 
-        public static bool TrySpendBankedGold(int cost)
-        {
-            if (cost <= 0) return true;
-
-            int currentGold = GetBankedGold();
-            if (currentGold < cost) return false;
-
-            PlayerPrefs.SetInt($"{BankKeyPrefix}{GoldRewardId}", currentGold - cost);
-            PlayerPrefs.Save();
-            return true;
-        }
+        public static bool TrySpendBankedGold(int cost) => SaveService.TrySpendGold(cost);
     }
 }

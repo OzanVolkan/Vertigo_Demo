@@ -40,14 +40,8 @@ namespace Vertigo.Rewards.Views
 
         private void Awake()
         {
-            if (ui_particle_container != null) return;
-
-            ui_particle_container = GetComponent<RectTransform>();
             if (ui_particle_container == null)
-            {
-                Canvas canvas = GetComponentInParent<Canvas>() ?? FindFirstObjectByType<Canvas>();
-                if (canvas != null) ui_particle_container = canvas.GetComponent<RectTransform>();
-            }
+                ui_particle_container = (RectTransform)transform;
         }
 
         private void OnDestroy() => ClearActiveParticles();
@@ -157,7 +151,7 @@ namespace Vertigo.Rewards.Views
             GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image));
             obj.transform.SetParent(parent, false);
 
-            RectTransform rt = obj.GetComponent<RectTransform>();
+            RectTransform rt = (RectTransform)obj.transform;
             rt.sizeDelta = size;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
             rt.anchoredPosition = Vector2.zero;

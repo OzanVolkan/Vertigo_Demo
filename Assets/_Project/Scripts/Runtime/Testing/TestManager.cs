@@ -128,7 +128,7 @@ namespace Vertigo.Testing
         public void ResetWallet()
         {
             SessionInventoryManager.ResetBankedWallet();
-            Debug.Log("[TestManager] Reset Banked Cash & Gold to 0.");
+            Debug.Log($"[TestManager] Reset Banked Cash & Gold. Gold set to default: {SessionInventoryManager.GetBankedGold():N0}");
         }
 
         // =====================================================================

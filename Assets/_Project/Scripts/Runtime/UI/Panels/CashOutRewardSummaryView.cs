@@ -73,7 +73,6 @@ namespace Vertigo.UI.Panels
         private void Awake()
         {
             if (ui_panel_summary_root == null) ui_panel_summary_root = gameObject;
-            if (ui_canvas_group == null) ui_canvas_group = ui_panel_summary_root.GetComponent<CanvasGroup>();
 
             BindButton(ui_button_skip, OnSkipClicked);
             BindButton(ui_button_continue, OnContinueClicked);
@@ -129,12 +128,10 @@ namespace Vertigo.UI.Panels
             {
                 cardField = Instantiate(prefab, ui_transform_active_card);
                 cardField.name = childName;
-                if (cardField.TryGetComponent<RectTransform>(out var rt))
-                {
-                    rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-                    rt.anchoredPosition = Vector2.zero;
-                    rt.localScale = Vector3.one;
-                }
+                RectTransform rt = (RectTransform)cardField.transform;
+                rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.localScale = Vector3.one;
             }
         }
 
@@ -408,14 +405,8 @@ namespace Vertigo.UI.Panels
             ui_scroll_rect.vertical = false;
             ui_scroll_rect.scrollSensitivity = 25f;
 
-            if (ui_scroll_rect.viewport != null)
+            if (ui_scroll_rect.viewport != null && ui_scroll_rect.viewport.TryGetComponent<Image>(out var vpImg))
             {
-                Image vpImg = ui_scroll_rect.viewport.GetComponent<Image>();
-                if (vpImg == null)
-                {
-                    vpImg = ui_scroll_rect.viewport.gameObject.AddComponent<Image>();
-                    vpImg.color = Color.clear;
-                }
                 vpImg.raycastTarget = true;
             }
         }
