@@ -15,7 +15,6 @@ namespace Vertigo.Wheel.Data
 
         public int SliceIndex => sliceIndex;
         public IRewardData Reward => reward;
-        public RewardDataSO RewardSO => reward;
         public int Amount => amount;
         public float Weight => weight;
 

@@ -13,47 +13,27 @@ namespace Vertigo.Zone.Controllers
         [Header("State")]
         [SerializeField] private int currentZoneNumber = 1;
 
-        private ZoneData _currentZoneData;
-
         public int CurrentZoneNumber => currentZoneNumber;
         public int MaxZone => zoneConfig != null ? zoneConfig.MaxZone : 60;
         public bool IsFinalZone => currentZoneNumber >= MaxZone;
-        public ZoneData CurrentZoneData => _currentZoneData;
-        public bool IsSafeZone => _currentZoneData != null && _currentZoneData.ZoneType == ZoneType.Safe;
-        public bool IsSuperZone => _currentZoneData != null && _currentZoneData.ZoneType == ZoneType.Super;
-        public bool CanCashOut => _currentZoneData != null && _currentZoneData.CanCashOut;
+        public ZoneData CurrentZoneData { get; private set; }
+        public bool IsSafeZone => CurrentZoneData?.ZoneType == ZoneType.Safe;
+        public bool IsSuperZone => CurrentZoneData?.ZoneType == ZoneType.Super;
+        public bool CanCashOut => CurrentZoneData?.CanCashOut == true;
 
-        private void OnEnable()
-        {
-            GameEvents.OnGameRestartRequested += OnRestartRequested;
-        }
+        private void OnEnable() => GameEvents.OnGameRestartRequested += ResetToStart;
 
-        private void OnDisable()
-        {
-            GameEvents.OnGameRestartRequested -= OnRestartRequested;
-        }
+        private void OnDisable() => GameEvents.OnGameRestartRequested -= ResetToStart;
 
-        public void Initialize(int startZone = 1)
-        {
-            currentZoneNumber = Mathf.Clamp(startZone, 1, MaxZone);
-            LoadCurrentZone();
-        }
+        public void Initialize(int startZone = 1) => JumpToZone(startZone);
 
-        public void AdvanceToNextZone()
-        {
-            currentZoneNumber = Mathf.Clamp(currentZoneNumber + 1, 1, MaxZone);
-            LoadCurrentZone();
-        }
+        public void AdvanceToNextZone() => JumpToZone(currentZoneNumber + 1);
+
+        public void ResetToStart() => JumpToZone(1);
 
         public void JumpToZone(int targetZone)
         {
             currentZoneNumber = Mathf.Clamp(targetZone, 1, MaxZone);
-            LoadCurrentZone();
-        }
-
-        public void ResetToStart()
-        {
-            currentZoneNumber = 1;
             LoadCurrentZone();
         }
 
@@ -65,14 +45,9 @@ namespace Vertigo.Zone.Controllers
                 return;
             }
 
-            _currentZoneData = zoneConfig.GetZoneData(currentZoneNumber);
-            Debug.Log($"[ZoneManager] Entered Zone {currentZoneNumber} ({_currentZoneData.ZoneType}) - Multiplier: {_currentZoneData.RewardMultiplier:F2}");
-            GameEvents.FireZoneChanged(_currentZoneData);
-        }
-
-        private void OnRestartRequested()
-        {
-            ResetToStart();
+            CurrentZoneData = zoneConfig.GetZoneData(currentZoneNumber);
+            Debug.Log($"[ZoneManager] Entered Zone {currentZoneNumber} ({CurrentZoneData.ZoneType}) - Multiplier: {CurrentZoneData.RewardMultiplier:F2}");
+            GameEvents.FireZoneChanged(CurrentZoneData);
         }
     }
 }

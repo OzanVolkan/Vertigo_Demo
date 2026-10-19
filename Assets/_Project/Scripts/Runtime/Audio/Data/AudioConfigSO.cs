@@ -14,10 +14,5 @@ namespace Vertigo.Audio.Data
 
         public float MasterSfxVolume => masterSfxVolume;
         public SoundEffectEntry[] Entries => entries;
-
-        public void SetEntries(SoundEffectEntry[] newEntries)
-        {
-            entries = newEntries;
-        }
     }
 }

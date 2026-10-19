@@ -5,14 +5,12 @@ using Vertigo.Audio.Controllers;
 using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
 using Vertigo.Rewards.Controllers;
-using Vertigo.Rewards.Data;
 using Vertigo.Rewards.Views;
 using Vertigo.UI.Panels;
 using Vertigo.Wheel.Controllers;
 using Vertigo.Wheel.Data;
 using Vertigo.Wheel.Views;
 using Vertigo.Zone.Controllers;
-using Vertigo.Zone.Data;
 
 namespace Vertigo.Core.State
 {
@@ -52,47 +50,12 @@ namespace Vertigo.Core.State
             base.Awake();
             if (Instance != this) return;
 
-            if (audioManager == null) audioManager = FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include);
-            if (audioManager == null)
-            {
-                GameObject audioObj = new GameObject("[AudioManager]");
-                audioObj.transform.SetParent(transform, false);
-                audioManager = audioObj.AddComponent<AudioManager>();
-            }
-            if (wheelView == null) wheelView = FindFirstObjectByType<WheelView>();
-            if (inventoryView == null) inventoryView = FindFirstObjectByType<InventoryView>();
-            if (rewardCollectEffect == null) rewardCollectEffect = FindFirstObjectByType<RewardCollectEffectView>();
-            if (rewardShowcase == null) rewardShowcase = FindFirstObjectByType<RewardShowcaseView>(FindObjectsInactive.Include);
-            if (bombPopupView == null) bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
-            if (cashOutPopupView == null) cashOutPopupView = FindFirstObjectByType<CashOutPopupView>(FindObjectsInactive.Include);
-            if (cashOutSummaryView == null) cashOutSummaryView = FindFirstObjectByType<CashOutRewardSummaryView>(FindObjectsInactive.Include);
-            if (missionCompletePopupView == null) missionCompletePopupView = FindFirstObjectByType<MissionCompletePopupView>(FindObjectsInactive.Include);
-
-            if (bombPopupView != null && !bombPopupView.gameObject.activeSelf)
-            {
-                bombPopupView.HideImmediate();
-            }
-
-            if (cashOutPopupView != null && !cashOutPopupView.gameObject.activeSelf)
-            {
-                cashOutPopupView.HideImmediate();
-            }
-
-            if (cashOutSummaryView != null && !cashOutSummaryView.gameObject.activeSelf)
-            {
-                cashOutSummaryView.HideImmediate();
-            }
-
-            if (missionCompletePopupView != null && !missionCompletePopupView.gameObject.activeSelf)
-            {
-                missionCompletePopupView.HideImmediate();
-            }
+            EnsureAudioManager();
+            ResolveReferences();
+            HideInactivePopups();
         }
 
-        private void Start()
-        {
-            InitializeGame();
-        }
+        private void Start() => InitializeGame();
 
         private void OnEnable()
         {
@@ -115,12 +78,7 @@ namespace Vertigo.Core.State
         public void InitializeGame()
         {
             SetState(GameState.Initialize);
-
-            if (zoneManager != null)
-            {
-                zoneManager.Initialize(1);
-            }
-
+            zoneManager?.Initialize(1);
             SetState(GameState.Idle);
         }
 
@@ -133,50 +91,32 @@ namespace Vertigo.Core.State
             GameEvents.FireGameStateChanged(newState);
         }
 
-        private void HandleSpinStarted(int targetIndex, float targetAngle, float exactCenterAngle, float duration)
-        {
+        private void HandleSpinStarted(int targetIndex, float targetAngle, float exactCenterAngle, float duration) =>
             SetState(GameState.Spinning);
-        }
 
         private void HandleSpinCompleted(WheelSliceData landedSlice)
         {
             SetState(GameState.Evaluating);
 
-            if (landedSlice == null || landedSlice.Reward == null)
+            if (landedSlice?.Reward == null)
             {
                 Debug.LogError("[GameManager] Landed slice or reward is null!");
                 SetState(GameState.Idle);
                 return;
             }
 
-            if (landedSlice.Reward.IsBomb)
-            {
-                StartCoroutine(TriggerBombRoutine());
-            }
-            else
-            {
-                StartCoroutine(AwardRewardRoutine(landedSlice));
-            }
+            StartCoroutine(landedSlice.Reward.IsBomb ? TriggerBombRoutine() : AwardRewardRoutine(landedSlice));
         }
 
         private IEnumerator TriggerBombRoutine()
         {
-            if (wheelView != null)
-            {
-                wheelView.PlayBombImpactShake();
-            }
-
+            wheelView?.PlayBombImpactShake();
             yield return new WaitForSeconds(0.45f);
+
             SetState(GameState.BombTriggered);
 
-            if (bombPopupView == null)
-            {
-                bombPopupView = FindFirstObjectByType<BombPopupView>(FindObjectsInactive.Include);
-            }
             if (bombPopupView != null && !bombPopupView.gameObject.activeSelf)
-            {
                 bombPopupView.gameObject.SetActive(true);
-            }
 
             GameEvents.FireBombTriggered();
         }
@@ -185,196 +125,127 @@ namespace Vertigo.Core.State
         {
             SetState(GameState.RewardAwarded);
 
-            // Calculate scaled reward amount based on zone multiplier
-            float multiplier = zoneManager != null ? zoneManager.CurrentZoneData.RewardMultiplier : 1f;
+            float multiplier = zoneManager?.CurrentZoneData != null ? zoneManager.CurrentZoneData.RewardMultiplier : 1f;
             int scaledAmount = Mathf.Max(1, Mathf.RoundToInt(slice.Amount * multiplier));
-
             int oldAmount = inventoryManager != null ? inventoryManager.GetAmount(slice.Reward.Id) : 0;
             int newAmount = oldAmount + scaledAmount;
 
-            InventoryRewardSlotView targetSlot = null;
-            if (inventoryView != null)
-            {
-                targetSlot = inventoryView.GetOrCreateSlot(slice.Reward, oldAmount);
-            }
+            InventoryRewardSlotView targetSlot = inventoryView != null
+                ? inventoryView.GetOrCreateSlot(slice.Reward, oldAmount)
+                : null;
 
-            // Suppress immediate inventory update event so slot text won't instantly snap before the animation
-            bool suppressUpdate = (targetSlot != null && rewardCollectEffect != null);
-            if (inventoryManager != null)
-            {
-                inventoryManager.AddReward(slice.Reward, scaledAmount, suppressInventoryUpdateEvent: suppressUpdate);
-            }
+            bool suppressUpdate = targetSlot != null && rewardCollectEffect != null;
+            inventoryManager?.AddReward(slice.Reward, scaledAmount, suppressInventoryUpdateEvent: suppressUpdate);
 
-            WheelType currentWheelType = WheelType.BronzeNormal;
-            if (wheelController != null && wheelController.CurrentConfig != null)
-            {
-                currentWheelType = wheelController.CurrentConfig.WheelType;
-            }
-            else if (zoneManager != null && zoneManager.CurrentZoneData != null)
-            {
-                switch (zoneManager.CurrentZoneData.ZoneType)
-                {
-                    case ZoneType.Safe:
-                        currentWheelType = WheelType.SilverSafe;
-                        break;
-                    case ZoneType.Super:
-                        currentWheelType = WheelType.GoldenSuper;
-                        break;
-                    default:
-                        currentWheelType = WheelType.BronzeNormal;
-                        break;
-                }
-            }
+            WheelType wheelType = GetCurrentWheelType();
 
-            if (rewardShowcase == null)
-            {
-                rewardShowcase = FindFirstObjectByType<RewardShowcaseView>(FindObjectsInactive.Include);
-            }
+            yield return PlayShowcaseRoutine(slice, scaledAmount, wheelType);
+            yield return ScrollToSlotIfNeededRoutine(targetSlot);
+            yield return PlayCollectEffectRoutine(slice, targetSlot, oldAmount, newAmount, wheelType);
+            yield return new WaitForSeconds(0.25f);
+            yield return AdvanceOrCompleteRoutine();
+        }
 
-            // 1. Showcase the won reward prominently on screen (Polish)
-            if (rewardShowcase != null)
-            {
-                bool showcaseFinished = false;
-                string formattedAmount = slice.Reward.FormatAmount(scaledAmount);
-                rewardShowcase.ShowReward(
-                    slice.Reward.Icon,
-                    formattedAmount,
-                    currentWheelType,
-                    () => showcaseFinished = true
-                );
+        private IEnumerator PlayShowcaseRoutine(WheelSliceData slice, int scaledAmount, WheelType wheelType)
+        {
+            if (rewardShowcase == null) yield break;
 
-                while (!showcaseFinished)
-                {
-                    yield return null;
-                }
-            }
+            bool finished = false;
+            rewardShowcase.ShowReward(
+                slice.Reward.Icon,
+                slice.Reward.FormatAmount(scaledAmount),
+                wheelType,
+                () => finished = true);
 
-            // 2. Normal flow: If the target slot is outside the visible scrollview viewport, smoothly scroll to bring it into view!
-            if (inventoryView != null && targetSlot != null && !inventoryView.IsSlotVisible(targetSlot))
-            {
-                Tween scrollTween = inventoryView.ScrollToSlot(targetSlot, smooth: true, duration: 0.32f);
-                if (scrollTween != null && scrollTween.IsActive())
-                {
-                    yield return scrollTween.WaitForCompletion();
-                }
-                else
-                {
-                    yield return new WaitForSeconds(0.15f);
-                }
-            }
+            while (!finished)
+                yield return null;
+        }
 
-            Vector3 startPos = wheelView != null ? wheelView.GetWinningSlicePosition() : transform.position;
+        private IEnumerator ScrollToSlotIfNeededRoutine(InventoryRewardSlotView targetSlot)
+        {
+            if (inventoryView == null || targetSlot == null || inventoryView.IsSlotVisible(targetSlot))
+                yield break;
 
-            if (rewardCollectEffect != null && targetSlot != null)
-            {
-                bool effectFinished = false;
-                rewardCollectEffect.PlayCollectEffect(
-                    slice.Reward.Icon,
-                    startPos,
-                    targetSlot,
-                    oldAmount,
-                    newAmount,
-                    currentWheelType,
-                    () => effectFinished = true
-                );
-
-                while (!effectFinished)
-                {
-                    yield return null;
-                }
-            }
+            Tween scrollTween = inventoryView.ScrollToSlot(targetSlot, smooth: true, duration: 0.32f);
+            if (scrollTween != null && scrollTween.IsActive())
+                yield return scrollTween.WaitForCompletion();
             else
+                yield return new WaitForSeconds(0.15f);
+        }
+
+        private IEnumerator PlayCollectEffectRoutine(
+            WheelSliceData slice,
+            InventoryRewardSlotView targetSlot,
+            int oldAmount,
+            int newAmount,
+            WheelType wheelType)
+        {
+            if (rewardCollectEffect == null || targetSlot == null)
             {
                 yield return new WaitForSeconds(rewardAwardDelay);
-            }
-
-            // Short breath after collection before zone advances
-            yield return new WaitForSeconds(0.25f);
-
-            // Final Zone (Zone 60) completed: show mission complete celebration panel first, then cash out!
-            if (zoneManager != null && zoneManager.IsFinalZone)
-            {
-                Debug.Log($"[GameManager] Final Zone ({zoneManager.CurrentZoneNumber}) completed! Showing Mission Complete celebration panel.");
-                if (missionCompletePopupView != null)
-                {
-                    missionCompletePopupView.Show(() =>
-                    {
-                        GameEvents.FireCashOutRequested();
-                    });
-                }
-                else
-                {
-                    GameEvents.FireCashOutRequested();
-                }
                 yield break;
             }
 
-            // Advance to next zone
-            SetState(GameState.ZoneTransition);
-            if (zoneManager != null)
+            Vector3 startPos = wheelView != null ? wheelView.GetWinningSlicePosition() : transform.position;
+            bool finished = false;
+            rewardCollectEffect.PlayCollectEffect(
+                slice.Reward.Icon,
+                startPos,
+                targetSlot,
+                oldAmount,
+                newAmount,
+                wheelType,
+                () => finished = true);
+
+            while (!finished)
+                yield return null;
+        }
+
+        private IEnumerator AdvanceOrCompleteRoutine()
+        {
+            if (zoneManager != null && zoneManager.IsFinalZone)
             {
-                zoneManager.AdvanceToNextZone();
+                if (missionCompletePopupView != null)
+                    missionCompletePopupView.Show(GameEvents.FireCashOutRequested);
+                else
+                    GameEvents.FireCashOutRequested();
+                yield break;
             }
 
+            SetState(GameState.ZoneTransition);
+            zoneManager?.AdvanceToNextZone();
             yield return new WaitForSeconds(zoneTransitionDelay);
             SetState(GameState.Idle);
+        }
+
+        private WheelType GetCurrentWheelType()
+        {
+            if (wheelController?.CurrentConfig != null)
+                return wheelController.CurrentConfig.WheelType;
+
+            return (zoneManager?.CurrentZoneData?.ZoneType) switch
+            {
+                ZoneType.Safe => WheelType.SilverSafe,
+                ZoneType.Super => WheelType.GoldenSuper,
+                _ => WheelType.BronzeNormal
+            };
         }
 
         private void HandleReviveRequested()
         {
             Debug.Log("[GameManager] Revive requested. Preserving rewards and continuing...");
             GameEvents.FireReviveSuccess();
-
-            // After reviving, advance to next zone
-            StartCoroutine(PostReviveRoutine());
-        }
-
-        private IEnumerator PostReviveRoutine()
-        {
-            if (zoneManager != null && zoneManager.IsFinalZone)
-            {
-                if (missionCompletePopupView != null)
-                {
-                    missionCompletePopupView.Show(() =>
-                    {
-                        GameEvents.FireCashOutRequested();
-                    });
-                }
-                else
-                {
-                    GameEvents.FireCashOutRequested();
-                }
-                yield break;
-            }
-
-            SetState(GameState.ZoneTransition);
-            if (zoneManager != null)
-            {
-                zoneManager.AdvanceToNextZone();
-            }
-            yield return new WaitForSeconds(zoneTransitionDelay);
-            SetState(GameState.Idle);
+            StartCoroutine(AdvanceOrCompleteRoutine());
         }
 
         public void JumpToZone(int targetZone)
         {
             StopAllCoroutines();
+            HideAllPopups();
 
-            // Dismiss any active popups and effects cleanly
-            if (bombPopupView != null) bombPopupView.HideImmediate();
-            if (cashOutPopupView != null) cashOutPopupView.HideImmediate();
-            if (cashOutSummaryView != null) cashOutSummaryView.HideImmediate();
-            if (missionCompletePopupView != null) missionCompletePopupView.HideImmediate();
-            if (rewardShowcase != null) rewardShowcase.HideImmediate();
-
-            // Reset wheel if it was spinning
-            if (wheelController != null) wheelController.ResetSpinState();
-            if (wheelView != null) wheelView.ResetWheel();
-
-            if (zoneManager != null)
-            {
-                zoneManager.JumpToZone(targetZone);
-            }
+            wheelController?.ResetSpinState();
+            wheelView?.ResetWheel();
+            zoneManager?.JumpToZone(targetZone);
             SetState(GameState.Idle);
         }
 
@@ -390,37 +261,38 @@ namespace Vertigo.Core.State
             {
                 yield return new WaitForSeconds(0.05f);
                 while (cashOutSummaryView.IsPresenting)
-                {
                     yield return null;
-                }
             }
             else
             {
                 yield return new WaitForSeconds(0.25f);
             }
 
-            if (zoneManager != null)
-            {
-                zoneManager.ResetToStart();
-            }
+            zoneManager?.ResetToStart();
             SetState(GameState.Idle);
         }
 
         private void HandleRestartRequested()
         {
             SetState(GameState.GameOver);
-            if (missionCompletePopupView != null)
-            {
-                missionCompletePopupView.HideImmediate();
-            }
-            if (zoneManager != null)
-            {
-                zoneManager.ResetToStart();
-            }
+            missionCompletePopupView?.HideImmediate();
+            zoneManager?.ResetToStart();
             SetState(GameState.Idle);
         }
 
-        private void OnValidate()
+        private void EnsureAudioManager()
+        {
+            if (audioManager == null)
+                audioManager = FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include);
+
+            if (audioManager != null) return;
+
+            var audioObj = new GameObject("[AudioManager]");
+            audioObj.transform.SetParent(transform, false);
+            audioManager = audioObj.AddComponent<AudioManager>();
+        }
+
+        private void ResolveReferences()
         {
             if (zoneManager == null) zoneManager = GetComponentInChildren<ZoneManager>();
             if (wheelController == null) wheelController = GetComponentInChildren<WheelController>();
@@ -434,5 +306,24 @@ namespace Vertigo.Core.State
             if (cashOutSummaryView == null) cashOutSummaryView = FindFirstObjectByType<CashOutRewardSummaryView>(FindObjectsInactive.Include);
             if (missionCompletePopupView == null) missionCompletePopupView = FindFirstObjectByType<MissionCompletePopupView>(FindObjectsInactive.Include);
         }
+
+        private void HideInactivePopups()
+        {
+            if (bombPopupView != null && !bombPopupView.gameObject.activeSelf) bombPopupView.HideImmediate();
+            if (cashOutPopupView != null && !cashOutPopupView.gameObject.activeSelf) cashOutPopupView.HideImmediate();
+            if (cashOutSummaryView != null && !cashOutSummaryView.gameObject.activeSelf) cashOutSummaryView.HideImmediate();
+            if (missionCompletePopupView != null && !missionCompletePopupView.gameObject.activeSelf) missionCompletePopupView.HideImmediate();
+        }
+
+        private void HideAllPopups()
+        {
+            bombPopupView?.HideImmediate();
+            cashOutPopupView?.HideImmediate();
+            cashOutSummaryView?.HideImmediate();
+            missionCompletePopupView?.HideImmediate();
+            rewardShowcase?.HideImmediate();
+        }
+
+        private void OnValidate() => ResolveReferences();
     }
 }

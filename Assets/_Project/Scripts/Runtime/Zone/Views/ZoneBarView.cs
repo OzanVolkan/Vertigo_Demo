@@ -1,9 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
 using Vertigo.Zone.Data;
 
@@ -11,6 +11,8 @@ namespace Vertigo.Zone.Views
 {
     public class ZoneBarView : MonoBehaviour
     {
+        private static readonly Color CurrentNormalTextColor = new Color(0.08f, 0.08f, 0.10f, 1f);
+
         [Header("Zone Strip Components")]
         [Tooltip("The parent container holding zone number items")]
         [SerializeField] private RectTransform ui_container_zone_slots;
@@ -36,12 +38,12 @@ namespace Vertigo.Zone.Views
         [SerializeField] private GameObject ui_badge_safe_zone;
 
         [Header("Colors")]
-        [SerializeField] private Color normalColor = new Color(1f, 1f, 1f, 1f); // Crisp white
-        [SerializeField] private Color safeColor = new Color(0.35f, 0.95f, 0.15f, 1f); // Vivid neon lime #59F226
-        [SerializeField] private Color superColor = new Color(1.00f, 0.84f, 0.00f, 1f); // Bright gold #FFD700
-        [SerializeField] private Color pastZoneColor = new Color(0.42f, 0.44f, 0.48f, 1f); // Muted grey #6B707B
-        [SerializeField] private Color pastSafeColor = new Color(0.20f, 0.42f, 0.12f, 1f); // Muted dark olive green #336B1E
-        [SerializeField] private Color pastSuperColor = new Color(0.55f, 0.42f, 0.12f, 1f); // Muted dark gold
+        [SerializeField] private Color normalColor = new Color(1f, 1f, 1f, 1f);
+        [SerializeField] private Color safeColor = new Color(0.35f, 0.95f, 0.15f, 1f);
+        [SerializeField] private Color superColor = new Color(1.00f, 0.84f, 0.00f, 1f);
+        [SerializeField] private Color pastZoneColor = new Color(0.42f, 0.44f, 0.48f, 1f);
+        [SerializeField] private Color pastSafeColor = new Color(0.20f, 0.42f, 0.12f, 1f);
+        [SerializeField] private Color pastSuperColor = new Color(0.55f, 0.42f, 0.12f, 1f);
 
         [Header("Smooth DOTween Animation Settings")]
         [SerializeField] private float slideDuration = 0.35f;
@@ -49,31 +51,30 @@ namespace Vertigo.Zone.Views
         [SerializeField] private float punchScaleAmount = 0.08f;
         [SerializeField] private int maxZone = 60;
 
-        private int _currentZoneNumber = 0;
+        private int _currentZoneNumber;
         private Sequence _slideSequence;
         private RectTransform _rootRectTransform;
+
+        private int ActiveZone => _currentZoneNumber > 0 ? _currentZoneNumber : 1;
+        private int TotalSlots => ui_slot_texts is { Count: > 0 } ? ui_slot_texts.Count : 13;
+        private int HalfSlots => TotalSlots / 2;
 
         private void Awake()
         {
             _rootRectTransform = GetComponent<RectTransform>();
         }
 
-        private System.Collections.IEnumerator Start()
+        private IEnumerator Start()
         {
-            // Frame 0: Snap immediately
-            int zone = _currentZoneNumber > 0 ? _currentZoneNumber : 1;
-            SnapToZone(zone);
-
-            // Wait 1 frame for CanvasScaler and HorizontalLayoutGroup to fully evaluate
+            SnapToZone(ActiveZone);
             yield return null;
-
-            SnapToZone(_currentZoneNumber > 0 ? _currentZoneNumber : 1);
+            SnapToZone(ActiveZone);
         }
 
         private void OnEnable()
         {
             GameEvents.OnZoneChanged += UpdateZoneBar;
-            SnapToZone(_currentZoneNumber > 0 ? _currentZoneNumber : 1);
+            SnapToZone(ActiveZone);
         }
 
         private void OnDisable()
@@ -82,17 +83,13 @@ namespace Vertigo.Zone.Views
             KillSequence();
         }
 
-        private void OnDestroy()
-        {
-            KillSequence();
-        }
+        private void OnDestroy() => KillSequence();
 
         private void KillSequence()
         {
             if (_slideSequence != null && _slideSequence.IsActive())
-            {
                 _slideSequence.Kill();
-            }
+
             if (ui_container_zone_slots != null)
             {
                 ui_container_zone_slots.DOKill();
@@ -105,46 +102,25 @@ namespace Vertigo.Zone.Views
             if (zoneData == null) return;
             int newZone = Mathf.Clamp(zoneData.ZoneNumber, 1, maxZone);
 
-            // 1. Update Top-Right Next Badges (clamped to maxZone = 60)
             UpdateNextBadges(newZone);
 
-            // 2. Initial Setup or Edit Mode: Snap immediately without tweening
-            if (_currentZoneNumber == 0 || !Application.isPlaying || ui_transform_current_badge == null)
-            {
-                _currentZoneNumber = newZone;
-                SnapToZone(newZone);
-                return;
-            }
+            bool shouldAnimate = _currentZoneNumber > 0
+                && Application.isPlaying
+                && ui_transform_current_badge != null
+                && newZone == _currentZoneNumber + 1;
 
-            // 3. Same Zone: Just refresh
-            if (newZone == _currentZoneNumber)
-            {
-                SnapToZone(newZone);
-                return;
-            }
-
-            // 4. Animate with smooth DOTween slide only if advancing forward by exactly 1 zone
-            if (newZone == _currentZoneNumber + 1)
-            {
+            if (shouldAnimate)
                 AnimateToZone(newZone);
-            }
             else
-            {
-                // Arbitrary jump or backward navigation: snap immediately and accurately
                 SnapToZone(newZone);
-            }
         }
 
         private void UpdateNextBadges(int zoneNumber)
         {
-            // Always displays the NEXT upcoming milestone zone:
-            // Entering Zone 1 -> shows 5, entering Zone 5 -> shows 10, Zone 10 -> shows 15, etc.
             int nextSafe = Mathf.Min(maxZone, ((zoneNumber / 5) + 1) * 5);
-            if (nextSafe % 30 == 0)
-            {
-                // Zone 30 (and 60) is a Super Zone, not a safe zone. The safe zone after 25 is 35!
+            if (IsSuperZone(nextSafe))
                 nextSafe = Mathf.Min(maxZone, nextSafe + 5);
-            }
+
             int nextSuper = Mathf.Min(maxZone, ((zoneNumber / 30) + 1) * 30);
 
             if (ui_text_next_safe_zone_value != null)
@@ -159,26 +135,19 @@ namespace Vertigo.Zone.Views
         private void UpdateSafeZoneBadgeVisibility(int zoneNumber)
         {
             if (ui_badge_safe_zone == null && ui_text_next_safe_zone_value != null)
-            {
                 ui_badge_safe_zone = ui_text_next_safe_zone_value.transform.parent.gameObject;
-            }
 
-            if (ui_badge_safe_zone != null)
-            {
-                // Level 55 is the final safe zone; when reaching level 55 (and above), hide the safe zone badge.
-                // When resetting back to level 1 (or any zone < 55), re-open/show the safe zone badge.
-                bool showSafeBadge = zoneNumber < 55;
-                if (ui_badge_safe_zone.activeSelf != showSafeBadge)
-                {
-                    ui_badge_safe_zone.SetActive(showSafeBadge);
-                }
-            }
+            if (ui_badge_safe_zone == null) return;
+
+            bool showSafeBadge = zoneNumber < 55;
+            if (ui_badge_safe_zone.activeSelf != showSafeBadge)
+                ui_badge_safe_zone.SetActive(showSafeBadge);
         }
 
-        private int CalculateStartZone(int zone, int totalSlots, int halfSlots)
+        private int CalculateStartZone(int zone)
         {
-            int maxStartZone = Mathf.Max(1, maxZone - totalSlots + 1);
-            return Mathf.Clamp(zone - halfSlots, 1, maxStartZone);
+            int maxStartZone = Mathf.Max(1, maxZone - TotalSlots + 1);
+            return Mathf.Clamp(zone - HalfSlots, 1, maxStartZone);
         }
 
         public void SnapToZone(int currentZone)
@@ -189,21 +158,15 @@ namespace Vertigo.Zone.Views
 
             UpdateNextBadges(currentZone);
 
-            int totalSlots = ui_slot_texts != null && ui_slot_texts.Count > 0 ? ui_slot_texts.Count : 13;
-            int halfSlots = totalSlots / 2;
-            int startZone = CalculateStartZone(currentZone, totalSlots, halfSlots);
-
-            RefreshSlotNumbers(startZone);
-            RefreshSlotColors(currentZone, startZone);
-            UpdateBadgeVisual(currentZone);
+            int startZone = CalculateStartZone(currentZone);
+            ApplyZoneVisuals(currentZone, startZone);
 
             if (ui_transform_current_badge != null)
             {
                 ui_transform_current_badge.DOKill();
                 ui_transform_current_badge.localScale = Vector3.one;
-                int targetIndex = Mathf.Clamp(currentZone - startZone, 0, totalSlots - 1);
-                float targetX = GetSlotLocalX(targetIndex);
-                ui_transform_current_badge.anchoredPosition = new Vector2(targetX, 0);
+                int targetIndex = Mathf.Clamp(currentZone - startZone, 0, TotalSlots - 1);
+                ui_transform_current_badge.anchoredPosition = new Vector2(GetSlotLocalX(targetIndex), 0f);
             }
         }
 
@@ -213,137 +176,73 @@ namespace Vertigo.Zone.Views
             newZone = Mathf.Clamp(newZone, 1, maxZone);
             _slideSequence = DOTween.Sequence();
 
-            int totalSlots = ui_slot_texts != null && ui_slot_texts.Count > 0 ? ui_slot_texts.Count : 13;
-            int halfSlots = totalSlots / 2; // e.g. 6 in 13 slots
             int previousZone = _currentZoneNumber;
-
-            if (newZone < _currentZoneNumber)
-            {
-                // Reset to beginning (e.g. restart from Zone 1)
-                int startZone = 1;
-                RefreshSlotNumbers(startZone);
-                RefreshSlotColors(newZone, startZone);
-                UpdateBadgeVisual(newZone);
-
-                float targetX = GetSlotLocalX(0);
-
-                _slideSequence.Append(ui_transform_current_badge.DOAnchorPosX(targetX, slideDuration * 1.2f).SetEase(Ease.InOutCubic));
-                _slideSequence.AppendCallback(() =>
-                {
-                    _currentZoneNumber = newZone;
-                    ui_transform_current_badge.DOPunchScale(Vector3.one * punchScaleAmount, 0.2f, 2, 0.5f);
-                });
-                return;
-            }
-
-            // Advancing forward
-            int prevStartZone = CalculateStartZone(previousZone, totalSlots, halfSlots);
-            int nextStartZone = CalculateStartZone(newZone, totalSlots, halfSlots);
+            int prevStartZone = CalculateStartZone(previousZone);
+            int nextStartZone = CalculateStartZone(newZone);
             SetSlotPastColor(previousZone, prevStartZone);
 
             if (nextStartZone == prevStartZone)
             {
-                // Case A: Early Progression (Zones 1..7) OR Final Stretch (Zones 55..60)
-                // Strip stays fixed and badge slides smoothly from current slot to target slot!
-                int targetIndex = Mathf.Clamp(newZone - nextStartZone, 0, totalSlots - 1);
+                int targetIndex = Mathf.Clamp(newZone - nextStartZone, 0, TotalSlots - 1);
                 float targetX = GetSlotLocalX(targetIndex);
 
                 _slideSequence.Append(ui_transform_current_badge.DOAnchorPosX(targetX, slideDuration).SetEase(slideEase));
-                _slideSequence.AppendCallback(() =>
-                {
-                    _currentZoneNumber = newZone;
-                    UpdateBadgeVisual(newZone);
-                    RefreshSlotColors(newZone, nextStartZone);
-                    ui_transform_current_badge.DOPunchScale(Vector3.one * punchScaleAmount, 0.2f, 2, 0.5f);
-                });
             }
             else
             {
-                // Case B: Centered Progression (Zones 8..54)
-                // Badge remains FIXED at the center!
-                // Only the zone bar (number strip) slides smoothly to the left by 1 slot.
-                float slotStep = GetSlotStepDistance();
-                float centerX = GetSlotLocalX(halfSlots);
+                ui_transform_current_badge.anchoredPosition = new Vector2(GetSlotLocalX(HalfSlots), 0f);
 
-                // Ensure badge is at center
-                ui_transform_current_badge.anchoredPosition = new Vector2(centerX, 0);
-
-                // Slide tape smoothly to the left
-                _slideSequence.Append(ui_container_zone_slots.DOAnchorPosX(-slotStep, slideDuration).SetEase(slideEase));
-                if (ui_slot_texts != null && ui_slot_texts.Count > 0 && ui_slot_texts[0] != null)
-                {
+                _slideSequence.Append(ui_container_zone_slots.DOAnchorPosX(-GetSlotStepDistance(), slideDuration).SetEase(slideEase));
+                if (ui_slot_texts is { Count: > 0 } && ui_slot_texts[0] != null)
                     _slideSequence.Join(ui_slot_texts[0].DOFade(0f, slideDuration * 0.8f));
-                }
-
-                _slideSequence.AppendCallback(() =>
-                {
-                    // Reset container offset seamlessly and update slot numbers
-                    ui_container_zone_slots.anchoredPosition = Vector2.zero;
-                    _currentZoneNumber = newZone;
-                    RefreshSlotNumbers(nextStartZone);
-                    RefreshSlotColors(newZone, nextStartZone);
-                    UpdateBadgeVisual(newZone);
-                    ui_transform_current_badge.DOPunchScale(Vector3.one * punchScaleAmount, 0.2f, 2, 0.5f);
-                });
             }
+
+            _slideSequence.AppendCallback(() => CompleteZoneAnimation(newZone, nextStartZone));
+        }
+
+        private void CompleteZoneAnimation(int newZone, int startZone)
+        {
+            if (ui_container_zone_slots != null)
+                ui_container_zone_slots.anchoredPosition = Vector2.zero;
+
+            _currentZoneNumber = newZone;
+            ApplyZoneVisuals(newZone, startZone);
+            ui_transform_current_badge.DOPunchScale(Vector3.one * punchScaleAmount, 0.2f, 2, 0.5f);
+        }
+
+        private void ApplyZoneVisuals(int zone, int startZone)
+        {
+            RefreshSlotNumbers(startZone);
+            RefreshSlotColors(zone, startZone);
+            UpdateBadgeVisual(zone);
         }
 
         private void SetSlotPastColor(int zoneNumber, int startZone)
         {
-            if (ui_slot_texts == null) return;
             int index = zoneNumber - startZone;
-            if (index >= 0 && index < ui_slot_texts.Count)
-            {
-                TMP_Text txt = ui_slot_texts[index];
-                if (txt != null)
-                {
-                    if (zoneNumber % 30 == 0)
-                    {
-                        txt.color = pastSuperColor;
-                        txt.fontStyle = FontStyles.Bold;
-                    }
-                    else if (IsSafeZone(zoneNumber))
-                    {
-                        txt.color = pastSafeColor;
-                        txt.fontStyle = FontStyles.Bold;
-                    }
-                    else
-                    {
-                        txt.color = pastZoneColor;
-                        txt.fontStyle = FontStyles.Normal;
-                    }
-                }
-            }
+            if (ui_slot_texts == null || index < 0 || index >= ui_slot_texts.Count || ui_slot_texts[index] == null) return;
+
+            (ui_slot_texts[index].color, ui_slot_texts[index].fontStyle) = GetZoneStyle(zoneNumber, isPast: true);
         }
 
-        public bool IsSafeZone(int zoneNumber)
-        {
-            if (zoneNumber <= 0 || zoneNumber > maxZone) return false;
-            if (zoneNumber % 30 == 0) return false;
-            return zoneNumber == 1 || zoneNumber % 5 == 0;
-        }
+        private static bool IsSuperZone(int zoneNumber) => zoneNumber > 0 && zoneNumber % 30 == 0;
+
+        public bool IsSafeZone(int zoneNumber) =>
+            zoneNumber > 0 && zoneNumber <= maxZone && !IsSuperZone(zoneNumber) && (zoneNumber == 1 || zoneNumber % 5 == 0);
 
         public void UpdateBadgeVisual(int zone)
         {
             if (ui_image_current_badge == null && ui_transform_current_badge != null)
-            {
                 ui_image_current_badge = ui_transform_current_badge.GetComponent<Image>();
-            }
 
             if (ui_image_current_badge == null) return;
 
-            if (zone % 30 == 0 && badgeSuperSprite != null)
-            {
-                ui_image_current_badge.sprite = badgeSuperSprite;
-            }
-            else if (IsSafeZone(zone) && badgeSafeSprite != null)
-            {
-                ui_image_current_badge.sprite = badgeSafeSprite;
-            }
-            else if (badgeNormalSprite != null)
-            {
-                ui_image_current_badge.sprite = badgeNormalSprite;
-            }
+            Sprite targetSprite = IsSuperZone(zone) ? badgeSuperSprite
+                : IsSafeZone(zone) ? badgeSafeSprite
+                : badgeNormalSprite;
+
+            if (targetSprite != null)
+                ui_image_current_badge.sprite = targetSprite;
         }
 
         private void RefreshSlotNumbers(int startZone)
@@ -352,9 +251,7 @@ namespace Vertigo.Zone.Views
             for (int i = 0; i < ui_slot_texts.Count; i++)
             {
                 if (ui_slot_texts[i] != null)
-                {
                     ui_slot_texts[i].text = (startZone + i).ToString();
-                }
             }
         }
 
@@ -368,124 +265,63 @@ namespace Vertigo.Zone.Views
                 if (slotTxt == null) continue;
 
                 int zoneNum = startZone + i;
-
                 if (zoneNum == currentZone)
                 {
-                    // Current zone: bold white on safe / super badges, bold black on normal silver badge
-                    if (currentZone % 30 == 0 || IsSafeZone(currentZone))
-                    {
-                        slotTxt.color = Color.white;
-                    }
-                    else
-                    {
-                        slotTxt.color = new Color(0.08f, 0.08f, 0.10f, 1f);
-                    }
+                    slotTxt.color = IsSuperZone(currentZone) || IsSafeZone(currentZone) ? Color.white : CurrentNormalTextColor;
                     slotTxt.fontStyle = FontStyles.Bold;
-                }
-                else if (zoneNum < currentZone)
-                {
-                    // Past zones
-                    if (zoneNum % 30 == 0)
-                    {
-                        slotTxt.color = pastSuperColor;
-                        slotTxt.fontStyle = FontStyles.Bold;
-                    }
-                    else if (IsSafeZone(zoneNum))
-                    {
-                        slotTxt.color = pastSafeColor;
-                        slotTxt.fontStyle = FontStyles.Bold;
-                    }
-                    else
-                    {
-                        slotTxt.color = pastZoneColor;
-                        slotTxt.fontStyle = FontStyles.Normal;
-                    }
                 }
                 else
                 {
-                    // Upcoming zones
-                    if (zoneNum % 30 == 0)
-                    {
-                        slotTxt.color = superColor;
-                        slotTxt.fontStyle = FontStyles.Bold;
-                    }
-                    else if (IsSafeZone(zoneNum))
-                    {
-                        slotTxt.color = safeColor;
-                        slotTxt.fontStyle = FontStyles.Bold;
-                    }
-                    else
-                    {
-                        slotTxt.color = normalColor;
-                        slotTxt.fontStyle = FontStyles.Normal;
-                    }
+                    (slotTxt.color, slotTxt.fontStyle) = GetZoneStyle(zoneNum, isPast: zoneNum < currentZone);
                 }
             }
         }
 
-        private float GetSlotStepDistance()
+        private (Color color, FontStyles style) GetZoneStyle(int zoneNum, bool isPast)
         {
-            if (ui_container_zone_slots != null)
+            if (IsSuperZone(zoneNum)) return (isPast ? pastSuperColor : superColor, FontStyles.Bold);
+            if (IsSafeZone(zoneNum)) return (isPast ? pastSafeColor : safeColor, FontStyles.Bold);
+            return (isPast ? pastZoneColor : normalColor, FontStyles.Normal);
+        }
+
+        private bool TryGetStripMetrics(out float containerW, out float padLeft, out float slotW, out float spacing)
+        {
+            if (ui_container_zone_slots == null)
             {
-                float containerW = ui_container_zone_slots.rect.width;
-                if (containerW <= 0f) containerW = 725f;
-
-                HorizontalLayoutGroup hlg = ui_container_zone_slots.GetComponent<HorizontalLayoutGroup>();
-                float padLeft = hlg != null ? hlg.padding.left : 0f;
-                float padRight = hlg != null ? hlg.padding.right : 0f;
-                float spacing = hlg != null ? hlg.spacing : 4.5f;
-
-                int count = ui_slot_texts != null && ui_slot_texts.Count > 0 ? ui_slot_texts.Count : 13;
-                float availW = containerW - (padLeft + padRight);
-                float totalSpacing = (count - 1) * spacing;
-                float slotW = count > 0 ? (availW - totalSpacing) / count : 51f;
-
-                return slotW + spacing;
+                containerW = padLeft = slotW = spacing = 0f;
+                return false;
             }
 
-            return 56.1f;
+            containerW = ui_container_zone_slots.rect.width > 0f ? ui_container_zone_slots.rect.width : 725f;
+            var hlg = ui_container_zone_slots.GetComponent<HorizontalLayoutGroup>();
+            padLeft = hlg != null ? hlg.padding.left : 0f;
+            float padRight = hlg != null ? hlg.padding.right : 0f;
+            spacing = hlg != null ? hlg.spacing : 4.5f;
+
+            int count = TotalSlots;
+            float availW = containerW - (padLeft + padRight);
+            slotW = (availW - (count - 1) * spacing) / count;
+            return true;
         }
+
+        private float GetSlotStepDistance() =>
+            TryGetStripMetrics(out _, out _, out float slotW, out float spacing) ? slotW + spacing : 56.1f;
 
         private float GetSlotLocalX(int index)
         {
             if (ui_slot_texts == null || index < 0 || index >= ui_slot_texts.Count) return 0f;
 
-            // 1. Deterministic mathematical calculation from container width & HorizontalLayoutGroup
-            if (ui_container_zone_slots != null)
+            if (TryGetStripMetrics(out float containerW, out float padLeft, out float slotW, out float spacing))
             {
-                float containerW = ui_container_zone_slots.rect.width;
-                if (containerW <= 0f) containerW = 725f;
-
-                HorizontalLayoutGroup hlg = ui_container_zone_slots.GetComponent<HorizontalLayoutGroup>();
-                float padLeft = hlg != null ? hlg.padding.left : 0f;
-                float padRight = hlg != null ? hlg.padding.right : 0f;
-                float spacing = hlg != null ? hlg.spacing : 4.5f;
-
-                int count = ui_slot_texts.Count;
-                float availW = containerW - (padLeft + padRight);
-                float totalSpacing = (count - 1) * spacing;
-                float slotW = count > 0 ? (availW - totalSpacing) / count : 51f;
-
                 float centerFromLeft = padLeft + index * (slotW + spacing) + (slotW * 0.5f);
-                float localX = centerFromLeft - (containerW * 0.5f);
-                return localX + ui_container_zone_slots.anchoredPosition.x;
+                return centerFromLeft - (containerW * 0.5f) + ui_container_zone_slots.anchoredPosition.x;
             }
 
-            // 2. Fallback to transform hierarchy
             if (_rootRectTransform == null)
-            {
                 _rootRectTransform = GetComponent<RectTransform>();
-            }
 
-            RectTransform slotRT = ui_slot_texts[index].rectTransform.parent as RectTransform;
-            if (slotRT == null)
-            {
-                slotRT = ui_slot_texts[index].rectTransform;
-            }
-
-            Vector3 worldPos = slotRT.position;
-            Vector3 localPos = _rootRectTransform.InverseTransformPoint(worldPos);
-            return localPos.x;
+            RectTransform slotRT = ui_slot_texts[index].rectTransform.parent as RectTransform ?? ui_slot_texts[index].rectTransform;
+            return _rootRectTransform.InverseTransformPoint(slotRT.position).x;
         }
     }
 }

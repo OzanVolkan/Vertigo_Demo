@@ -36,7 +36,6 @@ namespace Vertigo.Rewards.Controllers
 
             _sessionItems[reward.Id] = (reward, GetAmount(reward.Id) + amount);
 
-            GameEvents.FireRewardCollected(reward, amount);
             if (!suppressInventoryUpdateEvent)
             {
                 GameEvents.FireInventoryUpdated(_sessionItems);
@@ -46,7 +45,6 @@ namespace Vertigo.Rewards.Controllers
         public void ClearSession()
         {
             _sessionItems.Clear();
-            GameEvents.FireInventoryCleared();
             GameEvents.FireInventoryUpdated(_sessionItems);
         }
 

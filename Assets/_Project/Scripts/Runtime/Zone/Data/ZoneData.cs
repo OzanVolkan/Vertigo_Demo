@@ -23,10 +23,6 @@ namespace Vertigo.Zone.Data
         // Player can cash out during safe or super zones as specified in document
         public bool CanCashOut => zoneType == ZoneType.Safe || zoneType == ZoneType.Super;
 
-        public ZoneData(int zoneNumber, ZoneType zoneType = ZoneType.Normal) : this(zoneNumber, zoneType, null, 1f)
-        {
-        }
-
         public ZoneData(int zoneNumber, ZoneType zoneType, WheelConfigSO wheelConfig, float rewardMultiplier = 1f)
         {
             this.zoneNumber = zoneNumber;

@@ -35,13 +35,6 @@ namespace Vertigo.Zone.Data
         [SerializeField] private List<ZoneOverrideEntry> zoneOverrides = new List<ZoneOverrideEntry>();
 
         public int MaxZone => Mathf.Max(1, maxZone);
-        public int MultiplierStepPerZone => Mathf.Max(1, multiplierStepPerZone);
-        public bool FirstZoneIsSafe => firstZoneIsSafe;
-        public int SafeZoneInterval => safeZoneInterval;
-        public int SuperZoneInterval => superZoneInterval;
-        public WheelConfigSO DefaultNormalWheel => defaultNormalWheel;
-        public WheelConfigSO DefaultSilverWheel => defaultSilverWheel;
-        public WheelConfigSO DefaultGoldenWheel => defaultGoldenWheel;
 
         [Serializable]
         public struct ZoneOverrideEntry
