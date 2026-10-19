@@ -16,10 +16,8 @@ using Vertigo.Zone.Data;
 
 namespace Vertigo.Core.State
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : MonoBehaviourSingleton<GameManager>
     {
-        public static GameManager Instance { get; private set; }
-
         [Header("Sub-Managers")]
         [SerializeField] private ZoneManager zoneManager;
         [SerializeField] private WheelController wheelController;
@@ -49,14 +47,10 @@ namespace Vertigo.Core.State
         public SessionInventoryManager InventoryManager => inventoryManager;
         public AudioManager AudioManager => audioManager;
 
-        private void Awake()
+        protected override void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
+            base.Awake();
+            if (Instance != this) return;
 
             if (audioManager == null) audioManager = FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include);
             if (audioManager == null)

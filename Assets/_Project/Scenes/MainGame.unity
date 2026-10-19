@@ -2274,7 +2274,6 @@ MonoBehaviour:
   - {fileID: 299109154}
   - {fileID: 256196934}
   - {fileID: 466494408}
-  poolSize: 10
   buttonClickClip: {fileID: 8300000, guid: 60865ed1afbe64b6c8ba93c611861637, type: 3}
   wheelSpinStartClip: {fileID: 8300000, guid: 93886f0730d93455888a089599217469, type: 3}
   wheelTickClip: {fileID: 8300000, guid: 028da1dc76fc74a9881aa389a9f19e60, type: 3}

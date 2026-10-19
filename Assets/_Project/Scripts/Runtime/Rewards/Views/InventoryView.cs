@@ -24,7 +24,6 @@ namespace Vertigo.Rewards.Views
         private readonly Dictionary<string, InventoryRewardSlotView> _spawnedSlots 
             = new Dictionary<string, InventoryRewardSlotView>();
 
-        private bool _canCashOutInZone;
         private bool _isSpinning;
 
         private void Awake()
@@ -79,7 +78,6 @@ namespace Vertigo.Rewards.Views
 
         private void OnZoneChanged(ZoneData zone)
         {
-            _canCashOutInZone = true;
             UpdateCashOutButtonState();
         }
 
