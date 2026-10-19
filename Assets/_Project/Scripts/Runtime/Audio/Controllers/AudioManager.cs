@@ -121,7 +121,7 @@ namespace Vertigo.Audio.Controllers
             Instance = this;
 
 #if UNITY_EDITOR
-            EnsurePlaceholderClipsInEditor();
+            EnsureDefaultClipsInEditor();
 #endif
 
             EnsureAudioListener();
@@ -597,38 +597,38 @@ namespace Vertigo.Audio.Controllers
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            EnsurePlaceholderClipsInEditor();
+            EnsureDefaultClipsInEditor();
             if (Application.isPlaying)
             {
                 RebuildLookupTable();
             }
         }
 
-        private void EnsurePlaceholderClipsInEditor()
+        private void EnsureDefaultClipsInEditor()
         {
-            const string folder = "Assets/_Project/Audio/Placeholders/";
+            const string folder = "Assets/_Project/Audio/";
             if (audioConfig == null)
                 audioConfig = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioConfigSO>("Assets/_Project/Data/Audio/AudioConfig_Default.asset");
 
-            if (buttonClickClip == null) buttonClickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_button_click.wav");
-            if (wheelSpinStartClip == null) wheelSpinStartClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_wheel_spin_start.wav");
-            if (wheelTickClip == null) wheelTickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_wheel_tick.wav");
-            if (wheelStopBombClip == null) wheelStopBombClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_wheel_stop_bomb.wav");
-            if (rewardShowcasePopClip == null) rewardShowcasePopClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_reward_showcase_pop.wav");
-            if (rewardParticleBurstClip == null) rewardParticleBurstClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_reward_particle_burst.wav");
-            if (rewardSlotHitClip == null) rewardSlotHitClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_reward_slot_hit.wav");
-            if (zoneAdvanceClip == null) zoneAdvanceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_zone_advance.wav");
-            if (safeZoneEnterClip == null) safeZoneEnterClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_safe_zone_enter.wav");
-            if (superZoneEnterClip == null) superZoneEnterClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_super_zone_enter.wav");
-            if (bombPopupOpenClip == null) bombPopupOpenClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_bomb_popup_open.wav");
-            if (reviveSuccessClip == null) reviveSuccessClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_revive_success.wav");
-            if (giveUpClip == null) giveUpClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_give_up.wav");
-            if (cashOutPopupOpenClip == null) cashOutPopupOpenClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_cashout_popup_open.wav");
-            if (chestAppearClip == null) chestAppearClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_chest_appear.wav");
-            if (cardRevealSilverClip == null) cardRevealSilverClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_card_reveal_silver.wav");
-            if (cardRevealGoldClip == null) cardRevealGoldClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_card_reveal_gold.wav");
-            if (cashOutSummaryCompleteClip == null) cashOutSummaryCompleteClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_cashout_summary_complete.wav");
-            if (missionCompleteVictoryClip == null) missionCompleteVictoryClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "sfx_mission_complete_victory.wav");
+            if (buttonClickClip == null) buttonClickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "ClickyButton1a.wav");
+            if (wheelSpinStartClip == null) wheelSpinStartClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "SnappyButton5.wav");
+            if (wheelTickClip == null) wheelTickClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "Popup3.wav");
+            if (wheelStopBombClip == null) wheelStopBombClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "Error4.wav");
+            if (rewardShowcasePopClip == null) rewardShowcasePopClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "Success9.wav");
+            if (rewardParticleBurstClip == null) rewardParticleBurstClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "SnappyButton2.wav");
+            if (rewardSlotHitClip == null) rewardSlotHitClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "ClickyButton4.wav");
+            if (zoneAdvanceClip == null) zoneAdvanceClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "GenericNotification5.wav");
+            if (safeZoneEnterClip == null) safeZoneEnterClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "GenericNotification11.wav");
+            if (superZoneEnterClip == null) superZoneEnterClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "Success10.wav");
+            if (bombPopupOpenClip == null) bombPopupOpenClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "BombOpen.mp3");
+            if (reviveSuccessClip == null) reviveSuccessClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "OpenOrEnable1.wav");
+            if (giveUpClip == null) giveUpClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "Error5.wav");
+            if (cashOutPopupOpenClip == null) cashOutPopupOpenClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "Maximize4.wav");
+            if (chestAppearClip == null) chestAppearClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "OpenOrEnable4a.wav");
+            if (cardRevealSilverClip == null) cardRevealSilverClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "OpenOrEnable3.wav");
+            if (cardRevealGoldClip == null) cardRevealGoldClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "OpenOrEnable5.wav");
+            if (cashOutSummaryCompleteClip == null) cashOutSummaryCompleteClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "SwooshSlide1a.wav");
+            if (missionCompleteVictoryClip == null) missionCompleteVictoryClip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(folder + "Success5.wav");
         }
 #endif
     }
