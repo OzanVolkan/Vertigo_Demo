@@ -35,50 +35,29 @@ namespace Vertigo.Rewards.Views
         [SerializeField] private float staggerDelay = 0.08f;
         [SerializeField] private float countUpDuration = 0.45f;
 
-        private readonly List<GameObject> _activeParticles = new List<GameObject>();
-        private readonly List<Sequence> _activeSequences = new List<Sequence>();
+        private readonly List<GameObject> _activeParticles = new();
+        private readonly List<Sequence> _activeSequences = new();
 
         private void Awake()
         {
+            if (ui_particle_container != null) return;
+
+            ui_particle_container = GetComponent<RectTransform>();
             if (ui_particle_container == null)
             {
-                ui_particle_container = GetComponent<RectTransform>();
-                if (ui_particle_container == null)
-                {
-                    Canvas canvas = GetComponentInParent<Canvas>();
-                    if (canvas == null) canvas = FindFirstObjectByType<Canvas>();
-                    if (canvas != null)
-                    {
-                        ui_particle_container = canvas.GetComponent<RectTransform>();
-                    }
-                }
+                Canvas canvas = GetComponentInParent<Canvas>() ?? FindFirstObjectByType<Canvas>();
+                if (canvas != null) ui_particle_container = canvas.GetComponent<RectTransform>();
             }
         }
 
-        public Sprite GetFrameSprite(WheelType wheelType)
-        {
-            switch (wheelType)
-            {
-                case WheelType.BronzeNormal:
-                    return bronzeFrameSprite != null ? bronzeFrameSprite : goldFrameSprite;
-                case WheelType.SilverSafe:
-                    return silverFrameSprite != null ? silverFrameSprite : goldFrameSprite;
-                case WheelType.GoldenSuper:
-                default:
-                    return goldFrameSprite != null ? goldFrameSprite : (silverFrameSprite != null ? silverFrameSprite : bronzeFrameSprite);
-            }
-        }
+        private void OnDestroy() => ClearActiveParticles();
 
-        public void PlayCollectEffect(
-            Sprite rewardIcon,
-            Vector3 startWorldPos,
-            InventoryRewardSlotView targetSlot,
-            int oldAmount,
-            int newAmount,
-            Action onComplete)
+        public Sprite GetFrameSprite(WheelType wheelType) => wheelType switch
         {
-            PlayCollectEffect(rewardIcon, startWorldPos, targetSlot, oldAmount, newAmount, WheelType.BronzeNormal, onComplete);
-        }
+            WheelType.BronzeNormal => bronzeFrameSprite != null ? bronzeFrameSprite : goldFrameSprite,
+            WheelType.SilverSafe => silverFrameSprite != null ? silverFrameSprite : goldFrameSprite,
+            _ => goldFrameSprite != null ? goldFrameSprite : (silverFrameSprite != null ? silverFrameSprite : bronzeFrameSprite)
+        };
 
         public void PlayCollectEffect(
             Sprite rewardIcon,
@@ -103,15 +82,8 @@ namespace Vertigo.Rewards.Views
             bool hasPopped = false;
 
             Transform parentTransform = ui_particle_container != null ? ui_particle_container : transform;
-
-            // Convert world positions to Canvas local space so effect scales 1:1 with CanvasScaler across all resolutions
-            Vector3 startLocalPos = parentTransform.InverseTransformPoint(startWorldPos);
-            startLocalPos.z = 0f;
-
-            Vector3 targetLocalPos = targetSlot != null 
-                ? parentTransform.InverseTransformPoint(targetSlot.IconWorldPosition) 
-                : startLocalPos;
-            targetLocalPos.z = 0f;
+            Vector3 startLocalPos = ToLocalXY(parentTransform, startWorldPos);
+            Vector3 targetLocalPos = ToLocalXY(parentTransform, targetSlot.IconWorldPosition);
 
             for (int i = 0; i < count; i++)
             {
@@ -121,35 +93,28 @@ namespace Vertigo.Rewards.Views
                 pObj.transform.localScale = Vector3.zero;
                 _activeParticles.Add(pObj);
 
-                // Scatter angle & radius (in Canvas reference units)
-                float angle = (360f / count) * particleIndex + UnityEngine.Random.Range(-25f, 25f);
-                float rad = angle * Mathf.Deg2Rad;
+                float rad = ((360f / count) * particleIndex + UnityEngine.Random.Range(-25f, 25f)) * Mathf.Deg2Rad;
                 float dist = UnityEngine.Random.Range(burstMinRadius, burstMaxRadius);
-                Vector3 burstOffset = new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0f) * dist;
-                Vector3 burstLocalPos = startLocalPos + burstOffset;
-                burstLocalPos.z = 0f;
+                Vector3 burstLocalPos = startLocalPos + new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0f) * dist;
                 float tiltAngle = UnityEngine.Random.Range(-20f, 20f);
 
                 Sequence seq = DOTween.Sequence();
                 _activeSequences.Add(seq);
 
-                // 1. Burst Outwards (Local Canvas space)
+                // 1. Burst Outwards
                 seq.Append(pObj.transform.DOScale(Vector3.one, burstDuration).SetEase(Ease.OutBack, 1.4f));
                 seq.Join(pObj.transform.DOLocalMove(burstLocalPos, burstDuration).SetEase(Ease.OutCubic));
-                seq.Join(pObj.transform.DORotate(new Vector3(0, 0, tiltAngle), burstDuration).SetEase(Ease.OutQuad));
+                seq.Join(pObj.transform.DORotate(new Vector3(0f, 0f, tiltAngle), burstDuration).SetEase(Ease.OutQuad));
 
-                // 2. Pause in burst formation + stagger
+                // 2. Staggered Pause & Flight to Inventory Slot
                 seq.AppendInterval(burstPauseDuration + (particleIndex * staggerDelay));
-
-                // 3. Flight to target inventory slot (Local Canvas space)
                 seq.Append(pObj.transform.DOLocalMove(targetLocalPos, flyDuration).SetEase(Ease.InCubic));
                 seq.Join(pObj.transform.DORotate(Vector3.zero, flyDuration).SetEase(Ease.InQuad));
 
-                // 4. Hit target
+                // 3. Slot Impact
                 seq.AppendCallback(() =>
                 {
                     GameEvents.FireSfx(SoundEffectType.RewardSlotHit, 1f + (particleIndex * 0.03f));
-
                     if (!hasPopped && targetSlot != null)
                     {
                         hasPopped = true;
@@ -158,27 +123,19 @@ namespace Vertigo.Rewards.Views
                     }
                 });
 
-                // 5. Shrink & disappear into slot icon
+                // 4. Shrink & Cleanup
                 seq.Append(pObj.transform.DOScale(Vector3.zero, 0.12f).SetEase(Ease.InQuad));
-
                 seq.OnComplete(() =>
                 {
                     landedCount++;
                     _activeParticles.Remove(pObj);
                     _activeSequences.Remove(seq);
-                    if (pObj != null)
-                    {
-                        Destroy(pObj);
-                    }
+                    if (pObj != null) Destroy(pObj);
 
                     if (landedCount >= count)
                     {
-                        // Allow count-up text to finish nicely before proceeding
                         float waitExtra = Mathf.Max(0.08f, countUpDuration - 0.15f);
-                        DOVirtual.DelayedCall(waitExtra, () =>
-                        {
-                            onComplete?.Invoke();
-                        });
+                        DOVirtual.DelayedCall(waitExtra, () => onComplete?.Invoke());
                     }
                 });
             }
@@ -186,48 +143,42 @@ namespace Vertigo.Rewards.Views
 
         private GameObject CreateParticleObject(Sprite rewardIcon, Sprite frameSprite, Transform parent)
         {
-            GameObject obj = new GameObject("ui_particle_reward", typeof(RectTransform), typeof(Image));
+            Image frameImg = CreateCenteredImage("ui_particle_reward", parent, particleSize, frameSprite, false);
+            frameImg.type = frameSprite != null && frameSprite.border != Vector4.zero
+                ? Image.Type.Sliced
+                : Image.Type.Simple;
+
+            CreateCenteredImage("ui_icon", frameImg.transform, iconSize, rewardIcon, true);
+            return frameImg.gameObject;
+        }
+
+        private static Image CreateCenteredImage(string name, Transform parent, Vector2 size, Sprite sprite, bool preserveAspect)
+        {
+            GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image));
             obj.transform.SetParent(parent, false);
 
             RectTransform rt = obj.GetComponent<RectTransform>();
-            rt.sizeDelta = particleSize;
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = size;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
 
-            Image frameImg = obj.GetComponent<Image>();
-            frameImg.sprite = frameSprite;
-            frameImg.type = frameSprite != null && frameSprite.border != Vector4.zero 
-                ? Image.Type.Sliced 
-                : Image.Type.Simple;
-            frameImg.preserveAspect = false;
-            frameImg.raycastTarget = false;
+            Image img = obj.GetComponent<Image>();
+            img.sprite = sprite;
+            img.preserveAspect = preserveAspect;
+            img.raycastTarget = false;
+            return img;
+        }
 
-            // Child reward icon
-            GameObject iconObj = new GameObject("ui_icon", typeof(RectTransform), typeof(Image));
-            iconObj.transform.SetParent(obj.transform, false);
-
-            RectTransform iconRT = iconObj.GetComponent<RectTransform>();
-            iconRT.sizeDelta = iconSize;
-            iconRT.anchorMin = new Vector2(0.5f, 0.5f);
-            iconRT.anchorMax = new Vector2(0.5f, 0.5f);
-            iconRT.pivot = new Vector2(0.5f, 0.5f);
-            iconRT.anchoredPosition = Vector2.zero;
-
-            Image iconImg = iconObj.GetComponent<Image>();
-            iconImg.sprite = rewardIcon;
-            iconImg.preserveAspect = true;
-            iconImg.raycastTarget = false;
-
-            return obj;
+        private static Vector3 ToLocalXY(Transform parent, Vector3 worldPos)
+        {
+            Vector3 local = parent.InverseTransformPoint(worldPos);
+            local.z = 0f;
+            return local;
         }
 
         public void ClearActiveParticles()
         {
-            foreach (var seq in _activeSequences)
-            {
-                seq?.Kill();
-            }
+            foreach (var seq in _activeSequences) seq?.Kill();
             _activeSequences.Clear();
 
             foreach (var p in _activeParticles)
@@ -235,11 +186,6 @@ namespace Vertigo.Rewards.Views
                 if (p != null) Destroy(p);
             }
             _activeParticles.Clear();
-        }
-
-        private void OnDestroy()
-        {
-            ClearActiveParticles();
         }
     }
 }

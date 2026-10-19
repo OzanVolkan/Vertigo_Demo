@@ -26,105 +26,54 @@ namespace Vertigo.Rewards.Views
         [SerializeField] private TMP_Text ui_text_amount_value;
 
         [Header("Animation Settings")]
-        [Tooltip("Duration of the punchy entrance scale animation")]
         [SerializeField, Range(0.2f, 0.6f)] private float popInDuration = 0.32f;
-        [Tooltip("How long the reward stays prominently on screen")]
         [SerializeField, Range(0.4f, 2.0f)] private float displayDuration = 0.85f;
-        [Tooltip("Duration of the exit scale down animation")]
         [SerializeField, Range(0.15f, 0.5f)] private float popOutDuration = 0.22f;
-        [Tooltip("Sunburst rays continuous rotation speed")]
         [SerializeField] private float rayRotationSpeed = 25f;
 
         private Sequence _showcaseSequence;
         private Tween _rayRotationTween;
 
-        public float TotalDuration => popInDuration + displayDuration + popOutDuration;
-
         private void Awake()
         {
             if (ui_root == null) ui_root = gameObject;
             if (ui_image_card_bg != null) ui_image_card_bg.enabled = false;
-            
-            if (ui_dimmer_group != null)
-            {
-                ui_dimmer_group.alpha = 0f;
-                ui_dimmer_group.blocksRaycasts = false;
-            }
-            if (ui_transform_card_box != null)
-            {
-                ui_transform_card_box.localScale = Vector3.zero;
-            }
+            ResetVisualState();
         }
 
-        private void OnDisable()
-        {
-            _showcaseSequence?.Kill();
-            _rayRotationTween?.Kill();
-        }
+        private void OnDisable() => KillTweens();
 
         public void ShowReward(Sprite icon, string amountText, WheelType wheelType, Action onComplete)
         {
-            _showcaseSequence?.Kill();
-            _rayRotationTween?.Kill();
-
+            KillTweens();
             GameEvents.FireSfx(SoundEffectType.RewardShowcasePop);
 
-            if (ui_root != null && !ui_root.activeSelf)
-            {
-                ui_root.SetActive(true);
-            }
-
+            if (ui_root != null && !ui_root.activeSelf) ui_root.SetActive(true);
             if (ui_image_card_bg != null) ui_image_card_bg.enabled = false;
 
-            // Setup Icon & Amount
             if (ui_image_reward_icon != null)
             {
                 ui_image_reward_icon.sprite = icon;
                 ui_image_reward_icon.enabled = icon != null;
             }
 
-            if (ui_text_amount_value != null)
-            {
-                ui_text_amount_value.text = amountText;
-            }
+            if (ui_text_amount_value != null) ui_text_amount_value.text = amountText;
+            if (ui_image_sunburst != null) ui_image_sunburst.color = GetRayColor(wheelType);
+            if (ui_image_glow != null) ui_image_glow.color = GetGlowColor(wheelType);
 
-            // Tint Sunburst & Glow based on Tier
-            Color rayColor = GetRayColor(wheelType);
-            if (ui_image_sunburst != null)
-            {
-                ui_image_sunburst.color = rayColor;
-            }
+            ResetVisualState(blocksRaycasts: true);
 
-            if (ui_image_glow != null)
-            {
-                ui_image_glow.color = GetGlowColor(wheelType);
-            }
-
-            // Initial state for animation
-            if (ui_dimmer_group != null)
-            {
-                ui_dimmer_group.alpha = 0f;
-                ui_dimmer_group.blocksRaycasts = true;
-            }
-            if (ui_transform_card_box != null)
-            {
-                ui_transform_card_box.localScale = Vector3.zero;
-            }
-
-            // Continuous rotation on rays
             if (ui_transform_sunburst != null)
             {
                 ui_transform_sunburst.localEulerAngles = Vector3.zero;
                 _rayRotationTween = ui_transform_sunburst
-                    .DORotate(new Vector3(0, 0, 360f), 360f / Mathf.Max(5f, rayRotationSpeed), RotateMode.FastBeyond360)
+                    .DORotate(new Vector3(0f, 0f, 360f), 360f / Mathf.Max(5f, rayRotationSpeed), RotateMode.FastBeyond360)
                     .SetEase(Ease.Linear)
                     .SetLoops(-1);
             }
 
-            // Showcase Sequence
             _showcaseSequence = DOTween.Sequence();
 
-            // 1. Pop In
             if (ui_dimmer_group != null)
             {
                 _showcaseSequence.Append(ui_dimmer_group.DOFade(1f, 0.2f).SetEase(Ease.OutQuad));
@@ -132,16 +81,13 @@ namespace Vertigo.Rewards.Views
 
             if (ui_transform_card_box != null)
             {
-                if (ui_dimmer_group != null)
-                    _showcaseSequence.Join(ui_transform_card_box.DOScale(Vector3.one, popInDuration).SetEase(Ease.OutBack, 1.35f));
-                else
-                    _showcaseSequence.Append(ui_transform_card_box.DOScale(Vector3.one, popInDuration).SetEase(Ease.OutBack, 1.35f));
+                Tween scaleIn = ui_transform_card_box.DOScale(Vector3.one, popInDuration).SetEase(Ease.OutBack, 1.35f);
+                if (ui_dimmer_group != null) _showcaseSequence.Join(scaleIn);
+                else _showcaseSequence.Append(scaleIn);
             }
 
-            // 2. Display Hold
             _showcaseSequence.AppendInterval(displayDuration);
 
-            // 3. Pop Out (shrink down)
             if (ui_transform_card_box != null)
             {
                 _showcaseSequence.Append(ui_transform_card_box.DOScale(Vector3.zero, popOutDuration).SetEase(Ease.InBack, 1.2f));
@@ -161,50 +107,42 @@ namespace Vertigo.Rewards.Views
 
         public void HideImmediate()
         {
-            _showcaseSequence?.Kill();
-            _rayRotationTween?.Kill();
+            KillTweens();
+            ResetVisualState();
+            if (ui_root != null) ui_root.SetActive(false);
+        }
 
+        private void ResetVisualState(bool blocksRaycasts = false)
+        {
             if (ui_dimmer_group != null)
             {
                 ui_dimmer_group.alpha = 0f;
-                ui_dimmer_group.blocksRaycasts = false;
+                ui_dimmer_group.blocksRaycasts = blocksRaycasts;
             }
             if (ui_transform_card_box != null)
             {
                 ui_transform_card_box.localScale = Vector3.zero;
             }
-            if (ui_root != null)
-            {
-                ui_root.SetActive(false);
-            }
         }
 
-        private Color GetRayColor(WheelType wheelType)
+        private void KillTweens()
         {
-            switch (wheelType)
-            {
-                case WheelType.SilverSafe:
-                    return new Color(0.85f, 0.95f, 1f, 0.38f);
-                case WheelType.GoldenSuper:
-                    return new Color(1f, 0.88f, 0.25f, 0.45f);
-                case WheelType.BronzeNormal:
-                default:
-                    return new Color(1f, 0.78f, 0.35f, 0.32f);
-            }
+            _showcaseSequence?.Kill();
+            _rayRotationTween?.Kill();
         }
 
-        private Color GetGlowColor(WheelType wheelType)
+        private static Color GetRayColor(WheelType wheelType) => wheelType switch
         {
-            switch (wheelType)
-            {
-                case WheelType.SilverSafe:
-                    return new Color(0.5f, 0.85f, 1f, 0.65f);
-                case WheelType.GoldenSuper:
-                    return new Color(1f, 0.82f, 0.15f, 0.8f);
-                case WheelType.BronzeNormal:
-                default:
-                    return new Color(1f, 0.65f, 0.2f, 0.65f);
-            }
-        }
+            WheelType.SilverSafe => new Color(0.85f, 0.95f, 1f, 0.38f),
+            WheelType.GoldenSuper => new Color(1f, 0.88f, 0.25f, 0.45f),
+            _ => new Color(1f, 0.78f, 0.35f, 0.32f)
+        };
+
+        private static Color GetGlowColor(WheelType wheelType) => wheelType switch
+        {
+            WheelType.SilverSafe => new Color(0.5f, 0.85f, 1f, 0.65f),
+            WheelType.GoldenSuper => new Color(1f, 0.82f, 0.15f, 0.8f),
+            _ => new Color(1f, 0.65f, 0.2f, 0.65f)
+        };
     }
 }

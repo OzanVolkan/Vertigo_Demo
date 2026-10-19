@@ -15,10 +15,9 @@ namespace Vertigo.Rewards.Views
 
         public Vector3 IconWorldPosition => ui_image_icon != null ? ui_image_icon.transform.position : transform.position;
 
-        private void Awake()
-        {
-            EnforceMaskable();
-        }
+        private void Awake() => EnforceMaskable();
+
+        private void OnDestroy() => _countTween?.Kill();
 
         private void EnforceMaskable()
         {
@@ -37,23 +36,7 @@ namespace Vertigo.Rewards.Views
                 ui_image_icon.enabled = icon != null;
             }
 
-            _displayedAmount = amount;
-            if (ui_text_amount_value != null)
-            {
-                ui_text_amount_value.text = string.IsNullOrEmpty(formattedText) 
-                    ? amount.ToString("N0") 
-                    : formattedText;
-            }
-        }
-
-        public void SetAmount(int amount)
-        {
-            _countTween?.Kill();
-            _displayedAmount = amount;
-            if (ui_text_amount_value != null)
-            {
-                ui_text_amount_value.text = amount.ToString("N0");
-            }
+            SetDisplayedAmount(amount, formattedText);
         }
 
         public void PlayPop()
@@ -67,25 +50,25 @@ namespace Vertigo.Rewards.Views
         public void AnimateCountUp(int fromAmount, int toAmount, float duration)
         {
             _countTween?.Kill();
-            _displayedAmount = fromAmount;
-            if (ui_text_amount_value != null)
-            {
-                ui_text_amount_value.text = fromAmount.ToString("N0");
-            }
+            SetDisplayedAmount(fromAmount);
 
-            _countTween = DOTween.To(() => _displayedAmount, x =>
-            {
-                _displayedAmount = x;
-                if (ui_text_amount_value != null)
-                {
-                    ui_text_amount_value.text = $"{_displayedAmount:N0}";
-                }
-            }, toAmount, Mathf.Max(0.2f, duration)).SetEase(Ease.OutQuad);
+            _countTween = DOTween.To(
+                () => _displayedAmount,
+                x => SetDisplayedAmount(x),
+                toAmount,
+                Mathf.Max(0.2f, duration)
+            ).SetEase(Ease.OutQuad);
         }
 
-        private void OnDestroy()
+        private void SetDisplayedAmount(int amount, string customText = null)
         {
-            _countTween?.Kill();
+            _displayedAmount = amount;
+            if (ui_text_amount_value != null)
+            {
+                ui_text_amount_value.text = string.IsNullOrEmpty(customText)
+                    ? amount.ToString("N0")
+                    : customText;
+            }
         }
     }
 }

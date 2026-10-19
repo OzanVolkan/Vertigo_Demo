@@ -5,7 +5,6 @@ using UnityEngine.UI;
 using Vertigo.Core.Enums;
 using Vertigo.Core.Events;
 using Vertigo.Core.Interfaces;
-using Vertigo.Zone.Data;
 
 namespace Vertigo.Rewards.Views
 {
@@ -21,16 +20,18 @@ namespace Vertigo.Rewards.Views
         [SerializeField] private Transform ui_container_slots;
         [SerializeField] private InventoryRewardSlotView slotPrefab;
 
-        private readonly Dictionary<string, InventoryRewardSlotView> _spawnedSlots 
-            = new Dictionary<string, InventoryRewardSlotView>();
+        private readonly Dictionary<string, InventoryRewardSlotView> _spawnedSlots = new();
+        private readonly Vector3[] _slotCorners = new Vector3[4];
 
-        private bool _isSpinning;
+        private RectTransform ViewportRT => ui_scroll_rect.viewport != null
+            ? ui_scroll_rect.viewport
+            : ui_scroll_rect.GetComponent<RectTransform>();
 
         private void Awake()
         {
             if (ui_button_cashout != null)
             {
-                ui_button_cashout.onClick.AddListener(OnCashOutClicked);
+                ui_button_cashout.onClick.AddListener(GameEvents.FireCashOutPromptRequested);
             }
             SetManualScrollEnabled(true);
         }
@@ -38,75 +39,53 @@ namespace Vertigo.Rewards.Views
         private void OnEnable()
         {
             GameEvents.OnInventoryUpdated += OnInventoryUpdated;
-            GameEvents.OnZoneChanged += OnZoneChanged;
             GameEvents.OnGameStateChanged += OnGameStateChanged;
         }
 
         private void OnDisable()
         {
             GameEvents.OnInventoryUpdated -= OnInventoryUpdated;
-            GameEvents.OnZoneChanged -= OnZoneChanged;
             GameEvents.OnGameStateChanged -= OnGameStateChanged;
-        }
-
-        private void OnCashOutClicked()
-        {
-            GameEvents.FireCashOutPromptRequested();
         }
 
         private void OnGameStateChanged(GameState state)
         {
-            _isSpinning = (state != GameState.Idle);
-            UpdateCashOutButtonState();
-
-            // Disable manual scrolling during spin/award/transition, re-enable when Idle
-            bool allowManualScroll = (state == GameState.Idle);
-            SetManualScrollEnabled(allowManualScroll);
+            bool isIdle = state == GameState.Idle;
+            if (ui_button_cashout != null)
+            {
+                ui_button_cashout.interactable = isIdle;
+            }
+            SetManualScrollEnabled(isIdle);
         }
 
         public void SetManualScrollEnabled(bool isEnabled)
         {
-            if (ui_scroll_rect != null)
-            {
-                ui_scroll_rect.vertical = isEnabled;
-                if (!isEnabled)
-                {
-                    ui_scroll_rect.StopMovement();
-                }
-            }
-        }
+            if (ui_scroll_rect == null) return;
 
-        private void OnZoneChanged(ZoneData zone)
-        {
-            UpdateCashOutButtonState();
-        }
-
-        private void UpdateCashOutButtonState()
-        {
-            if (ui_button_cashout != null)
+            ui_scroll_rect.vertical = isEnabled;
+            if (!isEnabled)
             {
-                // Can cash out in any zone whenever the wheel is Idle
-                ui_button_cashout.interactable = !_isSpinning;
+                ui_scroll_rect.StopMovement();
             }
         }
 
         public InventoryRewardSlotView GetOrCreateSlot(IRewardData reward, int initialAmount)
         {
             if (reward == null) return null;
+
             if (!_spawnedSlots.TryGetValue(reward.Id, out var slotView) || slotView == null)
             {
-                if (slotPrefab != null && ui_container_slots != null)
-                {
-                    slotView = Instantiate(slotPrefab, ui_container_slots);
-                    slotView.gameObject.SetActive(true);
-                    slotView.Setup(reward.Icon, initialAmount);
-                    _spawnedSlots[reward.Id] = slotView;
+                if (slotPrefab == null || ui_container_slots == null) return null;
 
-                    if (ui_container_slots is RectTransform containerRT)
-                    {
-                        Canvas.ForceUpdateCanvases();
-                        LayoutRebuilder.ForceRebuildLayoutImmediate(containerRT);
-                    }
+                slotView = Instantiate(slotPrefab, ui_container_slots);
+                slotView.gameObject.SetActive(true);
+                slotView.Setup(reward.Icon, initialAmount);
+                _spawnedSlots[reward.Id] = slotView;
+
+                if (ui_container_slots is RectTransform containerRT)
+                {
+                    Canvas.ForceUpdateCanvases();
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(containerRT);
                 }
             }
             return slotView;
@@ -116,101 +95,73 @@ namespace Vertigo.Rewards.Views
         {
             if (ui_scroll_rect == null || slotView == null) return false;
 
-            RectTransform viewportRT = ui_scroll_rect.viewport != null 
-                ? ui_scroll_rect.viewport 
-                : ui_scroll_rect.GetComponent<RectTransform>();
-
+            RectTransform viewportRT = ViewportRT;
             if (viewportRT == null) return false;
 
-            RectTransform slotRT = slotView.GetComponent<RectTransform>();
-            Vector3[] slotCorners = new Vector3[4];
-            slotRT.GetWorldCorners(slotCorners);
+            slotView.GetComponent<RectTransform>().GetWorldCorners(_slotCorners);
 
             float slotMinY = float.MaxValue;
             float slotMaxY = float.MinValue;
 
             for (int i = 0; i < 4; i++)
             {
-                Vector3 localPos = viewportRT.InverseTransformPoint(slotCorners[i]);
-                if (localPos.y < slotMinY) slotMinY = localPos.y;
-                if (localPos.y > slotMaxY) slotMaxY = localPos.y;
+                float localY = viewportRT.InverseTransformPoint(_slotCorners[i]).y;
+                if (localY < slotMinY) slotMinY = localY;
+                if (localY > slotMaxY) slotMaxY = localY;
             }
 
             Rect viewRect = viewportRT.rect;
-            return (slotMinY >= viewRect.yMin + tolerance && slotMaxY <= viewRect.yMax - tolerance);
+            return slotMinY >= viewRect.yMin + tolerance && slotMaxY <= viewRect.yMax - tolerance;
         }
 
         public Tween ScrollToSlot(InventoryRewardSlotView slotView, bool smooth = true, float duration = 0.35f)
         {
-            if (ui_scroll_rect == null || slotView == null) return null;
+            if (ui_scroll_rect == null || slotView == null || ui_container_slots is not RectTransform contentRT)
+                return null;
 
-            RectTransform viewportRT = ui_scroll_rect.viewport != null 
-                ? ui_scroll_rect.viewport 
-                : ui_scroll_rect.GetComponent<RectTransform>();
+            RectTransform viewportRT = ViewportRT;
+            if (viewportRT == null) return null;
 
-            if (ui_container_slots is RectTransform contentRT && viewportRT != null)
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(contentRT);
+
+            float contentHeight = contentRT.rect.height;
+            float viewportHeight = viewportRT.rect.height;
+
+            if (contentHeight <= viewportHeight)
             {
-                Canvas.ForceUpdateCanvases();
-                LayoutRebuilder.ForceRebuildLayoutImmediate(contentRT);
-
-                float contentHeight = contentRT.rect.height;
-                float viewportHeight = viewportRT.rect.height;
-
-                if (contentHeight <= viewportHeight)
-                {
-                    ui_scroll_rect.verticalNormalizedPosition = 1f;
-                    return null;
-                }
-
-                RectTransform slotRT = slotView.GetComponent<RectTransform>();
-                Vector3 slotLocalInContent = contentRT.InverseTransformPoint(slotRT.position);
-                float slotCenterY = -slotLocalInContent.y;
-                float targetY = slotCenterY - (viewportHeight * 0.5f);
-                float maxScroll = contentHeight - viewportHeight;
-                float targetNorm = 1f - Mathf.Clamp01(targetY / maxScroll);
-
-                ui_scroll_rect.DOKill();
-                if (smooth)
-                {
-                    return DOTween.To(() => ui_scroll_rect.verticalNormalizedPosition, 
-                               x => ui_scroll_rect.verticalNormalizedPosition = x, 
-                               targetNorm, duration)
-                           .SetEase(Ease.OutQuad);
-                }
-                else
-                {
-                    ui_scroll_rect.verticalNormalizedPosition = targetNorm;
-                    return null;
-                }
-            }
-            return null;
-        }
-
-        public void ScrollToTop(bool smooth = true)
-        {
-            if (ui_scroll_rect == null) return;
-            ui_scroll_rect.DOKill();
-            if (smooth)
-                DOTween.To(() => ui_scroll_rect.verticalNormalizedPosition, x => ui_scroll_rect.verticalNormalizedPosition = x, 1f, 0.3f).SetEase(Ease.OutQuad);
-            else
                 ui_scroll_rect.verticalNormalizedPosition = 1f;
+                return null;
+            }
+
+            Vector3 slotLocalInContent = contentRT.InverseTransformPoint(slotView.transform.position);
+            float targetY = -slotLocalInContent.y - (viewportHeight * 0.5f);
+            float targetNorm = 1f - Mathf.Clamp01(targetY / (contentHeight - viewportHeight));
+
+            return ScrollToNormalizedPosition(targetNorm, smooth, duration);
         }
 
-        public void ScrollToBottom(bool smooth = true)
+        public void ScrollToTop(bool smooth = true) => ScrollToNormalizedPosition(1f, smooth);
+
+        public void ScrollToBottom(bool smooth = true) => ScrollToNormalizedPosition(0f, smooth);
+
+        private Tween ScrollToNormalizedPosition(float targetNorm, bool smooth, float duration = 0.3f)
         {
-            if (ui_scroll_rect == null) return;
+            if (ui_scroll_rect == null) return null;
+
             ui_scroll_rect.DOKill();
-            if (smooth)
-                DOTween.To(() => ui_scroll_rect.verticalNormalizedPosition, x => ui_scroll_rect.verticalNormalizedPosition = x, 0f, 0.3f).SetEase(Ease.OutQuad);
-            else
-                ui_scroll_rect.verticalNormalizedPosition = 0f;
-        }
+            if (!smooth)
+            {
+                ui_scroll_rect.verticalNormalizedPosition = targetNorm;
+                return null;
+            }
 
-        public InventoryRewardSlotView GetSlot(string rewardId)
-        {
-            if (string.IsNullOrEmpty(rewardId)) return null;
-            _spawnedSlots.TryGetValue(rewardId, out var slot);
-            return slot;
+            return DOTween.To(
+                () => ui_scroll_rect.verticalNormalizedPosition,
+                x => ui_scroll_rect.verticalNormalizedPosition = x,
+                targetNorm,
+                duration
+            ).SetEase(Ease.OutQuad);
         }
 
         private void OnInventoryUpdated(IReadOnlyDictionary<string, (IRewardData reward, int amount)> items)
@@ -221,12 +172,8 @@ namespace Vertigo.Rewards.Views
                 return;
             }
 
-            foreach (var kvp in items)
+            foreach (var (_, (reward, amount)) in items)
             {
-                string id = kvp.Key;
-                IRewardData reward = kvp.Value.reward;
-                int amount = kvp.Value.amount;
-
                 var slotView = GetOrCreateSlot(reward, amount);
                 if (slotView != null)
                 {
@@ -243,12 +190,9 @@ namespace Vertigo.Rewards.Views
                 ui_scroll_rect.verticalNormalizedPosition = 1f;
             }
 
-            foreach (var kvp in _spawnedSlots)
+            foreach (var slot in _spawnedSlots.Values)
             {
-                if (kvp.Value != null)
-                {
-                    Destroy(kvp.Value.gameObject);
-                }
+                if (slot != null) Destroy(slot.gameObject);
             }
             _spawnedSlots.Clear();
         }
