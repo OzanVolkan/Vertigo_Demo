@@ -467,6 +467,25 @@ namespace Vertigo.UI.Panels
             OnSummaryCompleted?.Invoke();
         }
 
+        private void OnValidate()
+        {
+            if (ui_panel_summary_root == null) ui_panel_summary_root = gameObject;
+            if (ui_canvas_group == null) ui_canvas_group = GetComponent<CanvasGroup>();
+
+            if (ui_button_skip == null)
+            {
+                Transform tr = transform.Find("ui_button_skip");
+                if (tr != null) ui_button_skip = tr.GetComponent<Button>();
+            }
+
+            if (ui_button_continue == null)
+            {
+                Transform tr = (ui_transform_summary_stage != null ? ui_transform_summary_stage.Find("ui_button_continue") : null)
+                    ?? transform.Find("ui_button_continue");
+                if (tr != null) ui_button_continue = tr.GetComponent<Button>();
+            }
+        }
+
 #if UNITY_EDITOR
         [ContextMenu("Debug: Test Summary Presentation (Silver & Gold Mix)")]
         private void DebugTestPresentation()

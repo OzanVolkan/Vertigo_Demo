@@ -136,5 +136,24 @@ namespace Vertigo.UI.Panels
             ui_canvas_group.blocksRaycasts = interactable;
             ui_canvas_group.interactable = interactable;
         }
+
+        private void OnValidate()
+        {
+            if (ui_panel_popup_root == null) ui_panel_popup_root = gameObject;
+            if (ui_canvas_group == null) ui_canvas_group = GetComponent<CanvasGroup>();
+
+            if (ui_transform_dialog == null)
+            {
+                Transform tr = transform.Find("ui_transform_dialog");
+                if (tr != null) ui_transform_dialog = tr.GetComponent<RectTransform>();
+            }
+
+            if (ui_button_collect_rewards == null)
+            {
+                Transform tr = (ui_transform_dialog != null ? ui_transform_dialog.Find("ui_button_collect_rewards") : null)
+                    ?? transform.Find("ui_button_collect_rewards");
+                if (tr != null) ui_button_collect_rewards = tr.GetComponent<Button>();
+            }
+        }
     }
 }
