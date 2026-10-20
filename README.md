@@ -46,45 +46,45 @@ The UI hierarchy is designed with **Canvas Scaler in Expand Mode**, anchor-pivot
 ### 1. Normal Zone (Bronze Wheel & Bomb)
 *Standard progression zone featuring 8 slices (including Bomb), live reward multiplier, and disabled cash out.*
 
-| 20:9 Aspect Ratio (2400x1080) | 16:9 Aspect Ratio (1920x1080) | 4:3 Aspect Ratio (1440x1080) |
+| 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| ![Normal Zone 20:9](./Screenshots/20_9/Capture_20261020_003015_20_9.png) | ![Normal Zone 16:9](./Screenshots/16_9/Capture_20261020_003015_16_9.png) | ![Normal Zone 4:3](./Screenshots/4_3/Capture_20261020_003015_4_3.png) |
+| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
 
 ---
 
 ### 2. Safe Zone (Silver Wheel - Risk-Free)
 *Occurs every 5th zone. Features upgraded silver wheel, zero bomb risk, and active Cash Out (Exit) button.*
 
-| 20:9 Aspect Ratio (2400x1080) | 16:9 Aspect Ratio (1920x1080) | 4:3 Aspect Ratio (1440x1080) |
+| 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| ![Safe Zone 20:9](./Screenshots/20_9/Capture_20261020_003108_20_9.png) | ![Safe Zone 16:9](./Screenshots/16_9/Capture_20261020_003108_16_9.png) | ![Safe Zone 4:3](./Screenshots/4_3/Capture_20261020_003108_4_3.png) |
+| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
 
 ---
 
 ### 3. Super Zone (Golden Wheel - Milestone Rewards)
 *Occurs every 30th zone. Features luxurious golden wheel, zero bomb risk, rare weapon drops, and active Cash Out.*
 
-| 20:9 Aspect Ratio (2400x1080) | 16:9 Aspect Ratio (1920x1080) | 4:3 Aspect Ratio (1440x1080) |
+| 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| ![Super Zone 20:9](./Screenshots/20_9/Capture_20261020_003138_20_9.png) | ![Super Zone 16:9](./Screenshots/16_9/Capture_20261020_003138_16_9.png) | ![Super Zone 4:3](./Screenshots/4_3/Capture_20261020_003138_4_3.png) |
+| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
 
 ---
 
 ### 4. Bomb Exploded (Revive & Give Up Modal)
 *Explosion modal presenting the choice between forfeiting rewards (Give Up) or reviving with Gold.*
 
-| 20:9 Aspect Ratio (2400x1080) | 16:9 Aspect Ratio (1920x1080) | 4:3 Aspect Ratio (1440x1080) |
+| 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| ![Bomb Modal 20:9](./Screenshots/20_9/Capture_20261020_003203_20_9.png) | ![Bomb Modal 16:9](./Screenshots/16_9/Capture_20261020_003203_16_9.png) | ![Bomb Modal 4:3](./Screenshots/4_3/Capture_20261020_003203_4_3.png) |
+| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
 
 ---
 
 ### 5. Cash Out & Rewards Summary
 *End-of-run reward reveal sequence displaying collected cards, quantities, and bank synchronization.*
 
-| 20:9 Aspect Ratio (2400x1080) | 16:9 Aspect Ratio (1920x1080) | 4:3 Aspect Ratio (1440x1080) |
+| 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| ![Cash Out Summary 20:9](./Screenshots/20_9/Capture_20261020_003216_20_9.png) | ![Cash Out Summary 16:9](./Screenshots/16_9/Capture_20261020_003216_16_9.png) | ![Cash Out Summary 4:3](./Screenshots/4_3/Capture_20261020_003216_4_3.png) |
+| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
 
 ---
 
@@ -123,22 +123,6 @@ Replaced `PlayerPrefs` with a clean, atomic JSON serialization service:
 - Disk location: `Application.persistentDataPath/player_save.json`.
 - Automatic one-time migration: Seamlessly migrates existing legacy PlayerPrefs data on first startup.
 - Default wallet: 100 starting Gold.
-
----
-
-## ⚡ Mobile & UI Optimization Checklist (Case Requirements)
-
-| Requirement | Implementation Details |
-| :--- | :--- |
-| **Canvas Mode Expand** | Canvas Scaler configured with `Screen Match Mode: Expand` (`ReferenceResolution: 1920x1080`) |
-| **TextMeshPro** | 100% TextMeshProUGUI across all labels and counters |
-| **Naming Conventions** | General-to-specific (`ui_panel_...`, `ui_button_...`), dynamic text ending in `_value` |
-| **Raycast & Masking** | Disabled `RaycastTarget` and `Maskable` on all decorative images (only 16 interactable targets in scene) |
-| **UI Animators Eliminated** | Zero `Animator` components on UI; 100% lightweight **DOTween** sequences (0 CPU animator dirtying) |
-| **Automatic OnValidate** | All Button and component references are automatically wired via `OnValidate()` editor code |
-| **Zero Editor OnClick** | 0 persistent UnityEvents in inspector; all button listeners bound programmatically via C# |
-| **Sprite Atlas & Sliced** | Packed into `VertigoDemoAtlas.spriteatlasv2`; panels use 9-slicing; icons preserve aspect ratio |
-| **Object Pooling / Reuse** | `ZoneBarView` recycles 13 visible zone slots with zero runtime instantiation during transitions |
 
 ---
 
@@ -185,14 +169,6 @@ Assets/_Project/
         ├── Wheel/       # Wheel controller, slice views, rotation physics
         └── Zone/        # Zone manager, strip view, progression logic
 ```
-
----
-
-## 📋 Technical Interview Notes (Self-Review)
-
-- **Why DOTween instead of Animators?** Animators cause UI canvas dirtying every frame and overhead on mobile CPU threads. DOTween sequences execute strictly on demand with zero garbage collection.
-- **Why JSON instead of PlayerPrefs?** PlayerPrefs writes unencrypted key-value pairs into platform registries/plists, lacks atomic operations, and does not scale for inventory structures. `SaveService` provides atomic, serialized file I/O with clean DTO isolation.
-- **How is scalability achieved?** Wheels, zones, and rewards are 100% decoupled via ScriptableObjects. Designers can configure a 100-zone campaign with distinct wheel slice distributions without writing a single line of code.
 
 ---
 
