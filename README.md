@@ -30,10 +30,7 @@ The game is a high-stakes gambling experience where the player balances escalati
 | Deliverable | Link / Path | Description |
 | :--- | :--- | :--- |
 | **Android APK Release** | [GitHub Releases](../../releases) | Working `.apk` build built with Unity 6000.3.23f1 |
-| **Gameplay Video** | [Watch Gameplay Video](#) *(Insert YouTube/Drive Link)* | Complete playthrough demonstrating Zones, Safe/Super zones, Revive, and Cash Out |
-| **Screenshots (20:9)** | [`Screenshots/20_9/`](./Screenshots/20_9/) | Ultra-wide mobile aspect ratio (2400x1080) |
-| **Screenshots (16:9)** | [`Screenshots/16_9/`](./Screenshots/16_9/) | Standard widescreen mobile aspect ratio (1920x1080) |
-| **Screenshots (4:3)** | [`Screenshots/4_3/`](./Screenshots/4_3/) | Tablet / iPad aspect ratio (1440x1080) |
+| **Gameplay Video** | [Watch Gameplay Video](https://drive.google.com/file/d/11pPWaqC6mpa2x3PB0YJ6HHYwDpdnuvrD/view?usp=sharing) | Complete playthrough demonstrating Zones, Safe/Super zones, Revive, and Cash Out |
 
 ---
 
@@ -48,7 +45,8 @@ The UI hierarchy is designed with **Canvas Scaler in Expand Mode**, anchor-pivot
 
 | 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
+| <img width="2400" height="1080" alt="Capture_20261020_003138_20_9" src="https://github.com/user-attachments/assets/c4d25ddf-6401-45a4-b390-5a9d632f2f39" /> | <img width="1920" height="1080" alt="Capture_20261020_003138_16_9" src="https://github.com/user-attachments/assets/d702bbd8-4f4a-4a1e-9ce5-d270bace6e13" /> | <img width="1440" height="1080" alt="Capture_20261020_003138_4_3" src="https://github.com/user-attachments/assets/587c5176-45db-4fd6-8ad2-2607117a1194" /> |
+
 
 ---
 
@@ -57,7 +55,8 @@ The UI hierarchy is designed with **Canvas Scaler in Expand Mode**, anchor-pivot
 
 | 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
+| <img width="2400" height="1080" alt="Capture_20261020_003015_20_9" src="https://github.com/user-attachments/assets/b160e5e1-1583-4452-b80a-f57392bc490d" /> | <img width="1920" height="1080" alt="Capture_20261020_003015_16_9" src="https://github.com/user-attachments/assets/f5ee94b5-78ba-46f9-8cf8-da223c9d31bf" /> | <img width="1440" height="1080" alt="Capture_20261020_003015_4_3" src="https://github.com/user-attachments/assets/42182ffc-24e7-40cc-ba04-ff46d740a629" /> |
+
 
 ---
 
@@ -66,16 +65,18 @@ The UI hierarchy is designed with **Canvas Scaler in Expand Mode**, anchor-pivot
 
 | 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
+| <img width="2400" height="1080" alt="Capture_20261020_003203_20_9" src="https://github.com/user-attachments/assets/c93d6c72-0bb7-43a8-a816-e62d89a761df" /> |<img width="1920" height="1080" alt="Capture_20261020_003203_16_9" src="https://github.com/user-attachments/assets/8c5093ea-3c7a-4034-a65d-99393bb2f069" /> | <img width="1440" height="1080" alt="Capture_20261020_003203_4_3" src="https://github.com/user-attachments/assets/37a92af8-0695-4272-b2d5-ec9aea28c4d8" /> |
 
 ---
+
 
 ### 4. Bomb Exploded (Revive & Give Up Modal)
 *Explosion modal presenting the choice between forfeiting rewards (Give Up) or reviving with Gold.*
 
 | 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
+| <img width="2400" height="1080" alt="Capture_20261020_003108_20_9" src="https://github.com/user-attachments/assets/9be0a5c8-edc7-42f4-9ca6-eaceea391510" /> | <img width="1920" height="1080" alt="Capture_20261020_003108_16_9" src="https://github.com/user-attachments/assets/790b2f48-17fa-4335-9cfa-d797867f7b14" /> | <img width="1440" height="1080" alt="Capture_20261020_003108_4_3" src="https://github.com/user-attachments/assets/5aaff2f5-e53a-48d7-a846-f939617af743" /> |
+
 
 ---
 
@@ -84,7 +85,8 @@ The UI hierarchy is designed with **Canvas Scaler in Expand Mode**, anchor-pivot
 
 | 20:9 (2400x1080) | 16:9 (1920x1080) | 4:3 (1440x1080) |
 | :---: | :---: | :---: |
-| *(Drop 20:9 screenshot here)* | *(Drop 16:9 screenshot here)* | *(Drop 4:3 screenshot here)* |
+| <img width="2400" height="1080" alt="Capture_20261020_003216_20_9" src="https://github.com/user-attachments/assets/65929d8c-1aa4-4c27-ac2b-bda694953491" /> | <img width="1920" height="1080" alt="Capture_20261020_003216_16_9" src="https://github.com/user-attachments/assets/6b1b04b2-b07f-469a-aeee-b4ff00266a26" /> | <img width="1440" height="1080" alt="Capture_20261020_003216_4_3" src="https://github.com/user-attachments/assets/e969c236-ab07-4094-82ed-e8681d3662e3" /> |
+
 
 ---
 
@@ -118,7 +120,6 @@ All game content is configurable from the Unity Inspector without recompiling:
 - `ZoneManagerConfigSO`: Controls safe zone intervals, super zone intervals, wheel overrides, and multiplier steps.
 
 ### 4. Lightweight JSON Save Infrastructure (`SaveService`)
-Replaced `PlayerPrefs` with a clean, atomic JSON serialization service:
 - Model: `PlayerSaveData` (DTO) storing Gold, Cash, and banked items.
 - Disk location: `Application.persistentDataPath/player_save.json`.
 - Automatic one-time migration: Seamlessly migrates existing legacy PlayerPrefs data on first startup.
