@@ -30,10 +30,7 @@ The game is a high-stakes gambling experience where the player balances escalati
 | Deliverable | Link / Path | Description |
 | :--- | :--- | :--- |
 | **Android APK Release** | [GitHub Releases](../../releases) | Working `.apk` build built with Unity 6000.3.23f1 |
-| **Gameplay Video** | [Watch Gameplay Video](#) *(Insert YouTube/Drive Link)* | Complete playthrough demonstrating Zones, Safe/Super zones, Revive, and Cash Out |
-| **Screenshots (20:9)** | [`Screenshots/20_9/`](./Screenshots/20_9/) | Ultra-wide mobile aspect ratio (2400x1080) |
-| **Screenshots (16:9)** | [`Screenshots/16_9/`](./Screenshots/16_9/) | Standard widescreen mobile aspect ratio (1920x1080) |
-| **Screenshots (4:3)** | [`Screenshots/4_3/`](./Screenshots/4_3/) | Tablet / iPad aspect ratio (1440x1080) |
+| **Gameplay Video** | [Watch Gameplay Video](https://drive.google.com/file/d/11pPWaqC6mpa2x3PB0YJ6HHYwDpdnuvrD/view?usp=sharing) | Complete playthrough demonstrating Zones, Safe/Super zones, Revive, and Cash Out |
 
 ---
 
@@ -123,7 +120,6 @@ All game content is configurable from the Unity Inspector without recompiling:
 - `ZoneManagerConfigSO`: Controls safe zone intervals, super zone intervals, wheel overrides, and multiplier steps.
 
 ### 4. Lightweight JSON Save Infrastructure (`SaveService`)
-Replaced `PlayerPrefs` with a clean, atomic JSON serialization service:
 - Model: `PlayerSaveData` (DTO) storing Gold, Cash, and banked items.
 - Disk location: `Application.persistentDataPath/player_save.json`.
 - Automatic one-time migration: Seamlessly migrates existing legacy PlayerPrefs data on first startup.
