@@ -73,3 +73,13 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# IL2CPP / Android Build Artifacts & Mappings
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+*_mapping.txt
+
+# JetBrains / Rider IDE
+.idea/
+
+# Local helper scripts
+generate_badges*.ps1
